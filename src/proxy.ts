@@ -5,15 +5,16 @@ import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session-token";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = decodeSession(request.cookies.get(SESSION_COOKIE)?.value);
-  const isLogin = pathname === "/login";
+  const isPublic =
+    pathname === "/login" || pathname.startsWith("/api/auth/");
 
-  if (!session && !isLogin) {
+  if (!session && !isPublic) {
     const login = new URL("/login", request.url);
     if (pathname !== "/") login.searchParams.set("next", pathname);
     return NextResponse.redirect(login);
   }
 
-  if (session && isLogin) {
+  if (session && isPublic && pathname === "/login") {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
