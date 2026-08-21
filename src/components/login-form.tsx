@@ -30,25 +30,11 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
         HR Recruitment
       </p>
       <h1 className="mt-3 font-display text-4xl leading-tight">Sign in</h1>
-      <p className="mt-2 text-sm text-muted">
+      {/* <p className="mt-2 text-sm text-muted">
         Company Google accounts only: @aerisbeaute.com and @fromthisisland.com.
-      </p>
+      </p> */}
 
-      <a
-        href="/api/auth/google"
-        className="mt-8 flex w-full items-center justify-center gap-2 rounded-full border border-line bg-paper px-4 py-3 text-sm font-medium text-ink transition hover:border-accent"
-      >
-        <IconGoogle className="h-4 w-4" />
-        Continue with Google
-      </a>
-
-      <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted">
-        <span className="h-px flex-1 bg-line" />
-        or email
-        <span className="h-px flex-1 bg-line" />
-      </div>
-
-      <form action={action} className="space-y-4">
+      <form action={action} className="mt-8 space-y-4">
         <Field label="Email">
           <input
             name="email"
@@ -84,6 +70,20 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
           {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>
+
+      <div className="my-6 flex items-center gap-3 text-[11px] uppercase tracking-[0.16em] text-muted">
+        <span className="h-px flex-1 bg-line" />
+        or google
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      <a
+        href="/api/auth/google"
+        className="flex w-full items-center justify-center gap-2 rounded-full border border-line bg-paper px-4 py-3 text-sm font-medium text-ink transition hover:border-accent"
+      >
+        <IconGoogle className="h-4 w-4" />
+        Continue with Google
+      </a>
     </motion.div>
   );
 }
