@@ -15,11 +15,15 @@ import {
   IconPlus,
   IconSearch,
   IconSwitch,
+  IconLogout,
 } from "./icons";
+import { logoutAction } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/auth/users";
+import { roleLabel } from "@/lib/auth/users";
 import { AddCandidateModal, AddJobModal } from "./modals";
 
 const NAV = [
-  { href: "", label: "Ringkasan", icon: IconGrid },
+  { href: "", label: "Overview", icon: IconGrid },
   { href: "/pipeline", label: "Pipeline", icon: IconKanban },
   { href: "/candidates", label: "Progress", icon: IconPeople },
   { href: "/jobs", label: "Vacancy", icon: IconBriefcase },
@@ -27,9 +31,11 @@ const NAV = [
 
 export function DashboardShell({
   slug,
+  user,
   children,
 }: {
   slug: CompanySlug;
+  user: AuthUser;
   children: ReactNode;
 }) {
   const brand = COMPANIES[slug];
@@ -38,7 +44,7 @@ export function DashboardShell({
     <div style={themeStyle(brand.theme)} className="h-full bg-paper text-ink">
       <RecruitmentProvider slug={slug}>
         <div className="flex h-full">
-          <Sidebar slug={slug} />
+          <Sidebar slug={slug} user={user} />
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <Topbar />
             <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-5 pt-6 pb-24 sm:px-8 lg:pb-4">
@@ -53,7 +59,7 @@ export function DashboardShell({
   );
 }
 
-function Sidebar({ slug }: { slug: CompanySlug }) {
+function Sidebar({ slug, user }: { slug: CompanySlug; user: AuthUser }) {
   const pathname = usePathname();
   const brand = COMPANIES[slug];
   const other = slug === "aeris-beaute" ? COMPANIES["from-this-island"] : COMPANIES["aeris-beaute"];
@@ -108,18 +114,33 @@ function Sidebar({ slug }: { slug: CompanySlug }) {
       </nav>
 
       <div className="space-y-3 px-1">
+        <div className="rounded-2xl border border-line px-3 py-3">
+          <p className="truncate text-sm font-medium">{user.name}</p>
+          <p className="mt-0.5 text-[11px] uppercase tracking-[0.16em] text-muted">
+            {roleLabel(user.role)}
+          </p>
+        </div>
         <Link
           href={`/${other.slug}`}
           className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-muted transition hover:bg-paper hover:text-ink"
         >
           <IconSwitch className="h-4 w-4" />
-          Ganti ke {other.shortName}
+          Switch to {other.shortName}
         </Link>
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-2 rounded-2xl px-3 py-2 text-sm text-muted transition hover:bg-paper hover:text-ink"
+          >
+            <IconLogout className="h-4 w-4" />
+            Sign out
+          </button>
+        </form>
         <Link
           href="/"
           className="px-3 text-[11px] uppercase tracking-[0.16em] text-muted hover:text-ink"
         >
-          Semua merek
+          All brands
         </Link>
       </div>
     </aside>
@@ -154,7 +175,7 @@ function Topbar() {
             className="hidden items-center gap-2 rounded-full border border-line bg-paper-raised px-3 py-2 text-sm text-muted sm:flex"
           >
             <IconSearch className="h-4 w-4" />
-            Cari kandidat
+            Search candidates
           </Link>
           <button
             type="button"
@@ -169,7 +190,7 @@ function Topbar() {
             className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-hover"
           >
             <IconPlus className="h-4 w-4" />
-            Kandidat
+            Candidate
           </button>
         </div>
       </header>

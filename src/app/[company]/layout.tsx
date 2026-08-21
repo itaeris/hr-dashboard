@@ -1,4 +1,5 @@
 import { DashboardShell } from "@/components/dashboard-shell";
+import { requireSession } from "@/app/actions/auth";
 import { COMPANIES, isCompanySlug } from "@/lib/companies";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -27,5 +28,6 @@ export default async function CompanyLayout({
 }) {
   const { company } = await params;
   if (!isCompanySlug(company)) notFound();
-  return <DashboardShell slug={company}>{children}</DashboardShell>;
+  const user = await requireSession();
+  return <DashboardShell slug={company} user={user}>{children}</DashboardShell>;
 }

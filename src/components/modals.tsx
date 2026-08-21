@@ -73,9 +73,9 @@ export function AddCandidateModal({
   }
 
   return (
-    <ModalFrame open={open} onClose={onClose} title="Progress — kandidat baru" wide>
+    <ModalFrame open={open} onClose={onClose} title="Progress — new candidate" wide>
       <form onSubmit={onSubmit} className="space-y-5">
-        <p className="text-xs uppercase tracking-[0.16em] text-muted">Identitas</p>
+        <p className="text-xs uppercase tracking-[0.16em] text-muted">Identity</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Candidate Name">
             <input required name="full_name" className={fieldClass} />
@@ -84,7 +84,7 @@ export function AddCandidateModal({
             <Select
               name="job_id"
               required
-              placeholder="Pilih posisi"
+              placeholder="Select a role"
               defaultValue={openJobs[0]?.id ?? ""}
               options={openJobs.map((job) => ({ value: job.id, label: job.title }))}
             />
@@ -97,17 +97,17 @@ export function AddCandidateModal({
             />
           </Field>
           <Field label="CV">
-            <input name="cv_url" placeholder="Link CV" className={fieldClass} />
+            <input name="cv_url" placeholder="CV link" className={fieldClass} />
           </Field>
           <Field label="Email">
             <input type="email" name="email" className={fieldClass} />
           </Field>
-          <Field label="Telepon">
+          <Field label="Phone">
             <input name="phone" className={fieldClass} />
           </Field>
         </div>
 
-        <p className="text-xs uppercase tracking-[0.16em] text-muted">Pengalaman</p>
+        <p className="text-xs uppercase tracking-[0.16em] text-muted">Experience</p>
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Total Experience">
             <input name="total_experience" className={fieldClass} />
@@ -191,7 +191,7 @@ export function AddCandidateModal({
           disabled={saving || openJobs.length === 0}
           className="mt-2 w-full rounded-full bg-accent py-3 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
         >
-          {saving ? "Menyimpan…" : "Simpan ke Progress"}
+          {saving ? "Saving…" : "Save to Progress"}
         </button>
       </form>
     </ModalFrame>
@@ -237,7 +237,7 @@ export function AddJobModal({
   }
 
   return (
-    <ModalFrame open={open} onClose={onClose} title="Vacancy Tracker — posisi baru" wide>
+    <ModalFrame open={open} onClose={onClose} title="Vacancy Tracker — new role" wide>
       <form onSubmit={onSubmit} className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Replacement / New">
@@ -311,7 +311,7 @@ export function AddJobModal({
           disabled={saving}
           className="mt-2 w-full rounded-full bg-accent py-3 text-sm font-medium text-white hover:bg-accent-hover"
         >
-          {saving ? "Menyimpan…" : "Simpan vacancy"}
+          {saving ? "Saving…" : "Save vacancy"}
         </button>
       </form>
     </ModalFrame>

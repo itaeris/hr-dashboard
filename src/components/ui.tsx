@@ -62,7 +62,7 @@ export function ModalFrame({
                 onClick={onClose}
                 className="text-sm text-muted hover:text-ink"
               >
-                Tutup
+                Close
               </button>
             </div>
             <ScrollArea axis="y" compact className="min-h-0 flex-1">

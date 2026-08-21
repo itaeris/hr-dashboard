@@ -112,7 +112,7 @@ export function Select({
   value,
   defaultValue = "",
   onChange,
-  placeholder = "Pilih",
+  placeholder = "Select",
   required = false,
   className = "",
 }: {
@@ -200,20 +200,20 @@ export function Select({
   );
 }
 
-const WEEKDAYS = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = [
-  "Januari",
-  "Februari",
-  "Maret",
+  "January",
+  "February",
+  "March",
   "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
+  "May",
+  "June",
+  "July",
+  "August",
   "September",
-  "Oktober",
+  "October",
   "November",
-  "Desember",
+  "December",
 ];
 
 function toYmd(date: Date) {
@@ -230,7 +230,7 @@ function parseYmd(value: string) {
 
 function formatDisplay(value: string) {
   const date = parseYmd(value);
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -254,7 +254,7 @@ export function DatePicker({
   value,
   defaultValue = "",
   onChange,
-  placeholder = "Pilih tanggal",
+  placeholder = "Select date",
   required = false,
 }: {
   name?: string;

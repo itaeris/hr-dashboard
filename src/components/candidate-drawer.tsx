@@ -87,7 +87,7 @@ export function CandidateDrawer() {
             </dl>
 
             <p className="mt-6 text-xs uppercase tracking-[0.14em] text-muted">
-              Tahap
+              Stage
             </p>
             <div className="mt-2">
               <Select
@@ -102,7 +102,7 @@ export function CandidateDrawer() {
               />
             </div>
 
-            <p className="mt-6 text-xs uppercase tracking-[0.14em] text-muted">Penilaian HR</p>
+            <p className="mt-6 text-xs uppercase tracking-[0.14em] text-muted">HR rating</p>
             <div className="mt-2 flex gap-1">
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
@@ -135,7 +135,7 @@ export function CandidateDrawer() {
             </dl>
 
             <label className="mt-6 block text-xs uppercase tracking-[0.14em] text-muted">
-              Catatan
+              Notes
             </label>
             <textarea
               value={notes}
@@ -150,7 +150,7 @@ export function CandidateDrawer() {
             />
 
             <p className="mt-auto pt-8 text-xs text-muted">
-              Melamar {formatDate(selected.applied_at)} · Update {formatDate(selected.updated_at)}
+              Applied {formatDate(selected.applied_at)} · Updated {formatDate(selected.updated_at)}
             </p>
             </ScrollArea>
           </motion.aside>

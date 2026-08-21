@@ -151,3 +151,12 @@ export function IconSwitch(props: IconProps) {
     </Icon>
   );
 }
+
+export function IconLogout(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M10 7V5.8A1.8 1.8 0 0 1 11.8 4h6.4A1.8 1.8 0 0 1 20 5.8v12.4a1.8 1.8 0 0 1-1.8 1.8h-6.4A1.8 1.8 0 0 1 10 18.2V17" />
+      <path d="M4 12h9M10 8.5 13.5 12 10 15.5" />
+    </Icon>
+  );
+}

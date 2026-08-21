@@ -15,13 +15,13 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "HR Recruitment",
   description:
-    "Dashboard rekrutmen untuk Aeris Beaute dan From This Island.",
+    "Recruitment dashboard for Aeris Beaute and From This Island.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="id"
+      lang="en"
       className={`${jakarta.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="h-full font-sans">{children}</body>

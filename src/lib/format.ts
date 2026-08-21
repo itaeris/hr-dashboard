@@ -11,7 +11,7 @@ export function initials(name: string) {
 }
 
 export function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -19,7 +19,7 @@ export function formatDate(iso: string) {
 }
 
 export function formatDateTime(iso: string) {
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-US", {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -43,7 +43,7 @@ export function formatSheetDate(iso: string | null) {
 
 export function formatTableDate(iso: string | null) {
   if (!iso) return null;
-  return new Intl.DateTimeFormat("id-ID", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -53,7 +53,7 @@ export function formatTableDate(iso: string | null) {
 export function daysAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const days = Math.max(0, Math.floor(diff / 86_400_000));
-  if (days === 0) return "Hari ini";
-  if (days === 1) return "Kemarin";
-  return `${days} hari lalu`;
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  return `${days} days ago`;
 }

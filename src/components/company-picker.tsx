@@ -1,11 +1,14 @@
 "use client";
 
+import { logoutAction } from "@/app/actions/auth";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { COMPANY_LIST, themeStyle } from "@/lib/companies";
+import type { AuthUser } from "@/lib/auth/users";
+import { roleLabel } from "@/lib/auth/users";
 import { CompanyMark } from "./company-mark";
 
-export function CompanyPicker() {
+export function CompanyPicker({ user }: { user: AuthUser }) {
   return (
     <div className="relative min-h-full overflow-hidden bg-[#F4EEE6] text-ink">
       <div className="pointer-events-none absolute -left-24 top-[-80px] h-[420px] w-[420px] rounded-full bg-[#E8D2D4]/70 blur-3xl" />
@@ -22,13 +25,20 @@ export function CompanyPicker() {
               HR Recruitment
             </p>
             <h1 className="mt-3 max-w-xl font-display text-4xl leading-tight text-ink sm:text-5xl">
-              Pilih rumah merek yang ingin kamu kelola hari ini.
+              Choose the brand house you want to manage today.
             </h1>
           </div>
-          <p className="hidden max-w-xs text-right text-sm leading-6 text-muted md:block">
-            Satu dashboard untuk dua perusahaan. Pipeline, kandidat, dan lowongan
-            tetap terpisah sesuai merek.
-          </p>
+          <div className="hidden text-right md:block">
+            <p className="text-sm font-medium">{user.name}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">
+              {roleLabel(user.role)}
+            </p>
+            <form action={logoutAction} className="mt-3">
+              <button type="submit" className="text-sm text-muted hover:text-ink">
+                Sign out
+              </button>
+            </form>
+          </div>
         </motion.header>
 
         <div className="mt-12 grid flex-1 gap-6 lg:grid-cols-2">
@@ -71,7 +81,7 @@ export function CompanyPicker() {
                   </h2>
                   <p className="mt-2 text-base text-muted">{company.tagline}</p>
                   <span className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-accent">
-                    Masuk dashboard
+                    Open dashboard
                     <span className="transition group-hover:translate-x-1">→</span>
                   </span>
                 </div>

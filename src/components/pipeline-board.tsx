@@ -20,7 +20,7 @@ export function PipelinePage() {
   return (
     <PageFade className="flex min-h-0 h-full flex-1 flex-col">
       <p className="mb-4 shrink-0 text-sm text-muted">
-        Seret kartu ke kolom berikutnya, atau klik untuk membuka detail kandidat.
+        Drag a card to the next column, or click to open candidate details.
       </p>
       <ScrollArea axis="x" className="min-h-0 flex-1">
         <div className="flex h-full items-stretch gap-4">

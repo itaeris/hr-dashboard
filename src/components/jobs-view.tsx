@@ -50,7 +50,7 @@ export function JobsPage() {
     <PageFade>
       <div className="mb-6 flex items-end justify-between gap-4">
         <p className="max-w-xl text-sm text-muted">
-          Vacancy Tracker — kolom mengikuti template recruitment Aeris.
+          Vacancy Tracker — columns follow the Aeris recruitment template.
         </p>
         <button
           type="button"
@@ -58,7 +58,7 @@ export function JobsPage() {
           className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
         >
           <IconPlus className="h-4 w-4" />
-          Vacancy baru
+          New vacancy
         </button>
       </div>
 

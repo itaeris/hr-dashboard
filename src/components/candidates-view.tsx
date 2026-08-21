@@ -62,7 +62,7 @@ const COLUMNS = [
 ] as const;
 
 function boolLabel(value: boolean) {
-  return value ? "Ya" : "Tidak";
+  return value ? "Yes" : "No";
 }
 
 export function CandidatesPage() {
@@ -92,7 +92,7 @@ export function CandidatesPage() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Cari nama, posisi, atau source"
+            placeholder="Search name, role, or source"
             className={`${fieldClass} pl-10`}
           />
         </div>
@@ -101,7 +101,7 @@ export function CandidatesPage() {
           value={status}
           onChange={(next) => setStatus(next as LatestStatus | "all")}
           options={[
-            { value: "all", label: "Semua status" },
+            { value: "all", label: "All statuses" },
             ...LATEST_STATUSES.map((item) => ({ value: item, label: item })),
           ]}
         />
@@ -110,7 +110,7 @@ export function CandidatesPage() {
           value={jobId}
           onChange={setJobId}
           options={[
-            { value: "all", label: "Semua posisi" },
+            { value: "all", label: "All roles" },
             ...jobs.map((job) => ({ value: job.id, label: job.title })),
           ]}
         />
@@ -135,7 +135,7 @@ export function CandidatesPage() {
           {filtered.length === 0 ? (
             <tr>
               <td colSpan={COLUMNS.length} className="px-5 py-12 text-sm text-muted">
-                Tidak ada kandidat yang cocok.
+                No matching candidates.
               </td>
             </tr>
           ) : (
@@ -160,7 +160,7 @@ export function CandidatesPage() {
                         className="text-[12px] font-medium text-accent hover:underline"
                         onClick={(event) => event.stopPropagation()}
                       >
-                        Lihat CV
+                        View CV
                       </a>
                     ) : (
                       <EmptyValue />

@@ -50,7 +50,7 @@ export const COMPANIES: Record<CompanySlug, CompanyConfig> = {
     name: "From This Island",
     shortName: "FTI",
     tagline: "Crafted from the archipelago",
-    industry: "Lifestyle & F&B",
+    industry: "Skincare & Beauty",
     city: "Bali",
     founded: "2021",
     theme: {

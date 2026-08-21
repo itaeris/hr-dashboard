@@ -35,10 +35,10 @@ export function OverviewPage() {
       <div className="space-y-6">
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            { label: "Kandidat aktif", value: stats.totalCandidates, hint: `${stats.activeCount} masih di pipeline` },
-            { label: "Lowongan terbuka", value: stats.openJobs, hint: `${jobs.length} total posisi` },
-            { label: "Wawancara minggu ini", value: stats.interviewsThisWeek, hint: "Termasuk trial & user interview" },
-            { label: "Hired bulan ini", value: stats.hiredThisMonth, hint: `${stats.conversion}% conversion` },
+            { label: "Active candidates", value: stats.totalCandidates, hint: `${stats.activeCount} still in pipeline` },
+            { label: "Open vacancies", value: stats.openJobs, hint: `${jobs.length} total roles` },
+            { label: "Interviews this week", value: stats.interviewsThisWeek, hint: "Includes trial and user interviews" },
+            { label: "Hired this month", value: stats.hiredThisMonth, hint: `${stats.conversion}% conversion` },
           ].map((stat, index) => (
             <motion.article
               key={stat.label}
@@ -62,11 +62,11 @@ export function OverviewPage() {
               <div>
                 <h2 className="font-display text-2xl">Funnel {brand.shortName}</h2>
                 <p className="mt-1 text-sm text-muted">
-                  Distribusi kandidat per tahap rekrutmen.
+                  Candidate distribution by hiring stage.
                 </p>
               </div>
               <Link href={`/${brand.slug}/pipeline`} className="text-sm text-accent">
-                Buka pipeline
+                Open pipeline
               </Link>
             </div>
             <div className="mt-6 space-y-3">
@@ -91,11 +91,11 @@ export function OverviewPage() {
           </article>
 
           <article className="rounded-[24px] border border-line bg-paper-raised p-6">
-            <h2 className="font-display text-2xl">Agenda wawancara</h2>
-            <p className="mt-1 text-sm text-muted">Slot terdekat di kalender HR.</p>
+            <h2 className="font-display text-2xl">Interview calendar</h2>
+            <p className="mt-1 text-sm text-muted">Upcoming slots on the HR calendar.</p>
             <div className="mt-5 space-y-3">
               {upcoming.length === 0 ? (
-                <p className="text-sm text-muted">Belum ada jadwal minggu ini.</p>
+                <p className="text-sm text-muted">No interviews scheduled this week.</p>
               ) : (
                 upcoming.map(({ item, at }) => (
                   <button
@@ -119,9 +119,9 @@ export function OverviewPage() {
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <article className="rounded-[24px] border border-line bg-paper-raised p-6">
             <div className="flex items-end justify-between">
-              <h2 className="font-display text-2xl">Aktivitas terbaru</h2>
+              <h2 className="font-display text-2xl">Recent activity</h2>
               <Link href={`/${brand.slug}/candidates`} className="text-sm text-accent">
-                Semua kandidat
+                All candidates
               </Link>
             </div>
             <div className="mt-5 divide-y divide-line">
@@ -147,9 +147,9 @@ export function OverviewPage() {
 
           <article className="rounded-[24px] border border-line bg-paper-raised p-6">
             <div className="flex items-end justify-between">
-              <h2 className="font-display text-2xl">Vacancy aktif</h2>
+              <h2 className="font-display text-2xl">Open vacancies</h2>
               <Link href={`/${brand.slug}/jobs`} className="text-sm text-accent">
-                Kelola
+                Manage
               </Link>
             </div>
             <div className="mt-5 space-y-3">
@@ -162,7 +162,7 @@ export function OverviewPage() {
                       {job.department} · {job.level} · {job.recruiter_pic}
                     </p>
                     <p className="mt-3 text-xs uppercase tracking-[0.14em] text-accent">
-                      {count} kandidat · {job.headcount_needed} HC · {job.status_vacancy}
+                      {count} candidates · {job.headcount_needed} HC · {job.status_vacancy}
                     </p>
                   </div>
                 );

@@ -277,7 +277,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0812-1100-2211",
     source: "Instagram",
     location: "Jakarta Selatan",
-    notes: "Pengalaman 3 tahun di Sephora. Portofolio makeup editorial kuat.",
+    notes: "3 years at Sephora. Strong editorial makeup portfolio.",
     created_at: "2026-08-18T04:12:00.000Z",
   },
   {
@@ -288,7 +288,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0813-4455-6677",
     source: "LinkedIn",
     location: "Bandung",
-    notes: "Ex store supervisor The Body Shop. Siap relokasi.",
+    notes: "Ex store supervisor at The Body Shop. Ready to relocate.",
     created_at: "2026-08-10T07:40:00.000Z",
   },
   {
@@ -299,7 +299,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0857-9000-1122",
     source: "Referral",
     location: "Tangerang",
-    notes: "Direferensikan oleh tim R&D. Lulusan farmasi UI.",
+    notes: "Referred by the R&D team. Pharmacy graduate from UI.",
     created_at: "2026-08-04T02:15:00.000Z",
   },
   {
@@ -321,7 +321,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0821-7788-9900",
     source: "JobStreet",
     location: "Bekasi",
-    notes: "Warehouse lead 4 tahun. Shift malam OK.",
+    notes: "4 years as warehouse lead. Night shifts OK.",
     created_at: "2026-05-02T01:20:00.000Z",
   },
   {
@@ -332,7 +332,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0812-5555-0101",
     source: "LinkedIn",
     location: "Jakarta Pusat",
-    notes: "Wawancara user selesai. Menunggu offering letter.",
+    notes: "User interview done. Waiting on the offer letter.",
     created_at: "2026-07-28T06:30:00.000Z",
   },
   {
@@ -343,7 +343,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0878-1212-3434",
     source: "Campus",
     location: "Yogyakarta",
-    notes: "Fresh graduate UGM kimia. Butuh screening English.",
+    notes: "Fresh UGM chemistry graduate. Needs an English screening.",
     created_at: "2026-08-16T03:45:00.000Z",
   },
   {
@@ -354,7 +354,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0816-9090-8080",
     source: "Referral",
     location: "Jakarta Utara",
-    notes: "Join date 1 September. Onboarding pack sudah dikirim.",
+    notes: "Join date 1 September. Onboarding pack already sent.",
     created_at: "2026-07-12T08:00:00.000Z",
   },
   {
@@ -365,7 +365,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0852-7777-1212",
     source: "Instagram",
     location: "Surabaya",
-    notes: "Tidak match dengan jam operasional toko.",
+    notes: "Did not match store operating hours.",
     created_at: "2026-08-06T05:10:00.000Z",
   },
   {
@@ -387,7 +387,7 @@ const aerisCandidates: CandidateRow[] = [
     phone: "0812-3434-5656",
     source: "Walk-in",
     location: "Bandung",
-    notes: "Walk-in boutique Bandung. Perlu tes leadership case.",
+    notes: "Walk-in at Bandung boutique. Needs a leadership case.",
     created_at: "2026-08-12T02:50:00.000Z",
   },
 ];
@@ -412,7 +412,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0813-8080-9090",
     source: "Instagram",
     location: "Canggu",
-    notes: "Menulis untuk Slow Food Bali. Bahasa Inggris fasih.",
+    notes: "Writes for Slow Food Bali. Fluent in English.",
     created_at: "2026-08-08T06:20:00.000Z",
   },
   {
@@ -434,7 +434,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0857-3333-4444",
     source: "Referral",
     location: "Denpasar",
-    notes: "Direferensikan chef dapur Tabanan.",
+    notes: "Referred by the Tabanan kitchen chef.",
     created_at: "2026-08-11T09:40:00.000Z",
   },
   {
@@ -445,7 +445,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0821-5555-6666",
     source: "Website",
     location: "Jakarta",
-    notes: "Retail weekend only. Cocok untuk Senopati.",
+    notes: "Retail weekend only. A good fit for Senopati.",
     created_at: "2026-08-15T01:05:00.000Z",
   },
   {
@@ -456,7 +456,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0819-7777-8888",
     source: "Campus",
     location: "Tabanan",
-    notes: "Lulusan STP Bali. Magang di hotel 5*.",
+    notes: "STP Bali graduate. Interned at a 5-star hotel.",
     created_at: "2026-08-03T07:15:00.000Z",
   },
   {
@@ -467,7 +467,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0878-9999-0000",
     source: "LinkedIn",
     location: "Bandung",
-    notes: "Offering dikirim 18 Agu. Menunggu signed letter.",
+    notes: "Offer sent 18 Aug. Waiting on the signed letter.",
     created_at: "2026-07-30T04:44:00.000Z",
   },
   {
@@ -478,7 +478,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0812-1212-3434",
     source: "Referral",
     location: "Ubud",
-    notes: "Hired sebagai barista lead. Join 25 Agustus.",
+    notes: "Hired as barista lead. Joins 25 August.",
     created_at: "2026-07-08T02:00:00.000Z",
   },
   {
@@ -489,7 +489,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0813-4545-6767",
     source: "JobStreet",
     location: "Seminyak",
-    notes: "Ekspektasi gaji di atas band. Ditahan dulu.",
+    notes: "Salary expectation above band. On hold for now.",
     created_at: "2026-08-02T08:30:00.000Z",
   },
   {
@@ -500,7 +500,7 @@ const ftiCandidates: CandidateRow[] = [
     phone: "0852-8888-9999",
     source: "Walk-in",
     location: "Gianyar",
-    notes: "Trial shift bar sudah dijadwalkan.",
+    notes: "Bar trial shift already scheduled.",
     created_at: "2026-08-19T03:18:00.000Z",
   },
   {
@@ -661,7 +661,7 @@ const aerisApplications: ApplicationRow[] = [
     updated_at: "2026-08-12T05:10:00.000Z",
     latest_status: "Dropped",
     rejection_letter: true,
-    hr_interview_note: "Jam operasional tidak match.",
+    hr_interview_note: "Operating hours did not match.",
   }),
   app({
     id: "ab-app-10",
