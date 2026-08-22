@@ -6,6 +6,14 @@ export const SESSION_MAX_AGE = 60 * 60 * 24 * 14;
 
 export type Session = AuthUser & { exp: number };
 
+export function hasAuthSecret() {
+  const value = process.env.AUTH_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    return Boolean(value && value.length >= 32);
+  }
+  return true;
+}
+
 export function authSecret() {
   const value = process.env.AUTH_SECRET;
   if (process.env.NODE_ENV === "production") {

@@ -5,6 +5,8 @@ import {
   GOOGLE_INTENT_COOKIE,
   GOOGLE_NEXT_COOKIE,
   GOOGLE_STATE_COOKIE,
+  PRODUCTION_ORIGIN,
+  appOrigin,
   googleCallbackUrl,
   isAllowedGoogleEmail,
   safeCalendarNext,
@@ -12,6 +14,7 @@ import {
 import {
   decodeSession,
   encodeSession,
+  hasAuthSecret,
   SESSION_COOKIE,
   sessionCookieOptions,
 } from "@/lib/auth/session-token";
@@ -23,15 +26,28 @@ function clearOauthCookies(response: NextResponse) {
   response.cookies.delete(GOOGLE_NEXT_COOKIE);
 }
 
+function redirectBase(request: NextRequest) {
+  const configured = process.env.AUTH_URL?.replace(/\/$/, "");
+  if (configured?.startsWith("https://") || configured?.startsWith("http://")) {
+    return configured;
+  }
+  try {
+    return appOrigin(request.nextUrl.origin);
+  } catch {
+    return PRODUCTION_ORIGIN;
+  }
+}
+
 function loginError(request: NextRequest, code: string) {
-  const base = process.env.AUTH_URL || request.url;
-  const response = NextResponse.redirect(new URL(`/login?error=${code}`, base));
+  const response = NextResponse.redirect(
+    new URL(`/login?error=${code}`, redirectBase(request)),
+  );
   clearOauthCookies(response);
   return response;
 }
 
 function calendarResult(request: NextRequest, next: string, flag: string) {
-  const dest = new URL(next, process.env.AUTH_URL || request.url);
+  const dest = new URL(next, redirectBase(request));
   dest.searchParams.set("google", flag);
   const response = NextResponse.redirect(dest);
   clearOauthCookies(response);
@@ -39,13 +55,22 @@ function calendarResult(request: NextRequest, next: string, flag: string) {
 }
 
 export async function GET(request: NextRequest) {
+  try {
+    return await handleCallback(request);
+  } catch (error) {
+    console.error("Google OAuth callback failed", error);
+    return loginError(request, "oauth");
+  }
+}
+
+async function handleCallback(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const intent = request.cookies.get(GOOGLE_INTENT_COOKIE)?.value;
   const next = safeCalendarNext(request.cookies.get(GOOGLE_NEXT_COOKIE)?.value ?? null);
   const calendarFlow = intent === "calendar";
 
-  if (!clientId || !clientSecret) {
+  if (!clientId || !clientSecret || !hasAuthSecret()) {
     return calendarFlow ? calendarResult(request, next, "config") : loginError(request, "config");
   }
 
@@ -59,7 +84,7 @@ export async function GET(request: NextRequest) {
   const state = url.searchParams.get("state");
   const savedState = request.cookies.get(GOOGLE_STATE_COOKIE)?.value;
   if (!code && !state && !savedState) {
-    return NextResponse.redirect(new URL("/login", process.env.AUTH_URL || origin));
+    return NextResponse.redirect(new URL("/login", redirectBase(request)));
   }
   if (!code || !state || !savedState || state !== savedState) {
     return calendarFlow ? calendarResult(request, next, "oauth") : loginError(request, "oauth");
@@ -131,7 +156,7 @@ export async function GET(request: NextRequest) {
   });
 
   const dest = await homePathForUser(user);
-  const home = new URL(dest, process.env.AUTH_URL || request.url);
+  const home = new URL(dest, redirectBase(request));
   const response = NextResponse.redirect(home);
   clearOauthCookies(response);
   response.cookies.set(SESSION_COOKIE, encodeSession(user), sessionCookieOptions());

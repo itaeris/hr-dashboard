@@ -1,15 +1,17 @@
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { GOOGLE_STATE_COOKIE, googleCallbackUrl } from "@/lib/auth/google";
-import { sessionCookieOptions } from "@/lib/auth/session-token";
+import { GOOGLE_STATE_COOKIE, PRODUCTION_ORIGIN, googleCallbackUrl } from "@/lib/auth/google";
+import { hasAuthSecret, sessionCookieOptions } from "@/lib/auth/session-token";
 
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  if (!clientId) {
-    return NextResponse.redirect(
-      new URL("/login?error=config", process.env.AUTH_URL || request.url),
-    );
+  const base =
+    process.env.AUTH_URL?.startsWith("http")
+      ? process.env.AUTH_URL
+      : request.nextUrl.origin || PRODUCTION_ORIGIN;
+  if (!clientId || !hasAuthSecret()) {
+    return NextResponse.redirect(new URL("/login?error=config", base));
   }
 
   const state = randomBytes(16).toString("hex");
