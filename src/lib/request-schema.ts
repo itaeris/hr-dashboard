@@ -312,7 +312,7 @@ function normalizeResponse(row: Record<string, unknown>): RequestResponse {
       ? (row.payload as Record<string, string>)
       : Object.fromEntries(
           Object.entries(row)
-            .filter(([key, value]) => typeof value === "string" || typeof value === "number")
+            .filter(([, value]) => typeof value === "string" || typeof value === "number")
             .map(([key, value]) => [key, String(value ?? "")]),
         );
 

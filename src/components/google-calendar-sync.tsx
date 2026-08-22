@@ -3,14 +3,43 @@
 import { collectScheduleEvents } from "@/lib/schedule-events";
 import { toCalendarSyncItems } from "@/lib/google-calendar/push";
 import { useRecruitment } from "@/lib/recruitment-context";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { IconCalendar } from "./icons";
 
+function oauthMessage(flag: string | null): string {
+  if (flag === "consent") {
+    return "Google did not return calendar access. Try Connect again and allow Calendar.";
+  }
+  if (flag === "denied") return "Google Calendar access was cancelled.";
+  if (flag === "domain") return "Use a company Google account.";
+  if (flag === "oauth") return "Google Calendar connect failed. Try again.";
+  if (flag === "config") return "Google sign-in is not configured.";
+  return "";
+}
+
 export function GoogleCalendarSync() {
+  return (
+    <Suspense fallback={null}>
+      <GoogleCalendarSyncInner />
+    </Suspense>
+  );
+}
+
+function GoogleCalendarSyncInner() {
   const { slug, brand, views } = useRecruitment();
-  const [connected, setConnected] = useState(false);
+  const searchParams = useSearchParams();
+  const flag = searchParams.get("google");
+  const [connected, setConnected] = useState(flag === "connected");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(() => oauthMessage(flag));
+  const [consumedFlag, setConsumedFlag] = useState<string | null>(null);
+  if (flag && flag !== consumedFlag) {
+    setConsumedFlag(flag);
+    if (flag === "connected") setConnected(true);
+    const text = oauthMessage(flag);
+    if (text) setMessage(text);
+  }
 
   useEffect(() => {
     void fetch("/api/calendar/sync")
@@ -55,29 +84,20 @@ export function GoogleCalendarSync() {
   }
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const flag = params.get("google");
     if (!flag) return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("google")) return;
     params.delete("google");
     const next = `${window.location.pathname}${params.size ? `?${params}` : ""}`;
     window.history.replaceState({}, "", next);
-    if (flag === "connected") {
-      setConnected(true);
+    if (flag !== "connected") return;
+    const timer = window.setTimeout(() => {
       void syncAll();
-    } else if (flag === "consent") {
-      setMessage("Google did not return calendar access. Try Connect again and allow Calendar.");
-    } else if (flag === "denied") {
-      setMessage("Google Calendar access was cancelled.");
-    } else if (flag === "domain") {
-      setMessage("Use a company Google account.");
-    } else if (flag === "oauth") {
-      setMessage("Google Calendar connect failed. Try again.");
-    } else if (flag === "config") {
-      setMessage("Google sign-in is not configured.");
-    }
+    }, 0);
+    return () => window.clearTimeout(timer);
     // views are loaded by the time user returns from OAuth
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [flag]);
 
   async function disconnect() {
     setBusy(true);

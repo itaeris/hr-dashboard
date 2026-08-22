@@ -124,17 +124,21 @@ export function RequestFormPage({
   const [notice, setNotice] = useState("");
   const [approvalOpen, setApprovalOpen] = useState(true);
   const [schemaLoading, setSchemaLoading] = useState(Boolean(initialCompany));
+  const [schemaCompany, setSchemaCompany] = useState<RequestCompany | "">(
+    initialCompany ?? "",
+  );
+  if (schemaCompany !== company) {
+    setSchemaCompany(company);
+    setSchema(null);
+    setAnswers({});
+    setErrors({});
+    setSchemaLoading(Boolean(company));
+  }
 
   useEffect(() => {
-    if (!company) {
-      setSchema(null);
-      setAnswers({});
-      setSchemaLoading(false);
-      return;
-    }
+    if (!company) return;
 
     let cancelled = false;
-    setSchemaLoading(true);
     void loadRequestSchema(company).then((next) => {
       if (cancelled) return;
       setSchema(next);

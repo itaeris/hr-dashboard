@@ -5,7 +5,6 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
-  useRef,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -27,10 +26,7 @@ function useMenuPosition(
   const [pos, setPos] = useState<MenuPos | null>(null);
 
   useLayoutEffect(() => {
-    if (!open || !trigger) {
-      setPos(null);
-      return;
-    }
+    if (!open || !trigger) return;
 
     const node = trigger;
 
@@ -134,7 +130,7 @@ export function Select({
   const [open, setOpen] = useState(false);
   const [internal, setInternal] = useState(defaultValue);
   const selected = value ?? internal;
-  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [triggerEl, setTriggerEl] = useState<HTMLButtonElement | null>(null);
   const menuId = useId();
   const label = options.find((option) => option.value === selected)?.label;
 
@@ -145,7 +141,7 @@ export function Select({
     }
     function onPointer(event: MouseEvent) {
       const target = event.target as Node;
-      if (triggerRef.current?.contains(target)) return;
+      if (triggerEl?.contains(target)) return;
       const menu = document.getElementById(menuId);
       if (menu?.contains(target)) return;
       setOpen(false);
@@ -156,7 +152,7 @@ export function Select({
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onPointer);
     };
-  }, [menuId, open]);
+  }, [menuId, open, triggerEl]);
 
   function pick(next: string) {
     setInternal(next);
@@ -168,7 +164,7 @@ export function Select({
     <div className={`relative ${className}`}>
       {name ? <input type="hidden" name={name} value={selected} required={required} /> : null}
       <button
-        ref={triggerRef}
+        ref={setTriggerEl}
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={`${fieldClass} flex items-center justify-between gap-2 text-left ${
@@ -180,7 +176,7 @@ export function Select({
       </button>
       <AnimatePresence>
         {open ? (
-          <Popover open={open} trigger={triggerRef.current} align="stretch">
+          <Popover open={open} trigger={triggerEl} align="stretch">
             <div id={menuId}>
               <ScrollArea axis="y" compact className="max-h-64">
                 <div className="p-1">
@@ -280,12 +276,13 @@ export function DatePicker({
   const [cursor, setCursor] = useState(() =>
     selected ? parseYmd(selected) : new Date(),
   );
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuId = useId();
-
-  useEffect(() => {
+  const [cursorFor, setCursorFor] = useState(selected);
+  if (selected !== cursorFor) {
+    setCursorFor(selected);
     if (selected) setCursor(parseYmd(selected));
-  }, [selected]);
+  }
+  const [triggerEl, setTriggerEl] = useState<HTMLButtonElement | null>(null);
+  const menuId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -294,7 +291,7 @@ export function DatePicker({
     }
     function onPointer(event: MouseEvent) {
       const target = event.target as Node;
-      if (triggerRef.current?.contains(target)) return;
+      if (triggerEl?.contains(target)) return;
       const menu = document.getElementById(menuId);
       if (menu?.contains(target)) return;
       setOpen(false);
@@ -305,7 +302,7 @@ export function DatePicker({
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onPointer);
     };
-  }, [menuId, open]);
+  }, [menuId, open, triggerEl]);
 
   function pick(next: string) {
     setInternal(next);
@@ -319,7 +316,7 @@ export function DatePicker({
     <div className="relative">
       {name ? <input type="hidden" name={name} value={selected} required={required} /> : null}
       <button
-        ref={triggerRef}
+        ref={setTriggerEl}
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={`${fieldClass} flex items-center justify-between gap-2 text-left ${
@@ -354,7 +351,7 @@ export function DatePicker({
       </button>
       <AnimatePresence>
         {open ? (
-          <Popover open={open} trigger={triggerRef.current} minHeight={360}>
+          <Popover open={open} trigger={triggerEl} minHeight={360}>
             <div id={menuId} className="p-3 pb-4">
               <div className="mb-3 flex items-center justify-between">
                 <button

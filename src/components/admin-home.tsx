@@ -180,12 +180,16 @@ function RoleSettings({
     setConfirmPassword("");
   }
 
+  const successKey = state?.success || deleteState?.success || "";
+  const [seenSuccess, setSeenSuccess] = useState("");
+  if (successKey !== seenSuccess) {
+    setSeenSuccess(successKey);
+    if (successKey) resetForm();
+  }
+
   useEffect(() => {
-    if (state?.success || deleteState?.success) {
-      resetForm();
-      router.refresh();
-    }
-  }, [deleteState?.success, router, state?.success]);
+    if (successKey) router.refresh();
+  }, [router, successKey]);
 
   const notice = deleteState?.error || deleteState?.success || state?.error || state?.success;
 

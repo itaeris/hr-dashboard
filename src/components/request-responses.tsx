@@ -39,17 +39,22 @@ export function RequestResponsesPage() {
   const [schema, setSchema] = useState<RequestSchema | null>(null);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<RequestResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadedCompany, setLoadedCompany] = useState<string | null>(null);
+  const loading = loadedCompany !== company;
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
     void Promise.all([loadRequestResponses(company), loadRequestSchema(company)]).then(
       ([nextRows, nextSchema]) => {
+        if (cancelled) return;
         setRows(nextRows);
         setSchema(nextSchema);
-        setLoading(false);
+        setLoadedCompany(company);
       },
     );
+    return () => {
+      cancelled = true;
+    };
   }, [company]);
 
   const filtered = useMemo(() => {

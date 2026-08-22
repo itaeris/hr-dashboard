@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { COMPANIES, themeStyle } from "@/lib/companies";
 import { RecruitmentProvider, useRecruitment } from "@/lib/recruitment-context";
 import type { CompanySlug } from "@/lib/types";
@@ -388,10 +388,11 @@ function Topbar({ user }: { user: AuthUser }) {
 function MobileNav({ slug }: { slug: CompanySlug }) {
   const pathname = usePathname();
   const [sheet, setSheet] = useState<"tracker" | "request" | null>(null);
-
-  useEffect(() => {
+  const [sheetPath, setSheetPath] = useState(pathname);
+  if (sheetPath !== pathname) {
+    setSheetPath(pathname);
     setSheet(null);
-  }, [pathname]);
+  }
 
   const trackerActive = TRACKER_LINKS.some((link) =>
     pathname.startsWith(`/${slug}${link.href}`),

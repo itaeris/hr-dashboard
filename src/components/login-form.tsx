@@ -86,6 +86,8 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
         <span className="h-px flex-1 bg-line" />
       </div>
 
+      {/* OAuth must be a full document navigation, not a Next.js client transition. */}
+      {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
       <a
         href="/api/auth/google"
         className="flex w-full items-center justify-center gap-2 rounded-full border border-line bg-paper px-4 py-3 text-sm font-medium text-ink transition hover:border-accent"

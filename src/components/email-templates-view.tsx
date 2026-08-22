@@ -9,22 +9,24 @@ import {
   type EmailTemplateKind,
 } from "@/lib/email-templates";
 import { useRecruitment } from "@/lib/recruitment-context";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FileAttachList } from "./file-attach";
 import { Field, PageFade, fieldClass } from "./ui";
 
 export function EmailTemplatesPage() {
   const { slug, brand } = useRecruitment();
   const [kind, setKind] = useState<EmailTemplateKind>("interview");
+  const sourceKey = `${slug}:${brand.name}`;
+  const [activeKey, setActiveKey] = useState(sourceKey);
   const [templates, setTemplates] = useState<EmailTemplate[]>(() =>
     loadTemplates(slug, brand.name),
   );
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
-
-  useEffect(() => {
+  if (activeKey !== sourceKey) {
+    setActiveKey(sourceKey);
     setTemplates(loadTemplates(slug, brand.name));
-  }, [brand.name, slug]);
+  }
 
   const current = templates.find((item) => item.kind === kind) ?? templates[0];
 

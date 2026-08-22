@@ -12,7 +12,7 @@ import {
   userToOfferSla,
 } from "@/lib/tracker";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CandidateForm } from "./candidate-form";
 import { CvCell } from "./cv-preview";
@@ -50,12 +50,14 @@ export function CandidateDrawer() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
+  const selectedId = selected?.id ?? null;
+  const [panelId, setPanelId] = useState(selectedId);
+  if (selectedId !== panelId) {
+    setPanelId(selectedId);
     setEditing(false);
     setConfirmDelete(false);
     setEmailOpen(false);
-  }, [selected?.id]);
+  }
 
   const jobOptions = selected
     ? jobs.filter(
