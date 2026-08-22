@@ -68,6 +68,16 @@ export function IconSearch(props: IconProps) {
   );
 }
 
+export function IconClipboard(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="7" y="4.5" width="10" height="15.5" rx="2" />
+      <path d="M9 4.5V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v.5" />
+      <path d="M10 10h4M10 13.5h4" />
+    </Icon>
+  );
+}
+
 export function IconPlus(props: IconProps) {
   return (
     <Icon {...props}>
@@ -131,6 +141,33 @@ export function IconPin(props: IconProps) {
     <Icon {...props}>
       <path d="M12 21s6.5-5.4 6.5-10.2A6.5 6.5 0 0 0 5.5 10.8C5.5 15.6 12 21 12 21Z" />
       <circle cx="12" cy="10.5" r="2.1" />
+    </Icon>
+  );
+}
+
+export function IconTrash(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 7h14" />
+      <path d="M10 7V5.6A1.6 1.6 0 0 1 11.6 4h.8A1.6 1.6 0 0 1 14 5.6V7" />
+      <path d="M8.5 7 9 18.4A1.6 1.6 0 0 0 10.6 20h2.8a1.6 1.6 0 0 0 1.6-1.6L15.5 7" />
+    </Icon>
+  );
+}
+
+export function IconPaperclip(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m8.5 13.2 6.4-6.4a2.4 2.4 0 1 1 3.4 3.4l-7.2 7.2a3.8 3.8 0 0 1-5.4-5.4l7-7" />
+    </Icon>
+  );
+}
+
+export function IconFile(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M7 3.5h7.2L18.5 8v12.5A1.5 1.5 0 0 1 17 22H7a1.5 1.5 0 0 1-1.5-1.5v-17A1.5 1.5 0 0 1 7 3.5Z" />
+      <path d="M14 3.5V8h4.5" />
     </Icon>
   );
 }

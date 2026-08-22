@@ -114,6 +114,7 @@ export function Select({
   onChange,
   placeholder = "Select",
   required = false,
+  invalid = false,
   className = "",
 }: {
   name?: string;
@@ -123,6 +124,7 @@ export function Select({
   onChange?: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  invalid?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -165,7 +167,9 @@ export function Select({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`${fieldClass} flex items-center justify-between gap-2 text-left`}
+        className={`${fieldClass} flex items-center justify-between gap-2 text-left ${
+          invalid ? "border-[#E57373]" : ""
+        }`}
       >
         <span className={label ? "truncate" : "truncate text-muted"}>{label ?? placeholder}</span>
         <IconChevronDown className={`h-4 w-4 shrink-0 text-muted transition ${open ? "rotate-180" : ""}`} />
@@ -256,6 +260,7 @@ export function DatePicker({
   onChange,
   placeholder = "Select date",
   required = false,
+  invalid = false,
 }: {
   name?: string;
   value?: string;
@@ -263,6 +268,7 @@ export function DatePicker({
   onChange?: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  invalid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [internal, setInternal] = useState(defaultValue);
@@ -312,7 +318,9 @@ export function DatePicker({
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={`${fieldClass} flex items-center justify-between gap-2 text-left`}
+        className={`${fieldClass} flex items-center justify-between gap-2 text-left ${
+          invalid ? "border-[#E57373]" : ""
+        }`}
       >
         <span className={selected ? "truncate" : "truncate text-muted"}>
           {selected ? formatDisplay(selected) : placeholder}

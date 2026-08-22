@@ -52,39 +52,25 @@ export function CompanyPicker({ user }: { user: AuthUser }) {
               <Link
                 href={`/${company.slug}`}
                 style={themeStyle(company.theme)}
-                className="group relative flex h-full min-h-[340px] flex-col overflow-hidden rounded-[28px] border border-white/60 bg-paper-raised p-8 shadow-[0_20px_50px_-28px_rgba(40,24,20,0.35)] transition duration-300 hover:-translate-y-1"
+                className="group relative flex h-full min-h-[260px] flex-col items-center justify-center overflow-hidden rounded-[28px] border border-white/60 bg-paper-raised p-8 text-center shadow-[0_20px_50px_-28px_rgba(40,24,20,0.35)] transition duration-300 hover:-translate-y-1"
               >
                 <div
                   className="absolute inset-x-8 top-0 h-px"
                   style={{ background: company.theme.accent }}
                 />
-                <div className="flex items-start justify-between gap-4">
-                  <CompanyMark
-                    slug={company.slug}
-                    className={
-                      company.slug === "aeris-beaute"
-                        ? "h-6 w-28"
-                        : "h-14 w-14"
-                    }
-                  />
-                  <span className="rounded-full border border-line px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-muted">
-                    {company.industry}
-                  </span>
-                </div>
-
-                <div className="mt-auto pt-16">
-                  <p className="text-xs uppercase tracking-[0.22em] text-muted">
-                    Est. {company.founded} · {company.city}
-                  </p>
-                  <h2 className="mt-3 font-display text-4xl text-ink">
-                    {company.name}
-                  </h2>
-                  <p className="mt-2 text-base text-muted">{company.tagline}</p>
-                  <span className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-accent">
-                    Open dashboard
-                    <span className="transition group-hover:translate-x-1">→</span>
-                  </span>
-                </div>
+                <CompanyMark
+                  slug={company.slug}
+                  className={
+                    company.slug === "aeris-beaute" ? "h-6 w-28" : "h-14 w-14"
+                  }
+                />
+                <h2 className="mt-8 font-display text-4xl text-ink">
+                  {company.name}
+                </h2>
+                <span className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-accent">
+                  Open
+                  <span className="transition group-hover:translate-x-1">→</span>
+                </span>
               </Link>
             </motion.div>
           ))}

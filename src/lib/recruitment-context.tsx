@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { COMPANIES, type CompanyConfig } from "./companies";
+import { persistCvFile } from "./cv";
 import { getMockBundle } from "./mock-data";
 import { getSupabaseBrowserClient } from "./supabase/client";
 import type {
@@ -31,13 +32,13 @@ import { isOpenVacancy, latestFromStage, nextInterviewAt, stageFromLatestStatus 
 
 type DataSource = "supabase" | "demo";
 
-type AddCandidateInput = {
+export type AddCandidateInput = {
   full_name: string;
   email: string;
   phone: string;
   source: string;
   job_id: string;
-  cv_url: string | null;
+  cv_file: File | null;
   total_experience: string;
   last_company: string;
   last_role: string;
@@ -92,6 +93,8 @@ type RecruitmentContextValue = {
   selected: ApplicationView | null;
   addCandidate: (input: AddCandidateInput) => Promise<void>;
   addJob: (input: AddJobInput) => Promise<void>;
+  updateCandidate: (applicationId: string, input: AddCandidateInput) => Promise<void>;
+  deleteCandidate: (applicationId: string) => Promise<void>;
   updateStage: (applicationId: string, stage: Stage) => Promise<void>;
   updateRating: (applicationId: string, rating: number) => Promise<void>;
   updateNotes: (candidateId: string, notes: string) => Promise<void>;
@@ -231,6 +234,7 @@ export function RecruitmentProvider({
     async (input: AddCandidateInput) => {
       if (!company) return;
       const now = new Date().toISOString();
+      const cv_url = input.cv_file ? await persistCvFile(input.cv_file, company.id) : null;
       const supabase = source === "supabase" ? getSupabaseBrowserClient() : null;
 
       if (supabase) {
@@ -255,7 +259,7 @@ export function RecruitmentProvider({
             job_id: input.job_id,
             stage: stageFromLatestStatus(input.latest_status),
             latest_status: input.latest_status,
-            cv_url: input.cv_url,
+            cv_url,
             total_experience: input.total_experience,
             last_company: input.last_company,
             last_role: input.last_role,
@@ -301,7 +305,7 @@ export function RecruitmentProvider({
         job_id: input.job_id,
         stage: stageFromLatestStatus(input.latest_status),
         latest_status: input.latest_status,
-        cv_url: input.cv_url,
+        cv_url,
         total_experience: input.total_experience,
         last_company: input.last_company,
         last_role: input.last_role,
@@ -330,6 +334,154 @@ export function RecruitmentProvider({
     [company, source],
   );
 
+  const updateCandidate = useCallback(
+    async (applicationId: string, input: AddCandidateInput) => {
+      const application = applications.find((item) => item.id === applicationId);
+      const candidate = candidates.find((item) => item.id === application?.candidate_id);
+      if (!application || !candidate || !company) return;
+
+      const now = new Date().toISOString();
+      const cv_url = input.cv_file
+        ? await persistCvFile(input.cv_file, company.id)
+        : application.cv_url;
+      const stage = stageFromLatestStatus(input.latest_status);
+      const supabase = source === "supabase" ? getSupabaseBrowserClient() : null;
+
+      const nextCandidate: CandidateRow = {
+        ...candidate,
+        full_name: input.full_name,
+        email: input.email || candidate.email,
+        phone: input.phone || null,
+        source: input.source,
+        notes: input.notes || null,
+      };
+      const nextApplication: ApplicationRow = {
+        ...application,
+        job_id: input.job_id,
+        stage,
+        latest_status: input.latest_status,
+        cv_url,
+        total_experience: input.total_experience,
+        last_company: input.last_company,
+        last_role: input.last_role,
+        last_salary: input.last_salary,
+        expected_salary: input.expected_salary,
+        approaching_date: input.approaching_date,
+        response_date: input.response_date,
+        hr_interview_date: input.hr_interview_date,
+        hr_interview_note: input.hr_interview_note,
+        shared_with_user: input.shared_with_user,
+        user_interview_date: input.user_interview_date,
+        user_remarks: input.user_remarks,
+        third_interview_date: input.third_interview_date,
+        offer_date: input.offer_date,
+        offer_result: input.offer_result,
+        join_date: input.join_date,
+        last_stage_date:
+          input.latest_status === application.latest_status
+            ? application.last_stage_date
+            : now,
+        rejection_letter: input.rejection_letter,
+        updated_at: now,
+      };
+
+      if (supabase) {
+        const { error: candidateError } = await supabase
+          .from("candidates")
+          .update({
+            full_name: nextCandidate.full_name,
+            email: nextCandidate.email,
+            phone: nextCandidate.phone,
+            source: nextCandidate.source,
+            notes: nextCandidate.notes,
+          })
+          .eq("id", candidate.id);
+        if (candidateError) throw candidateError;
+
+        const { error: applicationError } = await supabase
+          .from("applications")
+          .update({
+            job_id: nextApplication.job_id,
+            stage: nextApplication.stage,
+            latest_status: nextApplication.latest_status,
+            cv_url: nextApplication.cv_url,
+            total_experience: nextApplication.total_experience,
+            last_company: nextApplication.last_company,
+            last_role: nextApplication.last_role,
+            last_salary: nextApplication.last_salary,
+            expected_salary: nextApplication.expected_salary,
+            approaching_date: nextApplication.approaching_date,
+            response_date: nextApplication.response_date,
+            hr_interview_date: nextApplication.hr_interview_date,
+            hr_interview_note: nextApplication.hr_interview_note,
+            shared_with_user: nextApplication.shared_with_user,
+            user_interview_date: nextApplication.user_interview_date,
+            user_remarks: nextApplication.user_remarks,
+            third_interview_date: nextApplication.third_interview_date,
+            offer_date: nextApplication.offer_date,
+            offer_result: nextApplication.offer_result || null,
+            join_date: nextApplication.join_date,
+            last_stage_date: nextApplication.last_stage_date,
+            rejection_letter: nextApplication.rejection_letter,
+            updated_at: now,
+          })
+          .eq("id", applicationId);
+        if (applicationError) throw applicationError;
+      }
+
+      setCandidates((current) =>
+        current.map((item) => (item.id === candidate.id ? nextCandidate : item)),
+      );
+      setApplications((current) =>
+        current.map((item) => (item.id === applicationId ? nextApplication : item)),
+      );
+    },
+    [applications, candidates, company, source],
+  );
+
+  const deleteCandidate = useCallback(
+    async (applicationId: string) => {
+      const application = applications.find((item) => item.id === applicationId);
+      if (!application) return;
+
+      const supabase = source === "supabase" ? getSupabaseBrowserClient() : null;
+      if (supabase) {
+        const { error: applicationError } = await supabase
+          .from("applications")
+          .delete()
+          .eq("id", applicationId);
+        if (applicationError) throw applicationError;
+
+        const remaining = applications.some(
+          (item) =>
+            item.id !== applicationId && item.candidate_id === application.candidate_id,
+        );
+        if (!remaining) {
+          const { error: candidateError } = await supabase
+            .from("candidates")
+            .delete()
+            .eq("id", application.candidate_id);
+          if (candidateError) throw candidateError;
+        }
+      }
+
+      setApplications((current) => {
+        const next = current.filter((item) => item.id !== applicationId);
+        setCandidates((candidates) => {
+          const stillUsed = next.some(
+            (item) => item.candidate_id === application.candidate_id,
+          );
+          return stillUsed
+            ? candidates
+            : candidates.filter((item) => item.id !== application.candidate_id);
+        });
+        return next;
+      });
+      setSelectedId(null);
+    },
+    [applications, source],
+  );
+
   const addJob = useCallback(
     async (input: AddJobInput) => {
       if (!company) return;
@@ -355,6 +507,11 @@ export function RecruitmentProvider({
             offer_stage: input.offer_stage,
             priority: input.priority,
             notes: input.notes,
+            location: "",
+            type: "full-time",
+            status: isOpenVacancy(input.status_vacancy) ? "open" : "closed",
+            openings: input.headcount_needed,
+            description: input.notes,
           })
           .select()
           .single();
@@ -478,6 +635,8 @@ export function RecruitmentProvider({
       selected,
       addCandidate,
       addJob,
+      updateCandidate,
+      deleteCandidate,
       updateStage,
       updateRating,
       updateNotes,
@@ -487,6 +646,7 @@ export function RecruitmentProvider({
       addCandidate,
       addJob,
       applications,
+      deleteCandidate,
       brand,
       candidates,
       company,
@@ -497,6 +657,7 @@ export function RecruitmentProvider({
       slug,
       source,
       toggleJobStatus,
+      updateCandidate,
       updateNotes,
       updateRating,
       updateStage,

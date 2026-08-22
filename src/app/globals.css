@@ -22,8 +22,8 @@
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
-  --font-sans: var(--font-jakarta);
-  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-poppins);
+  --font-display: var(--font-poppins);
 }
 
 html,
@@ -37,8 +37,7 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-display), ui-serif, Georgia, serif;
-  font-optical-sizing: auto;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
 }
 
 .no-native-scrollbar {

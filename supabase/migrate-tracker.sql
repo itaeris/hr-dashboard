@@ -15,6 +15,10 @@ alter table public.jobs
   add column if not exists priority text not null default 'Medium',
   add column if not exists notes text not null default '';
 
+alter table public.jobs
+  alter column location drop not null,
+  alter column location set default '';
+
 alter table public.applications
   add column if not exists latest_status text not null default 'Approaching',
   add column if not exists cv_url text,

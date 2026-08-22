@@ -22,6 +22,7 @@ import {
   Th,
   cell,
 } from "./data-table";
+import { CvCell } from "./cv-preview";
 import { Avatar } from "./display";
 import { TableSkeleton } from "./skeletons";
 import { IconSearch } from "./icons";
@@ -152,19 +153,7 @@ export function CandidatesPage() {
                   <Td nowrap>{item.job.title}</Td>
                   <Td muted>{item.candidate.source}</Td>
                   <Td>
-                    {item.cv_url ? (
-                      <a
-                        href={item.cv_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[12px] font-medium text-accent hover:underline"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        View CV
-                      </a>
-                    ) : (
-                      <EmptyValue />
-                    )}
+                    <CvCell url={item.cv_url} />
                   </Td>
                   <Td>{cell(item.total_experience)}</Td>
                   <Td>{cell(item.last_company)}</Td>

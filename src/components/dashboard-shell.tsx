@@ -16,6 +16,8 @@ import {
   IconSearch,
   IconSwitch,
   IconLogout,
+  IconMail,
+  IconClipboard,
 } from "./icons";
 import { logoutAction } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth/users";
@@ -27,6 +29,8 @@ const NAV = [
   { href: "/pipeline", label: "Pipeline", icon: IconKanban },
   { href: "/candidates", label: "Progress", icon: IconPeople },
   { href: "/jobs", label: "Vacancy", icon: IconBriefcase },
+  { href: "/emails", label: "Emails", icon: IconMail },
+  { href: "/request", label: "Request", icon: IconClipboard },
 ];
 
 export function DashboardShell({
@@ -207,7 +211,7 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 gap-1 border-t border-line bg-paper-raised/95 px-2 py-2 backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 gap-1 border-t border-line bg-paper-raised/95 px-2 py-2 backdrop-blur lg:hidden">
       {NAV.map((item) => {
         const href = `/${slug}${item.href}`;
         const active =
