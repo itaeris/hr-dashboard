@@ -34,7 +34,7 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
         Company Google accounts only: @aerisbeaute.com and @fromthisisland.com.
       </p> */}
 
-      <form action={action} className="relative mt-8 space-y-4" method="post">
+      <form action={action} className="relative mt-8 space-y-4">
         <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
           <label>
             Company website
