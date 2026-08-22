@@ -203,7 +203,9 @@ URI values must match exactly. No trailing slash.
    - `openid`
    - `userinfo.email`
    - `userinfo.profile`
-3. **Save**.
+3. **Add or remove scopes** → search `calendar.events` → add
+   `https://www.googleapis.com/auth/calendar.events`.
+4. **Save**.
 
 ### 4. Test users (required while status is Testing)
 
@@ -229,6 +231,17 @@ The app still rejects non-company domains after publish.
 7. Copy **Client ID** and **Client secret** into `.env.local` and Vercel.
 
 `redirect_uri_mismatch` means a URI in Console does not match one of the two callback URLs above.
+
+### 6. Google Calendar API
+
+CalDAV is not used. Enable **Google Calendar API**:
+
+1. [API Library → Google Calendar API](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com)
+2. **Enable**.
+3. Supabase SQL Editor → run `supabase/google-calendar.sql`.
+4. In the app, open **Calendar → Connect Google Calendar** and allow access.
+
+Progress dates (approaching, interviews, offer, join) are created or updated on that Google account’s primary calendar. Clearing a date in Progress removes the matching Google event. Disconnect keeps existing Google events.
 
 ## Production (Vercel)
 
@@ -272,6 +285,7 @@ The app still gates access with its own login.
    - `supabase/storage-cvs.sql` — CV upload bucket (`cvs`)
    - `supabase/recruitment-requests.sql` — request form schemas and submissions
    - `supabase/auth-passwords.sql` — password changes from Settings
+   - `supabase/google-calendar.sql` — Google Calendar refresh tokens
 3. Copy project URL and anon key into env.
 4. Restart / redeploy.
 

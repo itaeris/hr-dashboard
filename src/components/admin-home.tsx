@@ -1,6 +1,11 @@
 "use client";
 
-import { logoutAction, saveAppUserAction, type RoleState } from "@/app/actions/auth";
+import {
+  deleteAppUserAction,
+  logoutAction,
+  saveAppUserAction,
+  type RoleState,
+} from "@/app/actions/auth";
 import { loadBrandProgress, type BrandProgress } from "@/lib/admin-stats";
 import type { AppUser } from "@/lib/auth/app-users";
 import { workspaceLabel } from "@/lib/auth/access";
@@ -14,7 +19,8 @@ import { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CompanyMark } from "./company-mark";
 import { Select } from "./fields";
-import { Field, fieldClass } from "./ui";
+import { IconPencil, IconTrash } from "./icons";
+import { Field, PasswordInput, fieldClass } from "./ui";
 
 export function AdminHome({
   user,
@@ -112,7 +118,7 @@ export function AdminHome({
           })}
         </div>
 
-        <RoleSettings users={users} />
+        <RoleSettings users={users} currentEmail={user.email} />
       </div>
     </div>
   );
@@ -127,16 +133,61 @@ function Stat({ label, value }: { label: string; value?: number }) {
   );
 }
 
-function RoleSettings({ users }: { users: AppUser[] }) {
+function RoleSettings({
+  users,
+  currentEmail,
+}: {
+  users: AppUser[];
+  currentEmail: string;
+}) {
   const router = useRouter();
   const [state, action, pending] = useActionState<RoleState, FormData>(
     saveAppUserAction,
     null,
   );
+  const [deleteState, deleteAction, deletePending] = useActionState<RoleState, FormData>(
+    deleteAppUserAction,
+    null,
+  );
+  const [editing, setEditing] = useState<AppUser | null>(null);
+  const [confirmEmail, setConfirmEmail] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState<"hr" | "admin">("hr");
+  const [company, setCompany] = useState("aeris-beaute");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  function resetForm() {
+    setEditing(null);
+    setConfirmEmail(null);
+    setEmail("");
+    setName("");
+    setRole("hr");
+    setCompany("aeris-beaute");
+    setPassword("");
+    setConfirmPassword("");
+  }
+
+  function startEdit(item: AppUser) {
+    setConfirmEmail(null);
+    setEditing(item);
+    setEmail(item.email);
+    setName(item.name);
+    setRole(item.role);
+    setCompany(item.role === "admin" ? "both" : item.company);
+    setPassword("");
+    setConfirmPassword("");
+  }
 
   useEffect(() => {
-    if (state?.success) router.refresh();
-  }, [router, state?.success]);
+    if (state?.success || deleteState?.success) {
+      resetForm();
+      router.refresh();
+    }
+  }, [deleteState?.success, router, state?.success]);
+
+  const notice = deleteState?.error || deleteState?.success || state?.error || state?.success;
 
   return (
     <motion.section
@@ -159,18 +210,29 @@ function RoleSettings({ users }: { users: AppUser[] }) {
               {roleLabel(item.role)}
               <span className="text-muted"> · {workspaceLabel(item.company)}</span>
             </p>
+            <UserRowActions
+              item={item}
+              currentEmail={currentEmail}
+              confirmEmail={confirmEmail}
+              deletePending={deletePending}
+              deleteAction={deleteAction}
+              onEdit={() => startEdit(item)}
+              onAskDelete={() => setConfirmEmail(item.email)}
+              onCancelDelete={() => setConfirmEmail(null)}
+            />
           </div>
         ))}
       </div>
 
       <div className="mt-5 hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             <tr className="text-[11px] uppercase tracking-[0.14em] text-muted">
               <th className="pb-3 font-medium">Name</th>
               <th className="pb-3 font-medium">Email</th>
               <th className="pb-3 font-medium">Role</th>
               <th className="pb-3 font-medium">Workspace</th>
+              <th className="pb-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -180,6 +242,18 @@ function RoleSettings({ users }: { users: AppUser[] }) {
                 <td className="py-3 text-muted">{item.email}</td>
                 <td className="py-3">{roleLabel(item.role)}</td>
                 <td className="py-3 text-muted">{workspaceLabel(item.company)}</td>
+                <td className="py-3 text-right">
+                  <UserRowActions
+                    item={item}
+                    currentEmail={currentEmail}
+                    confirmEmail={confirmEmail}
+                    deletePending={deletePending}
+                    deleteAction={deleteAction}
+                    onEdit={() => startEdit(item)}
+                    onAskDelete={() => setConfirmEmail(item.email)}
+                    onCancelDelete={() => setConfirmEmail(null)}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -192,17 +266,32 @@ function RoleSettings({ users }: { users: AppUser[] }) {
             name="email"
             type="email"
             required
+            value={email}
+            readOnly={Boolean(editing)}
+            onChange={(event) => setEmail(event.target.value)}
             placeholder="name@aerisbeaute.com"
-            className={fieldClass}
+            className={`${fieldClass} ${editing ? "bg-paper-raised text-muted" : ""}`}
           />
         </Field>
         <Field label="Name">
-          <input name="name" required placeholder="Full name" className={fieldClass} />
+          <input
+            name="name"
+            required
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Full name"
+            className={fieldClass}
+          />
         </Field>
         <Field label="Role">
           <Select
             name="role"
-            defaultValue="hr"
+            value={role}
+            onChange={(value) => {
+              const next = value === "admin" ? "admin" : "hr";
+              setRole(next);
+              setCompany(next === "admin" ? "both" : company === "both" ? "aeris-beaute" : company);
+            }}
             options={[
               { value: "hr", label: "HR" },
               { value: "admin", label: "Admin" },
@@ -212,7 +301,8 @@ function RoleSettings({ users }: { users: AppUser[] }) {
         <Field label="Workspace">
           <Select
             name="company"
-            defaultValue="aeris-beaute"
+            value={company}
+            onChange={setCompany}
             options={[
               { value: "aeris-beaute", label: COMPANIES["aeris-beaute"].name },
               { value: "from-this-island", label: COMPANIES["from-this-island"].name },
@@ -220,18 +310,121 @@ function RoleSettings({ users }: { users: AppUser[] }) {
             ]}
           />
         </Field>
+        <Field label={editing ? "New password" : "Password"}>
+          <PasswordInput
+            name="password"
+            autoComplete="new-password"
+            minLength={editing ? undefined : 8}
+            required={!editing}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder={editing ? "Leave blank to keep current" : "At least 8 characters"}
+          />
+        </Field>
+        <Field label="Confirm password">
+          <PasswordInput
+            name="confirm_password"
+            autoComplete="new-password"
+            minLength={editing ? undefined : 8}
+            required={!editing || Boolean(password)}
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            placeholder={editing ? "Leave blank to keep current" : "Repeat password"}
+          />
+        </Field>
         <div className="sm:col-span-2 lg:col-span-4">
-          {state?.error ? <p className="text-sm text-[#E24B4A]">{state.error}</p> : null}
-          {state?.success ? <p className="text-sm text-accent">{state.success}</p> : null}
-          <button
-            type="submit"
-            disabled={pending}
-            className="mt-3 rounded-full bg-[#1C1412] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-          >
-            {pending ? "Saving…" : "Save user role"}
-          </button>
+          {notice ? (
+            <p className={`text-sm ${notice.includes("Saved") || notice.includes("Deleted") ? "text-accent" : "text-[#E24B4A]"}`}>
+              {notice}
+            </p>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="submit"
+              disabled={pending}
+              className="rounded-full bg-[#1C1412] px-5 py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {pending ? "Saving…" : editing ? "Update user" : "Save user role"}
+            </button>
+            {editing ? (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded-full border border-line px-5 py-2.5 text-sm text-ink hover:bg-paper"
+              >
+                Cancel
+              </button>
+            ) : null}
+          </div>
         </div>
       </form>
     </motion.section>
+  );
+}
+
+function UserRowActions({
+  item,
+  currentEmail,
+  confirmEmail,
+  deletePending,
+  deleteAction,
+  onEdit,
+  onAskDelete,
+  onCancelDelete,
+}: {
+  item: AppUser;
+  currentEmail: string;
+  confirmEmail: string | null;
+  deletePending: boolean;
+  deleteAction: (payload: FormData) => void;
+  onEdit: () => void;
+  onAskDelete: () => void;
+  onCancelDelete: () => void;
+}) {
+  const self = item.email === currentEmail;
+
+  if (confirmEmail === item.email) {
+    return (
+      <form action={deleteAction} className="mt-3 flex flex-wrap items-center justify-end gap-2 md:mt-0">
+        <input type="hidden" name="email" value={item.email} />
+        <span className="text-xs text-muted">Delete {item.name}?</span>
+        <button
+          type="submit"
+          disabled={deletePending}
+          className="rounded-full bg-ink px-3 py-1.5 text-xs font-medium text-paper-raised disabled:opacity-50"
+        >
+          {deletePending ? "Deleting…" : "Delete"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancelDelete}
+          className="rounded-full border border-line px-3 py-1.5 text-xs text-ink"
+        >
+          Keep
+        </button>
+      </form>
+    );
+  }
+
+  return (
+    <div className="mt-3 flex justify-end gap-2 md:mt-0">
+      <button
+        type="button"
+        onClick={onEdit}
+        className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs text-ink hover:bg-paper"
+      >
+        <IconPencil className="h-3.5 w-3.5" />
+        Edit
+      </button>
+      <button
+        type="button"
+        disabled={self}
+        onClick={onAskDelete}
+        className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs text-muted hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <IconTrash className="h-3.5 w-3.5" />
+        Delete
+      </button>
+    </div>
   );
 }

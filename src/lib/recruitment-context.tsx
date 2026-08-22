@@ -11,6 +11,10 @@ import {
 } from "react";
 import { COMPANIES, type CompanyConfig } from "./companies";
 import { persistCvFile } from "./cv";
+import {
+  removeApplicationFromGoogle,
+  syncApplicationToGoogle,
+} from "./google-calendar/push";
 import { getMockBundle } from "./mock-data";
 import { getSupabaseBrowserClient } from "./supabase/client";
 import type {
@@ -286,6 +290,17 @@ export function RecruitmentProvider({
 
         setCandidates((current) => [candidate as CandidateRow, ...current]);
         setApplications((current) => [application as ApplicationRow, ...current]);
+        const job = jobs.find((item) => item.id === input.job_id);
+        if (job) {
+          syncApplicationToGoogle(
+            {
+              ...(application as ApplicationRow),
+              candidate: candidate as CandidateRow,
+              job,
+            },
+            company.name,
+          );
+        }
         return;
       }
 
@@ -331,8 +346,12 @@ export function RecruitmentProvider({
       };
       setCandidates((current) => [candidate, ...current]);
       setApplications((current) => [application, ...current]);
+      const job = jobs.find((item) => item.id === input.job_id);
+      if (job) {
+        syncApplicationToGoogle({ ...application, candidate, job }, company.name);
+      }
     },
-    [company, source],
+    [company, jobs, source],
   );
 
   const updateCandidate = useCallback(
@@ -436,8 +455,15 @@ export function RecruitmentProvider({
       setApplications((current) =>
         current.map((item) => (item.id === applicationId ? nextApplication : item)),
       );
+      const job = jobs.find((item) => item.id === nextApplication.job_id);
+      if (job) {
+        syncApplicationToGoogle(
+          { ...nextApplication, candidate: nextCandidate, job },
+          company.name,
+        );
+      }
     },
-    [applications, candidates, company, source],
+    [applications, candidates, company, jobs, source],
   );
 
   const deleteCandidate = useCallback(
@@ -479,6 +505,7 @@ export function RecruitmentProvider({
         return next;
       });
       setSelectedId(null);
+      removeApplicationFromGoogle(applicationId);
     },
     [applications, source],
   );

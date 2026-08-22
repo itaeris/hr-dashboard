@@ -4,7 +4,7 @@ import { changePasswordAction, type PasswordState } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth/users";
 import { roleLabel } from "@/lib/auth/users";
 import { useActionState } from "react";
-import { PageFade, Field, fieldClass } from "./ui";
+import { PageFade, Field, PasswordInput } from "./ui";
 
 export function SettingsPage({
   user,
@@ -37,12 +37,10 @@ export function SettingsPage({
         <h2 className="text-lg font-medium">Change password</h2>
         {hasPassword ? (
           <Field label="Current password">
-            <input
+            <PasswordInput
               name="current_password"
-              type="password"
               autoComplete="current-password"
               required
-              className={fieldClass}
             />
           </Field>
         ) : (
@@ -52,23 +50,19 @@ export function SettingsPage({
           </p>
         )}
         <Field label="New password">
-          <input
+          <PasswordInput
             name="new_password"
-            type="password"
             autoComplete="new-password"
             required
             minLength={8}
-            className={fieldClass}
           />
         </Field>
         <Field label="Confirm new password">
-          <input
+          <PasswordInput
             name="confirm_password"
-            type="password"
             autoComplete="new-password"
             required
             minLength={8}
-            className={fieldClass}
           />
         </Field>
 

@@ -51,6 +51,14 @@ export async function savePasswordOverride(row: PasswordOverride) {
   memory.set(next.email, next);
 }
 
+export async function deletePasswordOverride(email: string) {
+  const normalized = email.trim().toLowerCase();
+  memory.delete(normalized);
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return;
+  await supabase.from("hr_auth_passwords").delete().eq("email", normalized);
+}
+
 export async function getStoredUser(email: string): Promise<StoredUser | null> {
   const normalized = email.trim().toLowerCase();
   const seed = findUserByEmail(normalized);

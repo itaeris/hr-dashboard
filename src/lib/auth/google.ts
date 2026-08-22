@@ -6,6 +6,21 @@ export const ALLOWED_GOOGLE_DOMAINS = [
 ] as const;
 
 export const GOOGLE_STATE_COOKIE = "hr_oauth_state";
+export const GOOGLE_INTENT_COOKIE = "hr_oauth_intent";
+export const GOOGLE_NEXT_COOKIE = "hr_oauth_next";
+export const GOOGLE_CALENDAR_SCOPE = [
+  "openid",
+  "email",
+  "profile",
+  "https://www.googleapis.com/auth/calendar.events",
+].join(" ");
+
+const CALENDAR_NEXT = /^\/(aeris-beaute|from-this-island)\/calendar\/?$/;
+
+export function safeCalendarNext(value: string | null) {
+  if (!value || !CALENDAR_NEXT.test(value)) return "/";
+  return value.replace(/\/$/, "");
+}
 
 export function appOrigin(requestOrigin: string) {
   return (process.env.AUTH_URL || requestOrigin).replace(/\/$/, "");

@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useState, type InputHTMLAttributes, type ReactNode } from "react";
+import { IconEye, IconEyeOff } from "./icons";
 import { ScrollArea } from "./scroll-area";
 
 export function PageFade({
@@ -92,3 +93,28 @@ export function Field({
 
 export const fieldClass =
   "w-full rounded-2xl border border-line bg-paper px-3 py-2.5 text-sm text-ink outline-none transition focus:border-accent";
+
+export function PasswordInput({
+  className = fieldClass,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        {...props}
+        type={visible ? "text" : "password"}
+        className={`${className} pr-11`}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((current) => !current)}
+        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted hover:text-ink"
+        aria-label={visible ? "Hide password" : "Show password"}
+      >
+        {visible ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
+      </button>
+    </div>
+  );
+}

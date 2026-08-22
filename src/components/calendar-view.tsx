@@ -4,6 +4,7 @@ import { collectScheduleEvents, KIND_STYLE, type ScheduleEvent } from "@/lib/sch
 import { useRecruitment } from "@/lib/recruitment-context";
 import { useMemo, useState } from "react";
 import { CandidateDrawer } from "./candidate-drawer";
+import { GoogleCalendarSync } from "./google-calendar-sync";
 import { Avatar } from "./display";
 import { IconChevronDown } from "./icons";
 import { OverviewSkeleton } from "./skeletons";
@@ -221,6 +222,7 @@ export function CalendarPage() {
 
   return (
     <PageFade className="space-y-5">
+      <GoogleCalendarSync />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p className="text-sm text-muted">
           Interviews, offers, and join dates from Progress.

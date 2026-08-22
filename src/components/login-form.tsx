@@ -2,7 +2,7 @@
 
 import { loginAction, type LoginState } from "@/app/actions/auth";
 import { IconGoogle } from "@/components/icons";
-import { Field, fieldClass } from "@/components/ui";
+import { Field, PasswordInput, fieldClass } from "@/components/ui";
 import { motion } from "framer-motion";
 import { useActionState } from "react";
 
@@ -46,13 +46,11 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
           />
         </Field>
         <Field label="Password">
-          <input
+          <PasswordInput
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             placeholder="••••••••"
-            className={fieldClass}
           />
         </Field>
 

@@ -232,6 +232,26 @@ export function IconSettings(props: IconProps) {
   );
 }
 
+export function IconEye(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="2.6" />
+    </Icon>
+  );
+}
+
+export function IconEyeOff(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 5.5 19.5 21" />
+      <path d="M10.2 10.4A2.6 2.6 0 0 0 13.6 13.8" />
+      <path d="M7.1 7.4C4.8 8.9 3 11.1 2.5 12c0 0 3.5 6.5 9.5 6.5 1.7 0 3.2-.5 4.5-1.2" />
+      <path d="M16.7 15.4c1.8-1.2 3.2-2.9 4.3-4.4 0 0-3.5-6.5-9.5-6.5-.9 0-1.8.1-2.6.4" />
+    </Icon>
+  );
+}
+
 export function IconLogout(props: IconProps) {
   return (
     <Icon {...props}>

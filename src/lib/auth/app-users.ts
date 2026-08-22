@@ -35,9 +35,8 @@ export const SEED_APP_USERS: AppUser[] = [
   },
 ];
 
-const memory = new Map<string, AppUser>(
-  SEED_APP_USERS.map((user) => [user.email, user]),
-);
+const memory = new Map<string, AppUser>();
+const removed = new Set<string>();
 
 function normalize(email: string) {
   return email.trim().toLowerCase();
@@ -77,19 +76,19 @@ export async function loadAppUser(email: string): Promise<AppUser | null> {
 }
 
 export async function listAppUsers(): Promise<AppUser[]> {
-  const byEmail = new Map<string, AppUser>(
-    SEED_APP_USERS.map((user) => [user.email, user]),
-  );
-  for (const row of memory.values()) byEmail.set(row.email, row);
-
+  const byEmail = new Map<string, AppUser>();
   const supabase = getSupabaseBrowserClient();
+  let fromSupabase = false;
+
   if (supabase) {
     const { data, error } = await supabase
       .from("hr_app_users")
       .select("email, name, role, company");
-    if (!error && data) {
+    if (!error && data && data.length > 0) {
+      fromSupabase = true;
       for (const row of data) {
         const email = normalize(String(row.email));
+        if (removed.has(email)) continue;
         const role = asRole(row.role);
         byEmail.set(email, {
           email,
@@ -99,6 +98,16 @@ export async function listAppUsers(): Promise<AppUser[]> {
         });
       }
     }
+  }
+
+  if (!fromSupabase) {
+    for (const user of SEED_APP_USERS) {
+      if (!removed.has(user.email)) byEmail.set(user.email, user);
+    }
+  }
+
+  for (const row of memory.values()) {
+    if (!removed.has(row.email)) byEmail.set(row.email, row);
   }
 
   return [...byEmail.values()].sort((a, b) => a.name.localeCompare(b.name));
@@ -117,6 +126,8 @@ export async function saveAppUser(input: AppUser) {
           : input.company,
   };
 
+  removed.delete(next.email);
+
   const supabase = getSupabaseBrowserClient();
   if (supabase) {
     const { error } = await supabase.from("hr_app_users").upsert({
@@ -134,6 +145,21 @@ export async function saveAppUser(input: AppUser) {
 
   memory.set(next.email, next);
   return next;
+}
+
+export async function deleteAppUser(email: string) {
+  const key = normalize(email);
+  removed.add(key);
+  memory.delete(key);
+
+  const supabase = getSupabaseBrowserClient();
+  if (supabase) {
+    const { error } = await supabase.from("hr_app_users").delete().eq("email", key);
+    if (error) {
+      removed.delete(key);
+      throw error;
+    }
+  }
 }
 
 export async function resolveAuthUser(partial: {
