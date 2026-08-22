@@ -48,14 +48,14 @@ export function JobsPage() {
 
   return (
     <PageFade>
-      <div className="mb-6 flex items-end justify-between gap-4">
+      <div className="mb-5 flex flex-col items-stretch gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <p className="max-w-xl text-sm text-muted">
           Vacancy Tracker — columns follow the Aeris recruitment template.
         </p>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
         >
           <IconPlus className="h-4 w-4" />
           New vacancy

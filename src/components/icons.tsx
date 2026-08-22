@@ -111,6 +111,18 @@ export function IconCalendar(props: IconProps) {
   );
 }
 
+export function IconTimeline(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4v16" />
+      <circle cx="12" cy="6" r="1.8" />
+      <circle cx="12" cy="12" r="1.8" />
+      <circle cx="12" cy="18" r="1.8" />
+      <path d="M12 6h6M12 12H7M12 18h6" />
+    </Icon>
+  );
+}
+
 export function IconStar(props: IconProps) {
   return (
     <Icon {...props}>
@@ -168,6 +180,15 @@ export function IconFile(props: IconProps) {
     <Icon {...props}>
       <path d="M7 3.5h7.2L18.5 8v12.5A1.5 1.5 0 0 1 17 22H7a1.5 1.5 0 0 1-1.5-1.5v-17A1.5 1.5 0 0 1 7 3.5Z" />
       <path d="M14 3.5V8h4.5" />
+    </Icon>
+  );
+}
+
+export function IconPencil(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4.5 16.4 15.8 5.1a1.6 1.6 0 0 1 2.3 0l.8.8a1.6 1.6 0 0 1 0 2.3L7.6 19.5 4 20.5Z" />
+      <path d="m13.8 7.1 3.1 3.1" />
     </Icon>
   );
 }

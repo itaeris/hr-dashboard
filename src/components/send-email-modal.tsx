@@ -121,7 +121,7 @@ export function SendEmailModal({
     >
       {item ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted">
+          <p className="break-words text-sm text-muted">
             To <span className="font-medium text-ink">{item.candidate.full_name}</span> · {to}
           </p>
           <div className="flex flex-wrap gap-2">

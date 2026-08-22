@@ -24,12 +24,12 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto w-full max-w-md rounded-[28px] border border-white/60 bg-paper-raised p-8 shadow-[0_20px_50px_-28px_rgba(40,24,20,0.35)]"
+      className="mx-auto w-full max-w-md rounded-[28px] border border-white/60 bg-paper-raised p-5 shadow-[0_20px_50px_-28px_rgba(40,24,20,0.35)] sm:p-8"
     >
       <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-muted">
         HR Recruitment
       </p>
-      <h1 className="mt-3 font-display text-4xl leading-tight">Sign in</h1>
+      <h1 className="mt-3 font-display text-3xl leading-tight sm:text-4xl">Sign in</h1>
       {/* <p className="mt-2 text-sm text-muted">
         Company Google accounts only: @aerisbeaute.com and @fromthisisland.com.
       </p> */}

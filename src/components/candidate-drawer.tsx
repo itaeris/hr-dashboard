@@ -17,7 +17,7 @@ import { createPortal } from "react-dom";
 import { CandidateForm } from "./candidate-form";
 import { CvCell } from "./cv-preview";
 import { Avatar } from "./display";
-import { IconClose, IconMail, IconPhone, IconTrash } from "./icons";
+import { IconClose, IconMail, IconPencil, IconPhone, IconTrash } from "./icons";
 import { ScrollArea } from "./scroll-area";
 import { SendEmailModal } from "./send-email-modal";
 import { Pill } from "./data-table";
@@ -26,9 +26,13 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
   const empty =
     value === null || value === undefined || value === "" || value === "—";
   return (
-    <div className="space-y-1">
-      <p className="text-[11px] uppercase tracking-[0.14em] text-muted">{label}</p>
-      <div className="text-sm text-ink">{empty ? <span className="text-line">–</span> : value}</div>
+    <div className="min-w-0 space-y-1">
+      <p className="text-[10px] uppercase tracking-[0.12em] text-muted sm:text-[11px] sm:tracking-[0.14em]">
+        {label}
+      </p>
+      <div className="break-words text-sm text-ink">
+        {empty ? <span className="text-line">–</span> : value}
+      </div>
     </div>
   );
 }
@@ -63,7 +67,7 @@ export function CandidateDrawer() {
     <AnimatePresence>
       {selected ? (
         <motion.div
-          className="fixed inset-0 z-40 flex items-end justify-center bg-ink/30 p-4 sm:items-center"
+          className="fixed inset-0 z-40 flex items-end justify-center bg-ink/30 p-0 sm:items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -74,68 +78,63 @@ export function CandidateDrawer() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
-            className="flex h-[min(90vh,880px)] w-full max-w-4xl flex-col overflow-hidden rounded-[24px] border border-line bg-paper-raised p-6 shadow-xl"
+            className="flex h-[100dvh] w-full max-w-4xl flex-col overflow-hidden rounded-none border-0 bg-paper-raised p-5 shadow-xl sm:h-[min(90vh,880px)] sm:rounded-[24px] sm:border sm:border-line sm:p-6"
           >
-            <div className="flex shrink-0 items-start justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-3">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-line sm:hidden" />
+            <div className="shrink-0 space-y-3">
+              <div className="flex items-start gap-3">
                 <Avatar name={selected.candidate.full_name} />
-                <div className="min-w-0">
-                  <h2 className="font-display text-2xl leading-tight">
+                <div className="min-w-0 flex-1">
+                  <h2 className="break-words font-display text-xl leading-tight sm:text-2xl">
                     {selected.candidate.full_name}
                   </h2>
-                  <p className="truncate text-sm text-muted">{selected.job.title}</p>
+                  <p className="mt-0.5 text-sm text-muted">{selected.job.title}</p>
                 </div>
-              </div>
-              <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-                {editing ? (
+                <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                  <DrawerActions
+                    editing={editing}
+                    onCancel={() => setEditing(false)}
+                    onEmail={() => setEmailOpen(true)}
+                    onEdit={() => {
+                      setConfirmDelete(false);
+                      setEditing(true);
+                    }}
+                    onDelete={() => setConfirmDelete(true)}
+                  />
                   <button
                     type="button"
-                    onClick={() => setEditing(false)}
-                    className="rounded-full border border-line px-3 py-1.5 text-sm text-ink hover:bg-paper"
+                    onClick={() => setSelectedId(null)}
+                    className="rounded-full p-2 text-muted hover:bg-paper hover:text-ink"
+                    aria-label="Close"
                   >
-                    Cancel
+                    <IconClose className="h-4 w-4" />
                   </button>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setEmailOpen(true)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-ink hover:bg-paper"
-                    >
-                      <IconMail className="h-3.5 w-3.5" />
-                      Email
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setConfirmDelete(false);
-                        setEditing(true);
-                      }}
-                      className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-hover"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDelete(true)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-sm text-muted hover:text-ink"
-                    >
-                      <IconTrash className="h-3.5 w-3.5" />
-                      Delete
-                    </button>
-                  </>
-                )}
+                </div>
                 <button
                   type="button"
                   onClick={() => setSelectedId(null)}
-                  className="rounded-full p-2 text-muted hover:bg-paper hover:text-ink"
+                  className="rounded-full p-2 text-muted hover:bg-paper hover:text-ink sm:hidden"
+                  aria-label="Close"
                 >
                   <IconClose className="h-4 w-4" />
                 </button>
               </div>
+              <div className="grid grid-cols-3 gap-2 sm:hidden">
+                <DrawerActions
+                  editing={editing}
+                  stacked
+                  onCancel={() => setEditing(false)}
+                  onEmail={() => setEmailOpen(true)}
+                  onEdit={() => {
+                    setConfirmDelete(false);
+                    setEditing(true);
+                  }}
+                  onDelete={() => setConfirmDelete(true)}
+                />
+              </div>
             </div>
 
-            <ScrollArea axis="y" compact className="mt-6 min-h-0 flex-1">
+            <ScrollArea axis="y" compact className="mt-4 min-h-0 flex-1 sm:mt-6">
               {editing ? (
                 <CandidateForm
                   key={`${selected.id}-edit`}
@@ -180,6 +179,68 @@ export function CandidateDrawer() {
         </motion.div>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+function DrawerActions({
+  editing,
+  stacked = false,
+  onCancel,
+  onEmail,
+  onEdit,
+  onDelete,
+}: {
+  editing: boolean;
+  stacked?: boolean;
+  onCancel: () => void;
+  onEmail: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const pill =
+    "inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-sm";
+
+  if (editing) {
+    return (
+      <button
+        type="button"
+        onClick={onCancel}
+        className={`${pill} border border-line text-ink hover:bg-paper ${
+          stacked ? "col-span-3" : ""
+        }`}
+      >
+        Cancel
+      </button>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onEmail}
+        className={`${pill} border border-line text-ink hover:bg-paper`}
+      >
+        <IconMail className="h-3.5 w-3.5" />
+        Email
+      </button>
+      <button
+        type="button"
+        onClick={onEdit}
+        className={`${pill} bg-accent font-medium text-white hover:bg-accent-hover`}
+      >
+        <IconPencil className="h-3.5 w-3.5" />
+        Edit
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        className={`${pill} border border-line text-muted hover:text-ink`}
+      >
+        <IconTrash className="h-3.5 w-3.5" />
+        Delete
+      </button>
+    </>
   );
 }
 
@@ -252,27 +313,27 @@ function CandidateDetail({
   const stuck = stuckFlag(item);
 
   return (
-    <div className="space-y-7 pb-4">
-      <section className="flex flex-wrap items-center gap-3">
+    <div className="space-y-5 pb-[max(5rem,env(safe-area-inset-bottom))] sm:space-y-7 sm:pb-4">
+      <section className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
         <Pill>{item.latest_status}</Pill>
         {item.candidate.phone ? (
-          <span className="inline-flex items-center gap-1.5 text-sm text-muted">
-            <IconPhone className="h-3.5 w-3.5" />
+          <span className="inline-flex min-w-0 items-center gap-1.5 break-all text-sm text-muted">
+            <IconPhone className="h-3.5 w-3.5 shrink-0" />
             {item.candidate.phone}
           </span>
         ) : null}
         <a
           href={`mailto:${item.candidate.email}`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"
+          className="inline-flex min-w-0 items-center gap-1.5 break-all text-sm text-muted hover:text-ink"
         >
-          <IconMail className="h-3.5 w-3.5" />
+          <IconMail className="h-3.5 w-3.5 shrink-0" />
           {item.candidate.email}
         </a>
       </section>
 
       <section>
         <p className="mb-3 text-xs uppercase tracking-[0.16em] text-muted">Identity</p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-4 lg:grid-cols-3">
           <Detail label="Candidate" value={item.candidate.full_name} />
           <Detail label="Position" value={item.job.title} />
           <Detail label="Source" value={item.candidate.source} />
@@ -284,7 +345,7 @@ function CandidateDetail({
 
       <section>
         <p className="mb-3 text-xs uppercase tracking-[0.16em] text-muted">Experience</p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-4 lg:grid-cols-3">
           <Detail label="Total experience" value={item.total_experience} />
           <Detail label="Last company" value={item.last_company} />
           <Detail label="Last role" value={item.last_role} />
@@ -296,7 +357,7 @@ function CandidateDetail({
 
       <section>
         <p className="mb-3 text-xs uppercase tracking-[0.16em] text-muted">Interview & offer</p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-4 lg:grid-cols-3">
           <Detail label="Approaching" value={formatTableDate(item.approaching_date)} />
           <Detail label="Response" value={formatTableDate(item.response_date)} />
           <Detail label="HR interview" value={formatTableDate(item.hr_interview_date)} />
@@ -309,7 +370,7 @@ function CandidateDetail({
           <Detail label="Shared with user" value={item.shared_with_user ? "Yes" : "No"} />
           <Detail label="Rejection letter" value={item.rejection_letter ? "Yes" : "No"} />
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
           <Detail label="HR note" value={item.hr_interview_note} />
           <Detail label="User remarks" value={item.user_remarks} />
         </div>
@@ -317,7 +378,7 @@ function CandidateDetail({
 
       <section>
         <p className="mb-3 text-xs uppercase tracking-[0.16em] text-muted">Aging</p>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-4 lg:grid-cols-3">
           <Detail label="Aging" value={stageAging(item)} />
           <Detail
             label="Stuck"

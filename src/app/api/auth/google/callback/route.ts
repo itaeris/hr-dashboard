@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { homePathForUser, resolveAuthUser } from "@/lib/auth/app-users";
 import {
   GOOGLE_STATE_COOKIE,
   googleCallbackUrl,
-  userFromGoogleProfile,
+  isAllowedGoogleEmail,
 } from "@/lib/auth/google";
 import { encodeSession, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth/session-token";
 
@@ -59,15 +60,17 @@ export async function GET(request: NextRequest) {
   };
 
   if (!profile.sub || !profile.email) return loginError(request, "oauth");
-  const user = userFromGoogleProfile({
-    sub: profile.sub,
-    email: profile.email,
-    name: profile.name,
-    email_verified: profile.email_verified,
-  });
-  if (!user) return loginError(request, "domain");
+  if (profile.email_verified === false) return loginError(request, "domain");
+  if (!isAllowedGoogleEmail(profile.email)) return loginError(request, "domain");
 
-  const home = new URL("/", process.env.AUTH_URL || request.url);
+  const user = await resolveAuthUser({
+    id: `g_${profile.sub}`,
+    email: profile.email,
+    name: profile.name?.trim() || profile.email.split("@")[0],
+  });
+
+  const dest = await homePathForUser(user);
+  const home = new URL(dest, process.env.AUTH_URL || request.url);
   const response = NextResponse.redirect(home);
   response.cookies.delete(GOOGLE_STATE_COOKIE);
   response.cookies.set(SESSION_COOKIE, encodeSession(user), {

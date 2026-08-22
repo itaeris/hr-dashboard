@@ -170,7 +170,7 @@ MAIL_FROM_ADDRESS=
 MAIL_FROM_NAME=HR Recruitment
 ```
 
-Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy (Clara, Nadia, Sari, …). The dashboard shows a warning when that happens. Request forms and email templates still work locally.
+Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy (Clara, Nadia, Sari, …). Request forms and email templates still work locally.
 
 `NEXT_PUBLIC_SUPABASE_*` is baked in at **build** time. On Vercel, set both keys for Production, then **Redeploy**. Adding them later without a rebuild keeps prod on demo data even if Supabase already has new rows.
 

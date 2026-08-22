@@ -22,7 +22,7 @@ export function CvCell({ url }: { url: string | null }) {
           event.stopPropagation();
           setOpen(true);
         }}
-        className="inline-flex max-w-[160px] items-center gap-2 text-left text-[12px] font-medium text-accent"
+        className="inline-flex max-w-full items-center gap-2 text-left text-[12px] font-medium text-accent"
       >
         {meta.kind === "image" ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -59,7 +59,7 @@ export function CvPreviewDialog({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/40 p-4 sm:items-center"
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/40 p-0 sm:items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -70,9 +70,9 @@ export function CvPreviewDialog({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
-            className="flex h-[min(88vh,840px)] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-line bg-paper-raised shadow-xl"
+            className="flex h-[min(94dvh,840px)] w-full max-w-3xl flex-col overflow-hidden rounded-t-[24px] border border-line bg-paper-raised shadow-xl sm:h-[min(88vh,840px)] sm:rounded-[24px]"
           >
-            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-line px-5 py-4">
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-3 sm:gap-4 sm:px-5 sm:py-4">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-[0.16em] text-muted">CV</p>
                 <h2 className="truncate font-display text-xl text-ink">{meta.name}</h2>

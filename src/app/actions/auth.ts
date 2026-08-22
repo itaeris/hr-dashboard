@@ -1,10 +1,18 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { canAccessCompany, companyFromEmail } from "@/lib/auth/access";
+import {
+  homePathForUser,
+  loadAppUser,
+  saveAppUser,
+} from "@/lib/auth/app-users";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { getStoredUser, savePasswordOverride } from "@/lib/auth/password-store";
 import { clearSession, getSession, setSession } from "@/lib/auth/session";
-import { toPublicUser } from "@/lib/auth/users";
+import { toPublicUser, type Role } from "@/lib/auth/users";
+import { isCompanySlug } from "@/lib/companies";
+import type { CompanySlug } from "@/lib/types";
 
 export type LoginState = { error: string } | null;
 
@@ -24,8 +32,14 @@ export async function loginAction(
     return { error: "Incorrect email or password." };
   }
 
-  await setSession(toPublicUser(user));
-  redirect("/");
+  const sessionUser = toPublicUser(user);
+  const profile = await loadAppUser(sessionUser.email);
+  if (profile) {
+    sessionUser.name = profile.name;
+    sessionUser.role = profile.role;
+  }
+  await setSession(sessionUser);
+  redirect(await homePathForUser(sessionUser));
 }
 
 export async function logoutAction() {
@@ -36,6 +50,23 @@ export async function logoutAction() {
 export async function requireSession() {
   const session = await getSession();
   if (!session) redirect("/login");
+  return session;
+}
+
+export async function requireAdmin() {
+  const session = await requireSession();
+  if (session.role !== "admin") {
+    redirect(await homePathForUser(session));
+  }
+  return session;
+}
+
+export async function requireCompanyAccess(slug: CompanySlug) {
+  const session = await requireSession();
+  const profile = await loadAppUser(session.email);
+  if (!canAccessCompany(session, slug, profile?.company)) {
+    redirect(await homePathForUser(session));
+  }
   return session;
 }
 
@@ -86,4 +117,51 @@ export async function changePasswordAction(
   }
 
   return { success: "Password updated. Use it the next time you sign in." };
+}
+
+export type RoleState = { error?: string; success?: string } | null;
+
+export async function saveAppUserAction(
+  _prev: RoleState,
+  formData: FormData,
+): Promise<RoleState> {
+  const session = await getSession();
+  if (!session || session.role !== "admin") {
+    return { error: "Only admin can change user roles." };
+  }
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const name = String(formData.get("name") ?? "").trim();
+  const role = String(formData.get("role") ?? "hr") as Role;
+  const companyRaw = String(formData.get("company") ?? "");
+
+  if (!email || !email.includes("@")) return { error: "Enter a valid email." };
+  if (!name) return { error: "Enter a name." };
+  if (role !== "admin" && role !== "hr") return { error: "Pick a valid role." };
+
+  const company =
+    companyRaw === "both" || isCompanySlug(companyRaw) ? companyRaw : undefined;
+  if (role === "hr" && company === "both") {
+    return { error: "HR can only be assigned to one brand." };
+  }
+
+  try {
+    await saveAppUser({
+      email,
+      name,
+      role,
+      company:
+        role === "admin"
+          ? "both"
+          : isCompanySlug(companyRaw)
+            ? companyRaw
+            : companyFromEmail(email),
+    });
+  } catch (cause) {
+    return {
+      error: cause instanceof Error ? cause.message : "Could not save user.",
+    };
+  }
+
+  return { success: `Saved ${name} as ${role === "admin" ? "Admin" : "HR"}.` };
 }

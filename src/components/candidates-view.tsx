@@ -98,7 +98,7 @@ export function CandidatesPage() {
           />
         </div>
         <Select
-          className="lg:max-w-52"
+          className="w-full min-w-0 lg:max-w-52"
           value={status}
           onChange={(next) => setStatus(next as LatestStatus | "all")}
           options={[
@@ -107,7 +107,7 @@ export function CandidatesPage() {
           ]}
         />
         <Select
-          className="lg:max-w-64"
+          className="w-full min-w-0 lg:max-w-64"
           value={jobId}
           onChange={setJobId}
           options={[

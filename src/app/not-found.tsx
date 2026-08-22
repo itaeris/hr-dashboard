@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center bg-paper px-6 text-center text-ink">
+    <div className="flex min-h-full flex-col items-center justify-center bg-paper px-4 text-center text-ink sm:px-6">
       <p className="text-[11px] uppercase tracking-[0.22em] text-muted">404</p>
-      <h1 className="mt-3 font-display text-4xl">Company not found</h1>
+      <h1 className="mt-3 font-display text-3xl sm:text-4xl">Company not found</h1>
       <p className="mt-3 max-w-md text-sm text-muted">
         Choose Aeris Beaute or From This Island from the home page.
       </p>

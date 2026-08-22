@@ -1,7 +1,9 @@
-import { CompanyPicker } from "@/components/company-picker";
-import { requireSession } from "@/app/actions/auth";
+import { AdminHome } from "@/components/admin-home";
+import { requireAdmin } from "@/app/actions/auth";
+import { listAppUsers } from "@/lib/auth/app-users";
 
 export default async function Home() {
-  const user = await requireSession();
-  return <CompanyPicker user={user} />;
+  const user = await requireAdmin();
+  const users = await listAppUsers();
+  return <AdminHome user={user} users={users} />;
 }

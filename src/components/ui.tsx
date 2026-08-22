@@ -40,7 +40,7 @@ export function ModalFrame({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/35 p-4 sm:items-center"
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/35 p-0 sm:items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -51,12 +51,12 @@ export function ModalFrame({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             onClick={(event) => event.stopPropagation()}
-            className={`flex w-full flex-col overflow-hidden rounded-[24px] border border-line bg-paper-raised p-6 shadow-xl ${
-              wide ? "max-w-3xl max-h-[90vh]" : "max-w-lg max-h-[90vh]"
+            className={`flex w-full flex-col overflow-hidden rounded-t-[24px] border border-line bg-paper-raised p-4 shadow-xl sm:rounded-[24px] sm:p-6 ${
+              wide ? "max-w-3xl max-h-[94dvh] sm:max-h-[90vh]" : "max-w-lg max-h-[94dvh] sm:max-h-[90vh]"
             }`}
           >
-            <div className="mb-5 flex shrink-0 items-center justify-between">
-              <h2 className="font-display text-2xl">{title}</h2>
+            <div className="mb-4 flex shrink-0 items-center justify-between gap-3 sm:mb-5">
+              <h2 className="min-w-0 font-display text-xl sm:text-2xl">{title}</h2>
               <button
                 type="button"
                 onClick={onClose}

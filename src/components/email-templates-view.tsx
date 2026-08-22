@@ -49,9 +49,9 @@ export function EmailTemplatesPage() {
     <PageFade>
       <p className="max-w-2xl text-sm text-muted">
         Edit the three candidate emails. Merge fields:{" "}
-        <code className="text-ink">{"{{candidate_name}}"}</code>,{" "}
-        <code className="text-ink">{"{{role}}"}</code>,{" "}
-        <code className="text-ink">{"{{company}}"}</code>. Attach a file here
+        <code className="break-all text-ink">{"{{candidate_name}}"}</code>,{" "}
+        <code className="break-all text-ink">{"{{role}}"}</code>,{" "}
+        <code className="break-all text-ink">{"{{company}}"}</code>. Attach a file here
         and it will be included when you send from a candidate.
       </p>
 
@@ -77,10 +77,10 @@ export function EmailTemplatesPage() {
       </div>
 
       {current ? (
-        <div className="mt-6 rounded-[24px] border border-line bg-paper-raised p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="font-display text-3xl">{EMAIL_TEMPLATE_META[current.kind].label}</h2>
+        <div className="mt-6 rounded-[24px] border border-line bg-paper-raised p-4 sm:p-6">
+          <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:gap-4">
+            <div className="min-w-0">
+              <h2 className="font-display text-2xl sm:text-3xl">{EMAIL_TEMPLATE_META[current.kind].label}</h2>
               <p className="mt-1 text-sm text-muted">
                 {EMAIL_TEMPLATE_META[current.kind].hint}
               </p>

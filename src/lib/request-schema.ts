@@ -181,24 +181,27 @@ export function normalizeRequestSchema(schema: RequestSchema): RequestSchema {
   };
 }
 
+function schemaFromRow(row: Record<string, unknown> | null | undefined) {
+  const raw = row?.schema ?? row?.form_schema;
+  return raw ? normalizeRequestSchema(raw as RequestSchema) : null;
+}
+
 export async function loadRequestSchema(company: RequestCompany) {
   const fallback = defaultRequestSchema();
   try {
     const supabase = getSupabaseBrowserClient();
     if (supabase) {
-      const { data } = await supabase
+      // select * — do not filter on company/id. Older tables only have id.
+      const { data, error } = await supabase
         .from("recruitment_form_settings")
-        .select("schema")
-        .eq("company", company)
-        .maybeSingle();
-      if (data?.schema) return normalizeRequestSchema(data.schema as RequestSchema);
-
-      const { data: legacy } = await supabase
-        .from("recruitment_form_settings")
-        .select("schema")
-        .eq("id", 1)
-        .maybeSingle();
-      if (legacy?.schema) return normalizeRequestSchema(legacy.schema as RequestSchema);
+        .select("*")
+        .limit(20);
+      if (!error && data?.length) {
+        const rows = data as Record<string, unknown>[];
+        const match = rows.find((row) => row.company === company);
+        const parsed = schemaFromRow(match) ?? schemaFromRow(rows[0]);
+        if (parsed) return parsed;
+      }
     }
   } catch {
     /* use local */
@@ -225,12 +228,31 @@ export async function saveRequestSchema(
 
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return;
+
+  const updated_at = new Date().toISOString();
+  const { data: existing } = await supabase
+    .from("recruitment_form_settings")
+    .select("*")
+    .limit(1);
+  const sample = existing?.[0] as Record<string, unknown> | undefined;
+
+  if (sample && "company" in sample) {
+    const { error } = await supabase.from("recruitment_form_settings").upsert(
+      { company, schema, updated_at },
+      { onConflict: "company" },
+    );
+    if (error) throw error;
+    return;
+  }
+
+  const legacy = await supabase.from("recruitment_form_settings").upsert(
+    { id: 1, schema, updated_at },
+    { onConflict: "id" },
+  );
+  if (!legacy.error) return;
+
   const { error } = await supabase.from("recruitment_form_settings").upsert(
-    {
-      company,
-      schema,
-      updated_at: new Date().toISOString(),
-    },
+    { company, schema, updated_at },
     { onConflict: "company" },
   );
   if (error) throw error;

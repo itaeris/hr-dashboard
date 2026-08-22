@@ -82,7 +82,7 @@ export function ScrollArea({
           {children}
         </div>
         {showY ? (
-          <div className={`shrink-0 ${compact ? "py-2 pl-4 pr-2" : "py-2 pl-5 pr-3"}`}>
+          <div className={`hidden shrink-0 md:block ${compact ? "py-2 pl-3 pr-1" : "py-2 pl-5 pr-3"}`}>
             <Scrollbar
               orientation="y"
               scroll={metrics.st}

@@ -274,12 +274,12 @@ export function RequestFormPage({
 
   return (
     <div style={themeStyle(brand.theme)} className="min-h-full bg-paper text-ink">
-      <div className="mx-auto max-w-3xl px-5 py-10 sm:px-8">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-8 sm:py-10">
         <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-muted">
           HR Recruitment
         </p>
         <PageFade className="mx-auto w-full max-w-3xl pb-10">
-          <h1 className="font-display text-3xl">
+          <h1 className="font-display text-2xl sm:text-3xl">
             {schema?.title ?? "Recruitment Request Form"}
           </h1>
           <p className="mt-2 text-sm text-muted">
@@ -287,7 +287,7 @@ export function RequestFormPage({
               "This form is required to request new or replacement hires, to be used for tracking."}
           </p>
 
-          <section className="mt-6 rounded-[24px] border border-line bg-paper-raised p-6 sm:p-8">
+          <section className="mt-6 rounded-[24px] border border-line bg-paper-raised p-4 sm:p-8">
             <h2 className="text-lg font-medium">
               {schema?.sectionTitle ?? "Application Details"}
             </h2>

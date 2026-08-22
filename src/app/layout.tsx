@@ -14,6 +14,12 @@ export const metadata: Metadata = {
     "Recruitment dashboard for Aeris Beaute and From This Island.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html

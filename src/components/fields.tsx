@@ -78,10 +78,14 @@ function Popover({
   if (!open || !pos || typeof document === "undefined") return null;
 
   const openUp = pos.top < (trigger?.getBoundingClientRect().top ?? 0);
+  const width = Math.min(
+    align === "stretch" ? pos.width : Math.max(pos.width, 280),
+    window.innerWidth - 16,
+  );
   const style: CSSProperties = {
     position: "fixed",
-    left: pos.left,
-    width: align === "stretch" ? pos.width : Math.max(pos.width, 280),
+    left: Math.max(8, Math.min(pos.left, window.innerWidth - width - 8)),
+    width,
     maxHeight: pos.maxHeight,
     zIndex: 80,
   };

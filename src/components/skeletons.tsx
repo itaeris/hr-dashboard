@@ -26,7 +26,7 @@ export function OverviewSkeleton() {
           <Bone className="mt-2 h-3 w-56" />
           <div className="mt-6 space-y-4">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="grid grid-cols-[110px_1fr_32px] items-center gap-3">
+              <div key={index} className="grid grid-cols-[72px_minmax(0,1fr)_28px] items-center gap-2 sm:grid-cols-[110px_1fr_32px] sm:gap-3">
                 <Bone className="h-3 w-20" />
                 <Bone className="h-2 w-full rounded-full" />
                 <Bone className="h-3 w-6 justify-self-end" />

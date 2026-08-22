@@ -45,27 +45,27 @@ export function OverviewPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="rounded-[22px] border border-line bg-paper-raised p-5"
+              className="rounded-[22px] border border-line bg-paper-raised p-4 sm:p-5"
             >
               <p className="text-[11px] uppercase tracking-[0.16em] text-muted">
                 {stat.label}
               </p>
-              <p className="mt-3 font-display text-4xl">{stat.value}</p>
+              <p className="mt-3 font-display text-3xl sm:text-4xl">{stat.value}</p>
               <p className="mt-2 text-sm text-muted">{stat.hint}</p>
             </motion.article>
           ))}
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-          <article className="rounded-[24px] border border-line bg-paper-raised p-6">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h2 className="font-display text-2xl">Funnel {brand.shortName}</h2>
+          <article className="rounded-[24px] border border-line bg-paper-raised p-4 sm:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-display text-xl sm:text-2xl">Funnel {brand.shortName}</h2>
                 <p className="mt-1 text-sm text-muted">
                   Candidate distribution by hiring stage.
                 </p>
               </div>
-              <Link href={`/${brand.slug}/pipeline`} className="text-sm text-accent">
+              <Link href={`/${brand.slug}/pipeline`} className="shrink-0 text-sm text-accent">
                 Open pipeline
               </Link>
             </div>
@@ -73,8 +73,8 @@ export function OverviewPage() {
               {STAGES.map((stage) => {
                 const count = views.filter((item) => item.stage === stage.id).length;
                 return (
-                  <div key={stage.id} className="grid grid-cols-[110px_1fr_32px] items-center gap-3">
-                    <p className="text-sm text-muted">{stage.label}</p>
+                  <div key={stage.id} className="grid grid-cols-[72px_minmax(0,1fr)_28px] items-center gap-2 sm:grid-cols-[110px_1fr_32px] sm:gap-3">
+                    <p className="truncate text-xs text-muted sm:text-sm">{stage.label}</p>
                     <div className="h-2 overflow-hidden rounded-full bg-paper">
                       <motion.div
                         initial={{ width: 0 }}
@@ -90,8 +90,8 @@ export function OverviewPage() {
             </div>
           </article>
 
-          <article className="rounded-[24px] border border-line bg-paper-raised p-6">
-            <h2 className="font-display text-2xl">Interview calendar</h2>
+          <article className="rounded-[24px] border border-line bg-paper-raised p-4 sm:p-6">
+            <h2 className="font-display text-xl sm:text-2xl">Interview calendar</h2>
             <p className="mt-1 text-sm text-muted">Upcoming slots on the HR calendar.</p>
             <div className="mt-5 space-y-3">
               {upcoming.length === 0 ? (
@@ -102,13 +102,13 @@ export function OverviewPage() {
                     key={item.id}
                     type="button"
                     onClick={() => setSelectedId(item.id)}
-                    className="flex w-full items-start justify-between gap-3 rounded-2xl border border-line px-3 py-3 text-left hover:bg-paper"
+                    className="flex w-full flex-col items-start gap-2 rounded-2xl border border-line px-3 py-3 text-left hover:bg-paper sm:flex-row sm:justify-between"
                   >
-                    <div>
-                      <p className="text-sm font-medium">{item.candidate.full_name}</p>
-                      <p className="text-xs text-muted">{item.job.title}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{item.candidate.full_name}</p>
+                      <p className="truncate text-xs text-muted">{item.job.title}</p>
                     </div>
-                    <p className="text-xs text-accent">{formatDateTime(at)}</p>
+                    <p className="shrink-0 text-xs text-accent">{formatDateTime(at)}</p>
                   </button>
                 ))
               )}
@@ -117,9 +117,9 @@ export function OverviewPage() {
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <article className="rounded-[24px] border border-line bg-paper-raised p-6">
-            <div className="flex items-end justify-between">
-              <h2 className="font-display text-2xl">Recent activity</h2>
+          <article className="rounded-[24px] border border-line bg-paper-raised p-4 sm:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <h2 className="font-display text-xl sm:text-2xl">Recent activity</h2>
               <Link href={`/${brand.slug}/candidates`} className="text-sm text-accent">
                 All candidates
               </Link>
@@ -145,9 +145,9 @@ export function OverviewPage() {
             </div>
           </article>
 
-          <article className="rounded-[24px] border border-line bg-paper-raised p-6">
-            <div className="flex items-end justify-between">
-              <h2 className="font-display text-2xl">Open vacancies</h2>
+          <article className="rounded-[24px] border border-line bg-paper-raised p-4 sm:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <h2 className="font-display text-xl sm:text-2xl">Open vacancies</h2>
               <Link href={`/${brand.slug}/jobs`} className="text-sm text-accent">
                 Manage
               </Link>

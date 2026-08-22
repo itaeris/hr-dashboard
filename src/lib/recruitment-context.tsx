@@ -88,7 +88,6 @@ type RecruitmentContextValue = {
   views: ApplicationView[];
   loading: boolean;
   source: DataSource;
-  sourceNote: string;
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
   selected: ApplicationView | null;
@@ -155,7 +154,6 @@ export function RecruitmentProvider({
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [source, setSource] = useState<DataSource>("demo");
-  const [sourceNote, setSourceNote] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const hydrateMock = useCallback(() => {
@@ -177,10 +175,7 @@ export function RecruitmentProvider({
 
       if (!supabase) {
         hydrateMock();
-        if (!cancelled) {
-          setSourceNote("Supabase env is missing. Showing demo data.");
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
         return;
       }
 
@@ -215,13 +210,9 @@ export function RecruitmentProvider({
         setCandidates((candidateRows ?? []) as CandidateRow[]);
         setApplications((applicationRows ?? []) as ApplicationRow[]);
         setSource("supabase");
-        setSourceNote("");
       } catch (cause) {
         console.error("Failed to load recruitment data from Supabase", cause);
-        if (!cancelled) {
-          hydrateMock();
-          setSourceNote("Could not load Supabase. Showing demo data.");
-        }
+        if (!cancelled) hydrateMock();
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -640,7 +631,6 @@ export function RecruitmentProvider({
       views,
       loading,
       source,
-      sourceNote,
       selectedId,
       setSelectedId,
       selected,
@@ -667,7 +657,6 @@ export function RecruitmentProvider({
       selectedId,
       slug,
       source,
-      sourceNote,
       toggleJobStatus,
       updateCandidate,
       updateNotes,

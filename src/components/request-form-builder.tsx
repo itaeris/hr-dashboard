@@ -197,11 +197,11 @@ export function RequestFormBuilder() {
           ))}
       </Reorder.Group>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <button
           type="button"
           onClick={addField}
-          className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm hover:bg-paper"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-line px-4 py-2 text-sm hover:bg-paper sm:w-auto"
         >
           <IconPlus className="h-4 w-4" />
           Add field
@@ -209,7 +209,7 @@ export function RequestFormBuilder() {
         <button
           type="button"
           onClick={() => setSchema(defaultRequestSchema())}
-          className="rounded-full border border-line px-4 py-2 text-sm hover:bg-paper"
+          className="w-full rounded-full border border-line px-4 py-2 text-sm hover:bg-paper sm:w-auto"
         >
           Reset default
         </button>
@@ -217,7 +217,7 @@ export function RequestFormBuilder() {
           type="button"
           disabled={saving}
           onClick={() => void save()}
-          className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
+          className="w-full rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50 sm:w-auto"
         >
           {saving ? "Saving…" : "Save form"}
         </button>

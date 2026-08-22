@@ -125,7 +125,7 @@ export function RequestResponsesPage() {
       <AnimatePresence>
         {selected ? (
           <motion.div
-            className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/35 p-4 sm:items-center"
+            className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/35 p-0 sm:items-center sm:p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -136,11 +136,11 @@ export function RequestResponsesPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 12 }}
               onClick={(event) => event.stopPropagation()}
-              className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[24px] border border-line bg-paper-raised p-6 shadow-xl"
+              className="flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[24px] border border-line bg-paper-raised p-4 shadow-xl sm:max-h-[90vh] sm:rounded-[24px] sm:p-6"
             >
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="font-display text-2xl">
+                  <h2 className="font-display text-xl sm:text-2xl">
                     {selected.payload.job_position || "Request"}
                   </h2>
                   <p className="text-sm text-muted">{formatDate(selected.created_at)}</p>

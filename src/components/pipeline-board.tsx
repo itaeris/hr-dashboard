@@ -19,7 +19,7 @@ export function PipelinePage() {
 
   return (
     <PageFade className="flex min-h-0 h-full flex-1 flex-col">
-      <p className="mb-4 shrink-0 text-sm text-muted">
+      <p className="mb-3 shrink-0 text-sm text-muted sm:mb-4">
         Drag a card to the next column, or click to open candidate details.
       </p>
       <ScrollArea axis="x" className="min-h-0 flex-1">

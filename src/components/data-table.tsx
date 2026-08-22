@@ -39,7 +39,7 @@ export function Th({
     align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
   return (
     <th
-      className={`sticky top-0 z-20 whitespace-nowrap border-b border-line bg-paper px-4 py-3.5 text-[11px] font-medium tracking-[0.04em] text-muted ${alignClass} ${
+      className={`sticky top-0 z-20 whitespace-nowrap border-b border-line bg-paper px-3 py-3 text-[11px] font-medium tracking-[0.04em] text-muted sm:px-4 sm:py-3.5 ${alignClass} ${
         sticky ? "left-0 z-30 shadow-[1px_0_0_var(--line)]" : ""
       } ${groupStart ? "border-l border-line" : ""}`}
     >
@@ -69,7 +69,7 @@ export function Td({
     align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
   return (
     <td
-      className={`border-b border-line/80 px-4 py-4 ${alignClass} ${
+      className={`border-b border-line/80 px-3 py-3 sm:px-4 sm:py-4 ${alignClass} ${
         nowrap ? "whitespace-nowrap" : ""
       } ${muted ? "text-muted" : ""} ${
         sticky
