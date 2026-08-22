@@ -211,7 +211,7 @@ export function RequestFormPage({
 
   async function onSubmit() {
     if (!schema || !company) return;
-    const payload = { ...answers, company };
+    const payload: Record<string, string> = { ...answers, company };
     const nextErrors = validateAnswers(schema, payload);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
