@@ -9,7 +9,7 @@ import {
   googleCallbackUrl,
   safeCalendarNext,
 } from "@/lib/auth/google";
-import { decodeSession, SESSION_COOKIE } from "@/lib/auth/session-token";
+import { decodeSession, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth/session-token";
 
 export async function GET(request: NextRequest) {
   const session = decodeSession(request.cookies.get(SESSION_COOKIE)?.value);
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 
   const state = randomBytes(16).toString("hex");
-  const origin = process.env.AUTH_URL || request.nextUrl.origin;
+  const origin = request.nextUrl.origin;
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: googleCallbackUrl(origin),
@@ -44,13 +44,7 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(
     `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
   );
-  const cookie = {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    path: "/",
-    maxAge: 600,
-    secure: process.env.NODE_ENV === "production",
-  };
+  const cookie = { ...sessionCookieOptions(), maxAge: 600 };
   response.cookies.set(GOOGLE_STATE_COOKIE, state, cookie);
   response.cookies.set(GOOGLE_INTENT_COOKIE, "calendar", cookie);
   response.cookies.set(GOOGLE_NEXT_COOKIE, next, cookie);

@@ -9,32 +9,63 @@ import {
   loadAppUser,
   saveAppUser,
 } from "@/lib/auth/app-users";
-import { hashPassword, verifyPassword } from "@/lib/auth/password";
+import {
+  hashPassword,
+  MAX_PASSWORD_LENGTH,
+  verifyPassword,
+  verifyPasswordOrDummy,
+} from "@/lib/auth/password";
 import {
   deletePasswordOverride,
   getStoredUser,
   savePasswordOverride,
 } from "@/lib/auth/password-store";
+import { clearLoginFailures, loginAllowed } from "@/lib/auth/rate-limit";
 import { clearSession, getSession, setSession } from "@/lib/auth/session";
 import { toPublicUser, type Role } from "@/lib/auth/users";
 import { isCompanySlug } from "@/lib/companies";
 import type { CompanySlug } from "@/lib/types";
+import { headers } from "next/headers";
 
 export type LoginState = { error: string } | null;
+
+async function requestIp() {
+  const list = await headers();
+  const forwarded = list.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return forwarded || list.get("x-real-ip") || "local";
+}
 
 export async function loginAction(
   _prev: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const email = String(formData.get("email") ?? "");
+  const trap = String(formData.get("company_website") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
 
-  if (!email.trim() || !password) {
+  if (trap) return { error: "Incorrect email or password." };
+  if (!email || !email.includes("@") || !password) {
     return { error: "Enter your email and password." };
+  }
+  if (password.length > MAX_PASSWORD_LENGTH) {
+    return { error: "Incorrect email or password." };
+  }
+
+  const ip = await requestIp();
+  const limit = loginAllowed(ip, email);
+  if (!limit.ok) {
+    return {
+      error: "Too many sign-in attempts. Try again in a few minutes.",
+    };
   }
 
   const user = await getStoredUser(email);
-  if (!user || !verifyPassword(password, user.passwordSalt, user.passwordHash)) {
+  const valid = verifyPasswordOrDummy(
+    password,
+    user?.passwordSalt,
+    user?.passwordHash,
+  );
+  if (!user || !valid) {
     return { error: "Incorrect email or password." };
   }
 
@@ -44,6 +75,7 @@ export async function loginAction(
     sessionUser.name = profile.name;
     sessionUser.role = profile.role;
   }
+  clearLoginFailures(ip, email);
   await setSession(sessionUser);
   redirect(await homePathForUser(sessionUser));
 }
@@ -56,6 +88,12 @@ export async function logoutAction() {
 export async function requireSession() {
   const session = await getSession();
   if (!session) redirect("/login");
+  const profile = await loadAppUser(session.email);
+  if (profile && (profile.role !== session.role || profile.name !== session.name)) {
+    const next = { ...session, name: profile.name, role: profile.role };
+    await setSession(next);
+    return next;
+  }
   return session;
 }
 
@@ -89,8 +127,8 @@ export async function changePasswordAction(
   const next = String(formData.get("new_password") ?? "");
   const confirm = String(formData.get("confirm_password") ?? "");
 
-  if (next.length < 8) {
-    return { error: "New password must be at least 8 characters." };
+  if (next.length < 8 || next.length > MAX_PASSWORD_LENGTH) {
+    return { error: "New password must be 8–128 characters." };
   }
   if (next !== confirm) {
     return { error: "New password and confirmation do not match." };
@@ -164,8 +202,8 @@ export async function saveAppUserAction(
   }
 
   if (password || confirmPassword) {
-    if (password.length < 8) {
-      return { error: "Password must be at least 8 characters." };
+    if (password.length < 8 || password.length > MAX_PASSWORD_LENGTH) {
+      return { error: "Password must be 8–128 characters." };
     }
     if (password !== confirmPassword) {
       return { error: "Password and confirmation do not match." };

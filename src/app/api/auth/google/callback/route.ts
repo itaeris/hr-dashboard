@@ -13,7 +13,7 @@ import {
   decodeSession,
   encodeSession,
   SESSION_COOKIE,
-  SESSION_MAX_AGE,
+  sessionCookieOptions,
 } from "@/lib/auth/session-token";
 import { saveGoogleRefreshToken } from "@/lib/google-calendar/tokens";
 
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
   }
 
   const url = request.nextUrl;
+  const origin = url.origin;
   if (url.searchParams.get("error")) {
     return calendarFlow ? calendarResult(request, next, "denied") : loginError(request, "denied");
   }
@@ -57,11 +58,14 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const savedState = request.cookies.get(GOOGLE_STATE_COOKIE)?.value;
+  if (!code && !state && !savedState) {
+    return NextResponse.redirect(new URL("/login", process.env.AUTH_URL || origin));
+  }
   if (!code || !state || !savedState || state !== savedState) {
     return calendarFlow ? calendarResult(request, next, "oauth") : loginError(request, "oauth");
   }
 
-  const redirectUri = googleCallbackUrl(process.env.AUTH_URL || url.origin);
+  const redirectUri = googleCallbackUrl(origin);
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -130,12 +134,6 @@ export async function GET(request: NextRequest) {
   const home = new URL(dest, process.env.AUTH_URL || request.url);
   const response = NextResponse.redirect(home);
   clearOauthCookies(response);
-  response.cookies.set(SESSION_COOKIE, encodeSession(user), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-    secure: process.env.NODE_ENV === "production",
-  });
+  response.cookies.set(SESSION_COOKIE, encodeSession(user), sessionCookieOptions());
   return response;
 }

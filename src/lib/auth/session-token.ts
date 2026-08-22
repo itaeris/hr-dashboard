@@ -6,12 +6,32 @@ export const SESSION_MAX_AGE = 60 * 60 * 24 * 14;
 
 export type Session = AuthUser & { exp: number };
 
-function secret() {
-  return process.env.AUTH_SECRET ?? "dev-only-hr-dashboard-secret";
+export function authSecret() {
+  const value = process.env.AUTH_SECRET;
+  if (process.env.NODE_ENV === "production") {
+    if (!value || value.length < 32) {
+      throw new Error("AUTH_SECRET must be set to a long random string.");
+    }
+    return value;
+  }
+  return value || "dev-only-hr-dashboard-secret";
+}
+
+export function sessionCookieOptions() {
+  const secure =
+    process.env.NODE_ENV === "production" ||
+    Boolean(process.env.AUTH_URL?.startsWith("https://"));
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+    secure,
+  };
 }
 
 function sign(payload: string) {
-  return createHmac("sha256", secret()).update(payload).digest("base64url");
+  return createHmac("sha256", authSecret()).update(payload).digest("base64url");
 }
 
 function equal(left: string, right: string) {

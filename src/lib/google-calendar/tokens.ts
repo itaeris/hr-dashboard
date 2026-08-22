@@ -1,11 +1,12 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
+import { authSecret } from "@/lib/auth/session-token";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const memory = new Map<string, string>();
 
 function key() {
   return createHash("sha256")
-    .update(process.env.AUTH_SECRET ?? "dev-only-hr-dashboard-secret")
+    .update(authSecret())
     .digest();
 }
 

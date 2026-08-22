@@ -4,7 +4,7 @@ import {
   decodeSession,
   encodeSession,
   SESSION_COOKIE,
-  SESSION_MAX_AGE,
+  sessionCookieOptions,
 } from "./session-token";
 
 export type { Session } from "./session-token";
@@ -17,16 +17,10 @@ export async function getSession() {
 
 export async function setSession(user: AuthUser) {
   const store = await cookies();
-  store.set(SESSION_COOKIE, encodeSession(user), {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-    secure: process.env.NODE_ENV === "production",
-  });
+  store.set(SESSION_COOKIE, encodeSession(user), sessionCookieOptions());
 }
 
 export async function clearSession() {
   const store = await cookies();
-  store.delete(SESSION_COOKIE);
+  store.set(SESSION_COOKIE, "", { ...sessionCookieOptions(), maxAge: 0 });
 }

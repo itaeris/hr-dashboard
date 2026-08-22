@@ -34,13 +34,23 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
         Company Google accounts only: @aerisbeaute.com and @fromthisisland.com.
       </p> */}
 
-      <form action={action} className="mt-8 space-y-4">
+      <form action={action} className="relative mt-8 space-y-4" method="post">
+        <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+          <label>
+            Company website
+            <input name="company_website" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
         <Field label="Email">
           <input
             name="email"
             type="email"
-            autoComplete="email"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             required
+            maxLength={254}
             placeholder="name@aerisbeaute.com"
             className={fieldClass}
           />
@@ -50,6 +60,7 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
             name="password"
             autoComplete="current-password"
             required
+            maxLength={128}
             placeholder="••••••••"
           />
         </Field>

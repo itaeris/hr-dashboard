@@ -26,6 +26,9 @@ export async function POST(request: Request) {
   const to = payload.to?.trim() ?? "";
   const subject = payload.subject?.trim() ?? "";
   const text = payload.body?.trim() ?? "";
+  const attachments = Array.isArray(payload.attachments)
+    ? payload.attachments.slice(0, 5)
+    : [];
 
   if (!to || !subject || !text) {
     return NextResponse.json(
@@ -33,19 +36,23 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || to.length > 254) {
+    return NextResponse.json({ error: "Enter a valid recipient email." }, { status: 400 });
+  }
+  if (subject.length > 200 || text.length > 20_000) {
+    return NextResponse.json({ error: "Subject or body is too long." }, { status: 400 });
+  }
 
   try {
     await sendSmtpMail({
       to,
       subject,
       text,
-      attachments: payload.attachments ?? [],
+      attachments,
       replyTo: session.email,
     });
     return NextResponse.json({ ok: true });
-  } catch (cause) {
-    const message =
-      cause instanceof Error ? cause.message : "Could not send email.";
-    return NextResponse.json({ error: message }, { status: 502 });
+  } catch {
+    return NextResponse.json({ error: "Could not send email." }, { status: 502 });
   }
 }

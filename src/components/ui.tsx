@@ -96,6 +96,7 @@ export const fieldClass =
 
 export function PasswordInput({
   className = fieldClass,
+  maxLength = 128,
   ...props
 }: InputHTMLAttributes<HTMLInputElement>) {
   const [visible, setVisible] = useState(false);
@@ -104,6 +105,7 @@ export function PasswordInput({
     <div className="relative">
       <input
         {...props}
+        maxLength={maxLength}
         type={visible ? "text" : "password"}
         className={`${className} pr-11`}
       />

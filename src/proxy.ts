@@ -8,11 +8,16 @@ export function proxy(request: NextRequest) {
   const isPublic =
     pathname === "/login" ||
     pathname === "/recruitment-request" ||
-    pathname.startsWith("/api/auth/");
+    pathname === "/api/auth/google" ||
+    pathname === "/api/auth/google/callback" ||
+    pathname === "/api/auth/google/calendar";
 
   if (!session && !isPublic) {
     const login = new URL("/login", request.url);
-    if (pathname !== "/") login.searchParams.set("next", pathname);
+    const next = pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "";
+    if (next && next !== "/" && !next.includes("://")) {
+      login.searchParams.set("next", next);
+    }
     return NextResponse.redirect(login);
   }
 

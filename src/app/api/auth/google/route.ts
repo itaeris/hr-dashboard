@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { GOOGLE_STATE_COOKIE, googleCallbackUrl } from "@/lib/auth/google";
+import { sessionCookieOptions } from "@/lib/auth/session-token";
 
 export async function GET(request: NextRequest) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   }
 
   const state = randomBytes(16).toString("hex");
-  const origin = process.env.AUTH_URL || request.nextUrl.origin;
+  const origin = request.nextUrl.origin;
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: googleCallbackUrl(origin),
@@ -26,11 +27,8 @@ export async function GET(request: NextRequest) {
     `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
   );
   response.cookies.set(GOOGLE_STATE_COOKIE, state, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
+    ...sessionCookieOptions(),
     maxAge: 600,
-    secure: process.env.NODE_ENV === "production",
   });
   return response;
 }

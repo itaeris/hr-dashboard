@@ -2,7 +2,7 @@
 
 Internal recruitment tracker for **Aeris Beaute** and **From This Island**. One app, two brand workspaces — pipeline, progress, vacancies, emails, and hire requests stay separate per company.
 
-**Production:** [https://hr-dashboard-it-aeris.vercel.app/](https://hr-dashboard-it-aeris.vercel.app/)
+**Production:** [https://hr-dashboard-aeris-fti.vercel.app/](https://hr-dashboard-aeris-fti.vercel.app/)
 
 Stack: Next.js 16, React 19, Tailwind CSS v4, Framer Motion, optional Supabase, SMTP email.
 
@@ -223,10 +223,10 @@ The app still rejects non-company domains after publish.
 3. Name: `HR Dashboard`.
 4. **Authorized JavaScript origins**:
    - `http://localhost:3000`
-   - `https://hr-dashboard-it-aeris.vercel.app`
+   - `https://hr-dashboard-aeris-fti.vercel.app`
 5. **Authorized redirect URIs**:
    - `http://localhost:3000/api/auth/google/callback`
-   - `https://hr-dashboard-it-aeris.vercel.app/api/auth/google/callback`
+   - `https://hr-dashboard-aeris-fti.vercel.app/api/auth/google/callback`
 6. **Create**.
 7. Copy **Client ID** and **Client secret** into `.env.local` and Vercel.
 
@@ -251,7 +251,7 @@ Project → **Settings → Environment Variables** (Production):
 
 ```
 AUTH_SECRET=long-random-string
-AUTH_URL=https://hr-dashboard-it-aeris.vercel.app
+AUTH_URL=https://hr-dashboard-aeris-fti.vercel.app
 GOOGLE_CLIENT_ID=....apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=....
 NEXT_PUBLIC_SUPABASE_URL=...

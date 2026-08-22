@@ -22,8 +22,21 @@ export function safeCalendarNext(value: string | null) {
   return value.replace(/\/$/, "");
 }
 
+export const PRODUCTION_ORIGIN = "https://hr-dashboard-aeris-fti.vercel.app";
+
+export function allowedOrigins() {
+  const extra = process.env.AUTH_URL?.replace(/\/$/, "");
+  return [
+    "http://localhost:3000",
+    PRODUCTION_ORIGIN,
+    extra,
+  ].filter((value, index, list): value is string => Boolean(value) && list.indexOf(value) === index);
+}
+
 export function appOrigin(requestOrigin: string) {
-  return (process.env.AUTH_URL || requestOrigin).replace(/\/$/, "");
+  const origin = requestOrigin.replace(/\/$/, "");
+  if (allowedOrigins().includes(origin)) return origin;
+  return (process.env.AUTH_URL || PRODUCTION_ORIGIN).replace(/\/$/, "");
 }
 
 export function googleCallbackUrl(origin: string) {
