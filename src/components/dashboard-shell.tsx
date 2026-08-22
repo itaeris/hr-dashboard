@@ -18,6 +18,7 @@ import {
   IconLogout,
   IconMail,
   IconClipboard,
+  IconChevronDown,
 } from "./icons";
 import { logoutAction } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth/users";
@@ -30,7 +31,11 @@ const NAV = [
   { href: "/candidates", label: "Progress", icon: IconPeople },
   { href: "/jobs", label: "Vacancy", icon: IconBriefcase },
   { href: "/emails", label: "Emails", icon: IconMail },
-  { href: "/request", label: "Request", icon: IconClipboard },
+];
+
+const REQUEST_LINKS = [
+  { href: "/request/form", label: "Form" },
+  { href: "/request/responses", label: "Responses" },
 ];
 
 export function DashboardShell({
@@ -97,7 +102,7 @@ function Sidebar({ slug, user }: { slug: CompanySlug; user: AuthUser }) {
           const href = `/${slug}${item.href}`;
           const active =
             item.href === ""
-              ? pathname === href
+              ? pathname === `/${slug}`
               : pathname.startsWith(href);
           const Icon = item.icon;
           return (
@@ -115,6 +120,7 @@ function Sidebar({ slug, user }: { slug: CompanySlug; user: AuthUser }) {
             </Link>
           );
         })}
+        <RequestMenu slug={slug} pathname={pathname} />
       </nav>
 
       <div className="space-y-3 px-1">
@@ -151,6 +157,52 @@ function Sidebar({ slug, user }: { slug: CompanySlug; user: AuthUser }) {
   );
 }
 
+function RequestMenu({ slug, pathname }: { slug: CompanySlug; pathname: string }) {
+  const active = pathname.includes("/request/");
+  const [open, setOpen] = useState(active);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition ${
+          active
+            ? "bg-accent-soft font-medium text-accent-deep"
+            : "text-muted hover:bg-paper hover:text-ink"
+        }`}
+      >
+        <IconClipboard className="h-4 w-4" />
+        <span className="flex-1 text-left">Request</span>
+        <IconChevronDown
+          className={`h-3.5 w-3.5 transition ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      {open ? (
+        <div className="mt-1 ml-4 space-y-0.5 border-l border-line pl-3">
+          {REQUEST_LINKS.map((item) => {
+            const href = `/${slug}${item.href}`;
+            const current = pathname.startsWith(href);
+            return (
+              <Link
+                key={item.href}
+                href={href}
+                className={`block rounded-xl px-3 py-2 text-sm ${
+                  current
+                    ? "font-medium text-accent-deep"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Topbar() {
   const { brand, slug } = useRecruitment();
   const pathname = usePathname();
@@ -158,10 +210,14 @@ function Topbar() {
   const [jobOpen, setJobOpen] = useState(false);
 
   const title =
-    NAV.find((item) => {
-      const href = `/${slug}${item.href}`;
-      return item.href === "" ? pathname === href : pathname.startsWith(href);
-    })?.label ?? "Dashboard";
+    pathname.includes("/request/form")
+      ? "Request form"
+      : pathname.includes("/request/responses")
+        ? "Request responses"
+        : (NAV.find((item) => {
+            const href = `/${slug}${item.href}`;
+            return item.href === "" ? pathname === `/${slug}` : pathname.startsWith(href);
+          })?.label ?? "Dashboard");
 
   return (
     <>
@@ -212,10 +268,15 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 gap-1 border-t border-line bg-paper-raised/95 px-2 py-2 backdrop-blur lg:hidden">
-      {NAV.map((item) => {
+      {[
+        ...NAV,
+        { href: "/request/responses", label: "Request", icon: IconClipboard },
+      ].map((item) => {
         const href = `/${slug}${item.href}`;
         const active =
-          item.href === "" ? pathname === href : pathname.startsWith(href);
+          item.href === ""
+            ? pathname === `/${slug}`
+            : pathname.startsWith(`/${slug}${item.href.split("/").slice(0, 2).join("/")}`);
         const Icon = item.icon;
         return (
           <Link

@@ -1,6 +1,25 @@
 import type { CompanySlug } from "./types";
 
 export const REQUEST_COMPANIES = ["AERIS", "KIN", "FTI"] as const;
+export type RequestCompany = (typeof REQUEST_COMPANIES)[number];
+
+export function companyFromSlug(slug: CompanySlug): RequestCompany {
+  return slug === "from-this-island" ? "FTI" : "AERIS";
+}
+
+export function isRequestCompany(value: string): value is RequestCompany {
+  return REQUEST_COMPANIES.includes(value as RequestCompany);
+}
+
+export const REQUEST_COMPANY_LABELS: Record<RequestCompany, string> = {
+  AERIS: "Aeris Beaute",
+  KIN: "KIN",
+  FTI: "From This Island",
+};
+
+export function slugFromRequestCompany(company: RequestCompany): CompanySlug {
+  return company === "FTI" ? "from-this-island" : "aeris-beaute";
+}
 
 export const JOB_LEVELS = [
   "Internship",
@@ -39,14 +58,38 @@ export const DIVISIONS = [
 ] as const;
 
 export const DEPARTMENTS: Record<string, string[]> = {
-  MGMT: ["Executive Office", "PMO", "Legal & Compliance"],
-  FAT: ["Finance", "Accounting", "Tax"],
-  HRGA: ["Human Resources", "General Affairs", "IT"],
-  OPS: ["Warehouse", "Production", "Supply Chain", "Retail Operations"],
-  RD: ["Formulation", "Quality", "Packaging Development"],
-  MKT: ["Brand", "Digital Marketing", "Content"],
-  COMM: ["Sales", "E-commerce", "Key Account"],
+  MGMT: ["MGMT - Executive Office", "MGMT - PMO", "MGMT - Legal & Compliance"],
+  FAT: ["FAT - Finance", "FAT - Accounting", "FAT - Tax"],
+  HRGA: ["HRGA - Human Resources", "HRGA - General Affairs", "HRGA - IT"],
+  OPS: ["OPS - Warehouse & Logistics", "OPS - Supply Chain", "OPS - Production", "OPS - Retail Operations"],
+  RD: ["RD - Formulation", "RD - Quality", "RD - Packaging Development"],
+  MKT: ["MKT - Brand", "MKT - Digital Marketing", "MKT - Content"],
+  COMM: ["COMM - Sales", "COMM - E-commerce", "COMM - Key Account"],
 };
+
+export function defaultDepartmentOptions(): Record<string, string[]> {
+  return Object.fromEntries(
+    DIVISIONS.map((item) => [item.label, [...(DEPARTMENTS[item.value] ?? [])]]),
+  );
+}
+
+export function departmentsForDivision(
+  division: string,
+  optionsByParent?: Record<string, string[]>,
+) {
+  if (!division) return [];
+  if (optionsByParent?.[division]?.length) return optionsByParent[division];
+
+  const code = division.split(" - ")[0]?.trim();
+  if (optionsByParent && code) {
+    const match = Object.entries(optionsByParent).find(
+      ([key]) => key === code || key.startsWith(`${code} -`) || key.startsWith(`${code} `),
+    );
+    if (match?.[1]?.length) return match[1];
+  }
+
+  return code ? (DEPARTMENTS[code] ?? []) : [];
+}
 
 export const WORK_LOCATIONS = [
   "Head Office (HO)",
@@ -108,9 +151,9 @@ export function defaultCompany(slug: CompanySlug) {
   return slug === "from-this-island" ? "FTI" : "AERIS";
 }
 
-export function emptyRequestForm(slug: CompanySlug): RequestFormValues {
+export function emptyRequestForm(slug?: CompanySlug): RequestFormValues {
   return {
-    company: defaultCompany(slug),
+    company: slug ? defaultCompany(slug) : "",
     job_position: "",
     min_job_level: "",
     max_job_level: "",

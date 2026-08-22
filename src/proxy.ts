@@ -6,7 +6,9 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = decodeSession(request.cookies.get(SESSION_COOKIE)?.value);
   const isPublic =
-    pathname === "/login" || pathname.startsWith("/api/auth/");
+    pathname === "/login" ||
+    pathname === "/recruitment-request" ||
+    pathname.startsWith("/api/auth/");
 
   if (!session && !isPublic) {
     const login = new URL("/login", request.url);
