@@ -202,6 +202,15 @@ export function IconSwitch(props: IconProps) {
   );
 }
 
+export function IconSettings(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 13a7.6 7.6 0 0 0 .1-2l2-1.5-2-3.4-2.4 1a7.4 7.4 0 0 0-1.7-1L15 3.5h-6l-.4 2.6a7.4 7.4 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7.6 7.6 0 0 0 .1 2l-2 1.5 2 3.4 2.4-1a7.4 7.4 0 0 0 1.7 1l.4 2.6h6l.4-2.6a7.4 7.4 0 0 0 1.7-1l2.4 1 2-3.4Z" />
+    </Icon>
+  );
+}
+
 export function IconLogout(props: IconProps) {
   return (
     <Icon {...props}>

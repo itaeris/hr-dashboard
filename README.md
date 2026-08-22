@@ -26,11 +26,81 @@ The public hire request form also accepts **KIN** as a company. KIN has no dashb
 | `/[company]/candidates` | Progress tracker |
 | `/[company]/jobs` | Vacancy tracker |
 | `/[company]/emails` | Email templates (Interview, User Interview, Offering Letter) |
+| `/[company]/settings` | Change password |
 | `/[company]/request/form` | Customize the public request form |
 | `/[company]/request/responses` | Submissions for that company |
 | `/recruitment-request` | Public hire request (no login) |
 
 `/[company]` is `aeris-beaute` or `from-this-island`.
+
+## Flowcharts
+
+### Sign in and workspace
+
+```mermaid
+flowchart TD
+  A[Open app] --> B{Session cookie?}
+  B -->|No| C[/login]
+  C --> D{Sign in}
+  D -->|Email + password| E[Verify hash]
+  D -->|Google| F{Company domain?}
+  F -->|No| C
+  F -->|Yes| G[Set session]
+  E -->|OK| G
+  E -->|Fail| C
+  B -->|Yes| H[/ brand picker]
+  G --> H
+  H --> I{Company}
+  I -->|Aeris Beaute| J[/aeris-beaute]
+  I -->|From This Island| K[/from-this-island]
+  J --> L[Overview / Pipeline / Progress / Vacancy / Emails / Request / Settings]
+  K --> L
+```
+
+### Public hire request
+
+```mermaid
+flowchart TD
+  A[/recruitment-request] --> B[Pick company]
+  B --> C{Company}
+  C -->|AERIS| D[Load AERIS form schema]
+  C -->|FTI| E[Load FTI form schema]
+  C -->|KIN| F[Load KIN form schema]
+  D --> G[Fill fields]
+  E --> G
+  F --> G
+  G --> H[Pick Division]
+  H --> I[Department options for that division]
+  I --> J[Submit]
+  J --> K[(recruitment_requests)]
+```
+
+### Admin request form and responses
+
+```mermaid
+flowchart LR
+  A[Dashboard company] --> B{Workspace}
+  B -->|aeris-beaute| C[Edit AERIS schema]
+  B -->|from-this-island| D[Edit FTI schema]
+  C --> E[Save schema]
+  D --> E
+  E --> F[(recruitment_form_settings)]
+  F --> G[Public form loads that schema]
+  G --> H[Responses for that company only]
+```
+
+### Candidate data
+
+```mermaid
+flowchart TD
+  A[Open Progress / Pipeline / Vacancy] --> B{NEXT_PUBLIC_SUPABASE_* set at build?}
+  B -->|No| C[Demo data]
+  B -->|Yes| D[Query Supabase]
+  D -->|OK| E[Live rows]
+  D -->|Error| C
+  E --> F[candidates + applications + jobs]
+  F --> G[Progress table]
+```
 
 ## Auth
 
@@ -51,6 +121,14 @@ role:     admin
 ```
 
 Sessions use a signed httpOnly cookie (`AUTH_SECRET`).
+
+### Settings — change password
+
+`/[company]/settings` updates the password for **email sign-in**. Google sign-in is unchanged.
+
+- Seed / email users must enter the current password, then a new one (min. 8 characters).
+- Google-only accounts can set a password here so they can also sign in with email.
+- New hashes are stored in Supabase table `hr_auth_passwords` (`supabase/auth-passwords.sql`). Run that SQL or the save will not persist on Vercel.
 
 ## Recruitment request
 
@@ -92,7 +170,9 @@ MAIL_FROM_ADDRESS=
 MAIL_FROM_NAME=HR Recruitment
 ```
 
-Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy. Request forms and email templates still work locally.
+Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy (Clara, Nadia, Sari, …). The dashboard shows a warning when that happens. Request forms and email templates still work locally.
+
+`NEXT_PUBLIC_SUPABASE_*` is baked in at **build** time. On Vercel, set both keys for Production, then **Redeploy**. Adding them later without a rebuild keeps prod on demo data even if Supabase already has new rows.
 
 ## Google OAuth — Cloud Console (step by step)
 
@@ -171,7 +251,7 @@ MAIL_FROM_ADDRESS=...
 MAIL_FROM_NAME=HR Recruitment
 ```
 
-Redeploy after saving.
+Redeploy after saving. `NEXT_PUBLIC_*` values are compiled into the client bundle — a new deployment is required after any change.
 
 ### Deployment Protection
 
@@ -191,6 +271,7 @@ The app still gates access with its own login.
    - `supabase/migrate-tracker.sql` — if tables already exist from an older schema
    - `supabase/storage-cvs.sql` — CV upload bucket (`cvs`)
    - `supabase/recruitment-requests.sql` — request form schemas and submissions
+   - `supabase/auth-passwords.sql` — password changes from Settings
 3. Copy project URL and anon key into env.
 4. Restart / redeploy.
 

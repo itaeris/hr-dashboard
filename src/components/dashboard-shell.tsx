@@ -19,6 +19,7 @@ import {
   IconMail,
   IconClipboard,
   IconChevronDown,
+  IconSettings,
 } from "./icons";
 import { logoutAction } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth/users";
@@ -31,6 +32,7 @@ const NAV = [
   { href: "/candidates", label: "Progress", icon: IconPeople },
   { href: "/jobs", label: "Vacancy", icon: IconBriefcase },
   { href: "/emails", label: "Emails", icon: IconMail },
+  { href: "/settings", label: "Settings", icon: IconSettings },
 ];
 
 const REQUEST_LINKS = [
@@ -214,6 +216,8 @@ function Topbar() {
       ? "Request form"
       : pathname.includes("/request/responses")
         ? "Request responses"
+        : pathname.includes("/settings")
+          ? "Settings"
         : (NAV.find((item) => {
             const href = `/${slug}${item.href}`;
             return item.href === "" ? pathname === `/${slug}` : pathname.startsWith(href);
@@ -272,7 +276,7 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-6 gap-1 border-t border-line bg-paper-raised/95 px-2 py-2 backdrop-blur lg:hidden">
       {[
-        ...NAV,
+        ...NAV.filter((item) => item.href !== "/settings"),
         { href: "/request/responses", label: "Request", icon: IconClipboard },
       ].map((item) => {
         const href = `/${slug}${item.href}`;

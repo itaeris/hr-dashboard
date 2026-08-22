@@ -25,7 +25,7 @@ export function CompanyPicker({ user }: { user: AuthUser }) {
               HR Recruitment
             </p>
             <h1 className="mt-3 max-w-xl font-display text-4xl leading-tight text-ink sm:text-5xl">
-              Choose the brand house you want to manage today.
+              Select a company to manage recruitment.
             </h1>
           </div>
           <div className="hidden text-right md:block">
