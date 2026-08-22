@@ -204,7 +204,7 @@ function RequestMenu({ slug, pathname }: { slug: CompanySlug; pathname: string }
 }
 
 function Topbar() {
-  const { brand, slug } = useRecruitment();
+  const { brand, slug, source, sourceNote } = useRecruitment();
   const pathname = usePathname();
   const [candidateOpen, setCandidateOpen] = useState(false);
   const [jobOpen, setJobOpen] = useState(false);
@@ -227,6 +227,9 @@ function Topbar() {
             {brand.name}
           </p>
           <h1 className="font-display text-2xl">{title}</h1>
+          {source === "demo" ? (
+            <p className="mt-1 text-xs text-[#B45309]">{sourceNote || "Showing demo data."}</p>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2">
