@@ -64,7 +64,7 @@ export type AddCandidateInput = {
   notes: string;
 };
 
-type AddJobInput = {
+export type AddJobInput = {
   hire_type: HireType;
   title: string;
   level: string;
@@ -98,6 +98,8 @@ type RecruitmentContextValue = {
   selected: ApplicationView | null;
   addCandidate: (input: AddCandidateInput) => Promise<void>;
   addJob: (input: AddJobInput) => Promise<void>;
+  updateJob: (jobId: string, input: AddJobInput) => Promise<void>;
+  deleteJob: (jobId: string) => Promise<void>;
   updateCandidate: (applicationId: string, input: AddCandidateInput) => Promise<void>;
   deleteCandidate: (applicationId: string) => Promise<void>;
   updateStage: (applicationId: string, stage: Stage) => Promise<void>;
@@ -578,6 +580,80 @@ export function RecruitmentProvider({
     [company, source],
   );
 
+  const updateJob = useCallback(
+    async (jobId: string, input: AddJobInput) => {
+      const current = jobs.find((item) => item.id === jobId);
+      if (!current) return;
+
+      const next: JobRow = {
+        ...current,
+        hire_type: input.hire_type,
+        title: input.title,
+        level: input.level,
+        department: input.department,
+        hiring_manager: input.hiring_manager,
+        recruiter_pic: input.recruiter_pic,
+        headcount_needed: input.headcount_needed,
+        request_date: input.request_date,
+        sla_target: input.sla_target,
+        target_join: input.target_join,
+        status_vacancy: input.status_vacancy,
+        fulfilled_date: input.fulfilled_date,
+        offer_stage: input.offer_stage,
+        priority: input.priority,
+        notes: input.notes,
+      };
+
+      const supabase = source === "supabase" ? getSupabaseBrowserClient() : null;
+      if (supabase) {
+        const { error } = await supabase
+          .from("jobs")
+          .update({
+            hire_type: next.hire_type,
+            title: next.title,
+            level: next.level,
+            department: next.department,
+            hiring_manager: next.hiring_manager,
+            recruiter_pic: next.recruiter_pic,
+            headcount_needed: next.headcount_needed,
+            request_date: next.request_date,
+            sla_target: next.sla_target,
+            target_join: next.target_join,
+            status_vacancy: next.status_vacancy,
+            fulfilled_date: next.fulfilled_date,
+            offer_stage: next.offer_stage,
+            priority: next.priority,
+            notes: next.notes,
+            status: isOpenVacancy(next.status_vacancy) ? "open" : "closed",
+            openings: next.headcount_needed,
+            description: next.notes,
+          })
+          .eq("id", jobId);
+        if (error) throw error;
+      }
+
+      setJobs((list) => list.map((item) => (item.id === jobId ? next : item)));
+    },
+    [jobs, source],
+  );
+
+  const deleteJob = useCallback(
+    async (jobId: string) => {
+      if (applications.some((item) => item.job_id === jobId)) {
+        throw new Error("This vacancy still has candidates. Move or delete them first.");
+      }
+
+      const supabase = source === "supabase" ? getSupabaseBrowserClient() : null;
+      if (supabase) {
+        const { error } = await supabase.from("jobs").delete().eq("id", jobId);
+        if (error) throw error;
+      }
+
+      setJobs((current) => current.filter((item) => item.id !== jobId));
+    },
+    [applications, source],
+  );
+
   const updateStage = useCallback(
     async (applicationId: string, stage: Stage) => {
       const updatedAt = new Date().toISOString();
@@ -669,6 +745,8 @@ export function RecruitmentProvider({
       selected,
       addCandidate,
       addJob,
+      updateJob,
+      deleteJob,
       updateCandidate,
       deleteCandidate,
       updateStage,
@@ -681,6 +759,7 @@ export function RecruitmentProvider({
       addJob,
       applications,
       deleteCandidate,
+      deleteJob,
       brand,
       candidates,
       company,
@@ -692,6 +771,7 @@ export function RecruitmentProvider({
       source,
       userEmail,
       toggleJobStatus,
+      updateJob,
       updateCandidate,
       updateNotes,
       updateRating,

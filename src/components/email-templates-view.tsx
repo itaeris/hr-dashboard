@@ -50,7 +50,7 @@ export function EmailTemplatesPage() {
   return (
     <PageFade>
       <p className="max-w-2xl text-sm text-muted">
-        Edit the three candidate emails. Merge fields:{" "}
+        Edit the candidate emails. Merge fields:{" "}
         <code className="break-all text-ink">{"{{candidate_name}}"}</code>,{" "}
         <code className="break-all text-ink">{"{{role}}"}</code>,{" "}
         <code className="break-all text-ink">{"{{company}}"}</code>. Attach a file here

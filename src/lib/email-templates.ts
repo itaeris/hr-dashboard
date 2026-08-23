@@ -4,6 +4,7 @@ import type { ApplicationView, CompanySlug } from "./types";
 export const EMAIL_TEMPLATE_KINDS = [
   "interview",
   "user-interview",
+  "studi-case",
   "offering",
 ] as const;
 
@@ -33,6 +34,10 @@ export const EMAIL_TEMPLATE_META: Record<
   "user-interview": {
     label: "User Interview",
     hint: "Hiring-team interview invitation",
+  },
+  "studi-case": {
+    label: "Studi Case",
+    hint: "Case study brief for the candidate",
   },
   offering: {
     label: "Offering Letter",
@@ -69,6 +74,19 @@ Warm regards,
 Thank you for speaking with our Talent team. We would like to invite you to a user interview for the {{role}} role at {{company}}.
 
 This conversation will be with the hiring team. We will share the schedule and any preparation notes shortly.{{interview_line}}
+
+Warm regards,
+{{company}} Talent Team`,
+      attachments: [],
+    },
+    {
+      kind: "studi-case",
+      subject: `Studi Case — {{role}} at {{company}}`,
+      body: `Hi {{candidate_name}},
+
+Thank you for the conversation so far. As the next step for the {{role}} role at {{company}}, we would like you to complete a studi case.
+
+Please find the brief attached. Reply to this email if anything is unclear, and send your work back by the agreed deadline.
 
 Warm regards,
 {{company}} Talent Team`,
@@ -155,6 +173,9 @@ export function suggestedTemplate(item: ApplicationView): EmailTemplateKind {
     item.stage === "offer"
   ) {
     return "offering";
+  }
+  if (item.job.status_vacancy === "Study Case") {
+    return "studi-case";
   }
   if (
     item.latest_status === "User Interview" ||
