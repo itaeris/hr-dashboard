@@ -1,6 +1,8 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
 import { authSecret } from "@/lib/auth/session-token";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { CompanySlug } from "@/lib/types";
+import { calendarCompanyFromEmail } from "./scope";
 
 const memory = new Map<string, string>();
 
@@ -33,15 +35,30 @@ function decrypt(payload: string) {
   }
 }
 
-export async function saveGoogleRefreshToken(email: string, refreshToken: string) {
+function tokenKey(email: string, slug: CompanySlug) {
+  return `${email.trim().toLowerCase()}::${slug}`;
+}
+
+function lookupKeys(email: string, slug: CompanySlug) {
   const normalized = email.trim().toLowerCase();
+  const keys = [tokenKey(normalized, slug)];
+  if (calendarCompanyFromEmail(normalized) === slug) keys.push(normalized);
+  return keys;
+}
+
+export async function saveGoogleRefreshToken(
+  email: string,
+  slug: CompanySlug,
+  refreshToken: string,
+) {
+  const scoped = tokenKey(email, slug);
   const refresh_cipher = encrypt(refreshToken);
-  memory.set(normalized, refreshToken);
+  memory.set(scoped, refreshToken);
 
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return;
   const { error } = await supabase.from("hr_google_tokens").upsert({
-    email: normalized,
+    email: scoped,
     refresh_cipher,
     updated_at: new Date().toISOString(),
   });
@@ -50,32 +67,41 @@ export async function saveGoogleRefreshToken(email: string, refreshToken: string
   }
 }
 
-export async function loadGoogleRefreshToken(email: string) {
-  const normalized = email.trim().toLowerCase();
-  const cached = memory.get(normalized);
-  if (cached) return cached;
+export async function loadGoogleRefreshToken(email: string, slug: CompanySlug) {
+  for (const lookup of lookupKeys(email, slug)) {
+    const cached = memory.get(lookup);
+    if (cached) return cached;
+  }
 
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return null;
-  const { data, error } = await supabase
-    .from("hr_google_tokens")
-    .select("refresh_cipher")
-    .eq("email", normalized)
-    .maybeSingle();
-  if (error || !data?.refresh_cipher) return null;
-  const token = decrypt(data.refresh_cipher as string);
-  if (token) memory.set(normalized, token);
-  return token;
+  for (const lookup of lookupKeys(email, slug)) {
+    const { data, error } = await supabase
+      .from("hr_google_tokens")
+      .select("refresh_cipher")
+      .eq("email", lookup)
+      .maybeSingle();
+    if (error || !data?.refresh_cipher) continue;
+    const token = decrypt(data.refresh_cipher as string);
+    if (token) {
+      memory.set(tokenKey(email, slug), token);
+      return token;
+    }
+  }
+  return null;
 }
 
-export async function deleteGoogleRefreshToken(email: string) {
-  const normalized = email.trim().toLowerCase();
-  memory.delete(normalized);
+export async function deleteGoogleRefreshToken(email: string, slug: CompanySlug) {
+  for (const lookup of lookupKeys(email, slug)) {
+    memory.delete(lookup);
+  }
   const supabase = getSupabaseBrowserClient();
   if (!supabase) return;
-  await supabase.from("hr_google_tokens").delete().eq("email", normalized);
+  for (const lookup of lookupKeys(email, slug)) {
+    await supabase.from("hr_google_tokens").delete().eq("email", lookup);
+  }
 }
 
-export async function hasGoogleCalendar(email: string) {
-  return Boolean(await loadGoogleRefreshToken(email));
+export async function hasGoogleCalendar(email: string, slug: CompanySlug) {
+  return Boolean(await loadGoogleRefreshToken(email, slug));
 }

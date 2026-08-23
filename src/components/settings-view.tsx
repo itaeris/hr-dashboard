@@ -4,6 +4,7 @@ import { changePasswordAction, type PasswordState } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth/users";
 import { roleLabel } from "@/lib/auth/users";
 import { useActionState } from "react";
+import { GoogleCalendarSync } from "./google-calendar-sync";
 import { PageFade, Field, PasswordInput } from "./ui";
 
 export function SettingsPage({
@@ -23,6 +24,8 @@ export function SettingsPage({
       <p className="text-sm text-muted">
         Update the password for email sign-in. Google sign-in is unchanged.
       </p>
+
+      <GoogleCalendarSync surface="settings" />
 
       <div className="rounded-[24px] border border-line bg-paper-raised p-5">
         <p className="text-[11px] uppercase tracking-[0.14em] text-muted">Account</p>

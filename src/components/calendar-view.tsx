@@ -222,7 +222,7 @@ export function CalendarPage() {
 
   return (
     <PageFade className="space-y-5">
-      <GoogleCalendarSync />
+      <GoogleCalendarSync surface="calendar" />
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p className="text-sm text-muted">
           Interviews, offers, and join dates from Progress.

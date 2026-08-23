@@ -12,13 +12,13 @@ export const GOOGLE_CALENDAR_SCOPE = [
   "openid",
   "email",
   "profile",
-  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar",
 ].join(" ");
 
-const CALENDAR_NEXT = /^\/(aeris-beaute|from-this-island)\/calendar\/?$/;
+const GOOGLE_NEXT = /^\/(aeris-beaute|from-this-island)\/(calendar|settings)\/?$/;
 
 export function safeCalendarNext(value: string | null) {
-  if (!value || !CALENDAR_NEXT.test(value)) return "/";
+  if (!value || !GOOGLE_NEXT.test(value)) return "/";
   return value.replace(/\/$/, "");
 }
 

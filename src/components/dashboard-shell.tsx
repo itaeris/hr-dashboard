@@ -60,7 +60,7 @@ export function DashboardShell({
 
   return (
     <div style={themeStyle(brand.theme)} className="h-full bg-paper text-ink">
-      <RecruitmentProvider slug={slug}>
+      <RecruitmentProvider slug={slug} userEmail={user.email}>
         <div className="flex h-full min-w-0">
           <Sidebar slug={slug} user={user} />
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">

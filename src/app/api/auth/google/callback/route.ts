@@ -18,6 +18,7 @@ import {
   SESSION_COOKIE,
   sessionCookieOptions,
 } from "@/lib/auth/session-token";
+import { isCompanySlug } from "@/lib/companies";
 import { saveGoogleRefreshToken } from "@/lib/google-calendar/tokens";
 
 function clearOauthCookies(response: NextResponse) {
@@ -145,7 +146,12 @@ async function handleCallback(request: NextRequest) {
       return calendarResult(request, next, "consent");
     }
     const session = decodeSession(request.cookies.get(SESSION_COOKIE)?.value);
-    await saveGoogleRefreshToken(session?.email ?? profile.email, tokens.refresh_token);
+    const owner = session?.email ?? profile.email;
+    const slug = next.split("/").find((part) => isCompanySlug(part));
+    if (!slug) {
+      return calendarResult(request, next, "oauth");
+    }
+    await saveGoogleRefreshToken(owner, slug, tokens.refresh_token);
     return calendarResult(request, next, "connected");
   }
 

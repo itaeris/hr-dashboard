@@ -203,8 +203,8 @@ URI values must match exactly. No trailing slash.
    - `openid`
    - `userinfo.email`
    - `userinfo.profile`
-3. **Add or remove scopes** → search `calendar.events` → add
-   `https://www.googleapis.com/auth/calendar.events`.
+3. **Add or remove scopes** → search `calendar` → add
+   `https://www.googleapis.com/auth/calendar`.
 4. **Save**.
 
 ### 4. Test users (required while status is Testing)
@@ -239,9 +239,11 @@ CalDAV is not used. Enable **Google Calendar API**:
 1. [API Library → Google Calendar API](https://console.cloud.google.com/apis/library/calendar-json.googleapis.com)
 2. **Enable**.
 3. Supabase SQL Editor → run `supabase/google-calendar.sql`.
-4. In the app, open **Calendar → Connect Google Calendar** and allow access.
+4. In the app, open that brand’s **Calendar → Connect Google Calendar** and allow access.
 
-Progress dates (approaching, interviews, offer, join) are created or updated on that Google account’s primary calendar. Clearing a date in Progress removes the matching Google event. Disconnect keeps existing Google events.
+Each workspace has its own Connect / Disconnect. Progress dates for that brand go to a separate Google Calendar named `HR · Aeris Beaute` or `HR · From This Island` — the two brands are never mixed. Clearing a date in Progress removes the matching event. Disconnect keeps existing Google events.
+
+If Calendar was connected before this change, **Disconnect** then **Connect** again so Google can create the brand calendar.
 
 ## Production (Vercel)
 

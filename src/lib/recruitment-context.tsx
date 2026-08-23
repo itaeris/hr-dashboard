@@ -84,6 +84,7 @@ type AddJobInput = {
 
 type RecruitmentContextValue = {
   slug: CompanySlug;
+  userEmail: string;
   brand: CompanyConfig;
   company: CompanyRow | null;
   jobs: JobRow[];
@@ -146,9 +147,11 @@ function isThisMonth(iso: string) {
 
 export function RecruitmentProvider({
   slug,
+  userEmail,
   children,
 }: {
   slug: CompanySlug;
+  userEmail: string;
   children: ReactNode;
 }) {
   const brand = COMPANIES[slug];
@@ -298,6 +301,7 @@ export function RecruitmentProvider({
               candidate: candidate as CandidateRow,
               job,
             },
+            slug,
             company.name,
           );
         }
@@ -348,10 +352,10 @@ export function RecruitmentProvider({
       setApplications((current) => [application, ...current]);
       const job = jobs.find((item) => item.id === input.job_id);
       if (job) {
-        syncApplicationToGoogle({ ...application, candidate, job }, company.name);
+        syncApplicationToGoogle({ ...application, candidate, job }, slug, company.name);
       }
     },
-    [company, jobs, source],
+    [company, jobs, slug, source],
   );
 
   const updateCandidate = useCallback(
@@ -459,11 +463,12 @@ export function RecruitmentProvider({
       if (job) {
         syncApplicationToGoogle(
           { ...nextApplication, candidate: nextCandidate, job },
+          slug,
           company.name,
         );
       }
     },
-    [applications, candidates, company, jobs, source],
+    [applications, candidates, company, jobs, slug, source],
   );
 
   const deleteCandidate = useCallback(
@@ -505,9 +510,9 @@ export function RecruitmentProvider({
         return next;
       });
       setSelectedId(null);
-      removeApplicationFromGoogle(applicationId);
+      removeApplicationFromGoogle(applicationId, slug);
     },
-    [applications, source],
+    [applications, slug, source],
   );
 
   const addJob = useCallback(
@@ -650,6 +655,7 @@ export function RecruitmentProvider({
   const value = useMemo(
     () => ({
       slug,
+      userEmail,
       brand,
       company,
       jobs,
@@ -684,6 +690,7 @@ export function RecruitmentProvider({
       selectedId,
       slug,
       source,
+      userEmail,
       toggleJobStatus,
       updateCandidate,
       updateNotes,
