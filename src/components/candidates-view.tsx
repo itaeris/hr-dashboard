@@ -12,6 +12,14 @@ import {
   timeToFill,
   userToOfferSla,
 } from "@/lib/tracker";
+import {
+  TABLE_SORT_OPTIONS,
+  compareByDate,
+  compareByName,
+  paginate,
+  type PageSize,
+  type TableSortKey,
+} from "@/lib/table-page";
 import { LATEST_STATUSES, type LatestStatus } from "@/lib/types";
 import { useMemo, useState } from "react";
 import { CandidateDrawer } from "./candidate-drawer";
@@ -27,8 +35,9 @@ import {
 import { CvCell } from "./cv-preview";
 import { Avatar, PositionChip } from "./display";
 import { TableSkeleton } from "./skeletons";
-import { IconArrowLeft, IconSearch } from "./icons";
+import { IconSearch } from "./icons";
 import { Select } from "./fields";
+import { TablePager } from "./table-pager";
 import { PageFade, fieldClass } from "./ui";
 
 const COLUMNS = [
@@ -64,22 +73,6 @@ const COLUMNS = [
   { label: "Time to fill", align: "center" as const },
 ] as const;
 
-const PAGE_SIZE = 10;
-
-type SortKey = "az" | "za" | "newest" | "oldest";
-
-function pageItems(current: number, total: number) {
-  if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
-  const items: Array<number | "gap"> = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-  if (start > 2) items.push("gap");
-  for (let page = start; page <= end; page += 1) items.push(page);
-  if (end < total - 1) items.push("gap");
-  items.push(total);
-  return items;
-}
-
 function boolLabel(value: boolean) {
   return value ? "Yes" : "No";
 }
@@ -89,7 +82,8 @@ export function CandidatesPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<LatestStatus | "all">("all");
   const [jobId, setJobId] = useState("all");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<TableSortKey>("newest");
+  const [pageSize, setPageSize] = useState<PageSize>(10);
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
@@ -107,32 +101,29 @@ export function CandidatesPage() {
     const next = [...filtered];
     next.sort((left, right) => {
       if (sort === "az" || sort === "za") {
-        const compared = left.candidate.full_name.localeCompare(
+        return compareByName(
+          left.candidate.full_name,
           right.candidate.full_name,
-          undefined,
-          { numeric: true, sensitivity: "base" },
+          sort === "za",
         );
-        return sort === "az" ? compared : -compared;
       }
-      const leftTime = new Date(left.updated_at || left.applied_at).getTime();
-      const rightTime = new Date(right.updated_at || right.applied_at).getTime();
-      return sort === "newest" ? rightTime - leftTime : leftTime - rightTime;
+      return compareByDate(
+        left.updated_at || left.applied_at,
+        right.updated_at || right.applied_at,
+        sort === "newest",
+      );
     });
     return next;
   }, [filtered, sort]);
 
-  const filterKey = `${query}:${status}:${jobId}:${sort}`;
+  const filterKey = `${query}:${status}:${jobId}:${sort}:${pageSize}`;
   const [activeKey, setActiveKey] = useState(filterKey);
   if (activeKey !== filterKey) {
     setActiveKey(filterKey);
     setPage(1);
   }
 
-  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  const from = sorted.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const to = Math.min(currentPage * PAGE_SIZE, sorted.length);
+  const { pageCount, currentPage, items: paged } = paginate(sorted, page, pageSize);
 
   if (loading) return <TableSkeleton filters />;
 
@@ -169,13 +160,8 @@ export function CandidatesPage() {
         <Select
           className="w-full min-w-0 lg:max-w-48"
           value={sort}
-          onChange={(next) => setSort(next as SortKey)}
-          options={[
-            { value: "az", label: "A–Z" },
-            { value: "za", label: "Z–A" },
-            { value: "newest", label: "Newest first" },
-            { value: "oldest", label: "Oldest first" },
-          ]}
+          onChange={(next) => setSort(next as TableSortKey)}
+          options={TABLE_SORT_OPTIONS}
         />
       </div>
 
@@ -318,54 +304,14 @@ export function CandidatesPage() {
           )}
         </tbody>
       </TableCard>
-      {sorted.length > 0 ? (
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted">
-            {from}–{to} of {sorted.length}
-          </p>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button
-              type="button"
-              aria-label="Previous page"
-              disabled={currentPage <= 1}
-              onClick={() => setPage(currentPage - 1)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <IconArrowLeft className="h-4 w-4" />
-            </button>
-            {pageItems(currentPage, pageCount).map((item, index) =>
-              item === "gap" ? (
-                <span key={`gap-${index}`} className="px-1 text-sm text-muted">
-                  …
-                </span>
-              ) : (
-                <button
-                  key={item}
-                  type="button"
-                  aria-current={item === currentPage ? "page" : undefined}
-                  onClick={() => setPage(item)}
-                  className={`inline-flex h-9 min-w-9 items-center justify-center rounded-full px-2.5 text-sm ${
-                    item === currentPage
-                      ? "bg-accent font-medium text-white"
-                      : "border border-line text-ink hover:bg-paper"
-                  }`}
-                >
-                  {item}
-                </button>
-              ),
-            )}
-            <button
-              type="button"
-              aria-label="Next page"
-              disabled={currentPage >= pageCount}
-              onClick={() => setPage(currentPage + 1)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <IconArrowLeft className="h-4 w-4 rotate-180" />
-            </button>
-          </div>
-        </div>
-      ) : null}
+      <TablePager
+        page={currentPage}
+        pageCount={pageCount}
+        total={sorted.length}
+        pageSize={pageSize}
+        onPage={setPage}
+        onPageSize={setPageSize}
+      />
       <CandidateDrawer />
     </PageFade>
   );

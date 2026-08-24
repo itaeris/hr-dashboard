@@ -40,7 +40,7 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
 
 export function CandidateDrawer() {
   const {
-    selected,
+    selected, 
     setSelectedId,
     jobs,
     updateCandidate,

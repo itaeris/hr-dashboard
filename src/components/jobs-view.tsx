@@ -2,8 +2,16 @@
 
 import { formatTableDate } from "@/lib/format";
 import { useRecruitment } from "@/lib/recruitment-context";
+import {
+  compareByDate,
+  compareByName,
+  paginate,
+  TABLE_SORT_OPTIONS,
+  type PageSize,
+  type TableSortKey,
+} from "@/lib/table-page";
 import { hireStatus, hiredCount, isOpenVacancy, slaAging, slaResult } from "@/lib/tracker";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   EmptyValue,
   Pill,
@@ -16,7 +24,9 @@ import {
 import { TableSkeleton } from "./skeletons";
 import { AddJobModal, EditJobModal, JobPreviewModal } from "./modals";
 import { PositionChip } from "./display";
+import { Select } from "./fields";
 import { IconPencil, IconPlus, IconTrash } from "./icons";
+import { TablePager } from "./table-pager";
 import { PageFade } from "./ui";
 
 const COLUMNS = [
@@ -50,6 +60,33 @@ export function JobsPage() {
   const [removing, setRemoving] = useState<(typeof jobs)[number] | null>(null);
   const [deleteError, setDeleteError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [sort, setSort] = useState<TableSortKey>("newest");
+  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const [page, setPage] = useState(1);
+
+  const sorted = useMemo(() => {
+    const next = [...jobs];
+    next.sort((left, right) => {
+      if (sort === "az" || sort === "za") {
+        return compareByName(left.title, right.title, sort === "za");
+      }
+      return compareByDate(
+        left.request_date || left.created_at,
+        right.request_date || right.created_at,
+        sort === "newest",
+      );
+    });
+    return next;
+  }, [jobs, sort]);
+
+  const filterKey = `${sort}:${pageSize}`;
+  const [activeKey, setActiveKey] = useState(filterKey);
+  if (activeKey !== filterKey) {
+    setActiveKey(filterKey);
+    setPage(1);
+  }
+
+  const { pageCount, currentPage, items: paged } = paginate(sorted, page, pageSize);
 
   if (loading) return <TableSkeleton />;
 
@@ -59,14 +96,22 @@ export function JobsPage() {
         <p className="max-w-xl text-sm text-muted">
           Vacancy Tracker — columns follow the Aeris recruitment template.
         </p>
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
-        >
-          <IconPlus className="h-4 w-4" />
-          New vacancy
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Select
+            className="w-full min-w-0 sm:w-48"
+            value={sort}
+            onChange={(next) => setSort(next as TableSortKey)}
+            options={TABLE_SORT_OPTIONS}
+          />
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
+          >
+            <IconPlus className="h-4 w-4" />
+            New vacancy
+          </button>
+        </div>
       </div>
 
       <TableCard minWidth="1600px">
@@ -85,7 +130,14 @@ export function JobsPage() {
           </tr>
         </thead>
         <tbody>
-          {jobs.map((job) => {
+          {paged.length === 0 ? (
+            <tr>
+              <td colSpan={COLUMNS.length} className="px-5 py-12 text-sm text-muted">
+                No vacancies yet.
+              </td>
+            </tr>
+          ) : (
+          paged.map((job) => {
             const hired = hiredCount(job.id, views);
             const statusHire = hireStatus(hired, job.headcount_needed);
             const aging = slaAging(job);
@@ -192,9 +244,18 @@ export function JobsPage() {
                 </Td>
               </TableRow>
             );
-          })}
+          })
+          )}
         </tbody>
       </TableCard>
+      <TablePager
+        page={currentPage}
+        pageCount={pageCount}
+        total={sorted.length}
+        pageSize={pageSize}
+        onPage={setPage}
+        onPageSize={setPageSize}
+      />
       <AddJobModal open={open} onClose={() => setOpen(false)} />
       <JobPreviewModal job={preview} onClose={() => setPreview(null)} />
       <EditJobModal job={editing} onClose={() => setEditing(null)} />
