@@ -2,7 +2,7 @@
 
 import { isoToYmd } from "@/lib/format";
 import type { AddCandidateInput } from "@/lib/recruitment-context";
-import { blankDate } from "@/lib/tracker";
+import { alignedLatestStatus, blankDate } from "@/lib/tracker";
 import {
   LATEST_STATUSES,
   OFFER_RESULTS,
@@ -157,7 +157,9 @@ export function CandidateForm({
         <Field label="Latest Status">
           <Select
             name="latest_status"
-            defaultValue={item?.latest_status ?? "Approaching"}
+            defaultValue={
+              item ? alignedLatestStatus(item) : "Approaching"
+            }
             options={LATEST_STATUSES.map((status) => ({ value: status, label: status }))}
           />
         </Field>

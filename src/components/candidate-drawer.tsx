@@ -3,6 +3,7 @@
 import { formatDate, formatSheetDate, formatTableDate } from "@/lib/format";
 import { useRecruitment } from "@/lib/recruitment-context";
 import {
+  alignedLatestStatus,
   hrToUserSla,
   isOpenVacancy,
   screeningSla,
@@ -313,11 +314,12 @@ function CandidateDetail({
   item: NonNullable<ReturnType<typeof useRecruitment>["selected"]>;
 }) {
   const stuck = stuckFlag(item);
+  const status = alignedLatestStatus(item);
 
   return (
     <div className="space-y-5 pb-[max(5rem,env(safe-area-inset-bottom))] sm:space-y-7 sm:pb-4">
       <section className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-        <Pill>{item.latest_status}</Pill>
+        <Pill>{status}</Pill>
         {item.candidate.phone ? (
           <span className="inline-flex min-w-0 items-center gap-1.5 break-all text-sm text-muted">
             <IconPhone className="h-3.5 w-3.5 shrink-0" />
@@ -353,7 +355,7 @@ function CandidateDetail({
           <Detail label="Last role" value={item.last_role} />
           <Detail label="Last salary" value={item.last_salary} />
           <Detail label="Expected salary" value={item.expected_salary} />
-          <Detail label="Status" value={<Pill>{item.latest_status}</Pill>} />
+          <Detail label="Status" value={<Pill>{status}</Pill>} />
         </div>
       </section>
 

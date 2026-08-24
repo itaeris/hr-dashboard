@@ -55,11 +55,16 @@ export function stageAging(item: ApplicationRow) {
 }
 
 export function stuckFlag(item: ApplicationRow) {
-  if (item.latest_status === "Dropped" || item.latest_status === "Rejected") {
+  const status = alignedLatestStatus(item);
+  if (
+    item.stage === "rejected" ||
+    status === "Dropped" ||
+    status === "Rejected" ||
+    status === "Offer Rejected"
+  ) {
     return "DROPPED";
   }
-  if (item.latest_status === "Offer Rejected") return "DROPPED";
-  if (item.latest_status === "Joined" || item.latest_status === "Offer Accepted") {
+  if (item.stage === "hired" || status === "Joined" || status === "Offer Accepted") {
     return "";
   }
   if (stageAging(item) >= 14) return "STUCK";
@@ -130,6 +135,16 @@ export function latestFromStage(stage: Stage): LatestStatus {
     default:
       return "Dropped";
   }
+}
+
+/** Pipeline column (`stage`) wins when Progress status is out of date. */
+export function alignedLatestStatus(
+  item: Pick<ApplicationRow, "stage" | "latest_status">,
+): LatestStatus {
+  if (stageFromLatestStatus(item.latest_status) === item.stage) {
+    return item.latest_status;
+  }
+  return latestFromStage(item.stage);
 }
 
 export function blankDate(value: FormDataEntryValue | null) {

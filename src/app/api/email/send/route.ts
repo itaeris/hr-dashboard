@@ -1,4 +1,7 @@
+import { canAccessCompany } from "@/lib/auth/access";
+import { loadAppUser } from "@/lib/auth/app-users";
 import { getSession } from "@/lib/auth/session";
+import { isCompanySlug } from "@/lib/companies";
 import { isSmtpConfigured, sendSmtpMail } from "@/lib/email/smtp";
 import type { EmailAttachment } from "@/lib/email-templates";
 import { NextResponse } from "next/server";
@@ -20,15 +23,26 @@ export async function POST(request: Request) {
     to?: string;
     subject?: string;
     body?: string;
+    company?: string;
     attachments?: EmailAttachment[];
   };
 
   const to = payload.to?.trim() ?? "";
   const subject = payload.subject?.trim() ?? "";
   const text = payload.body?.trim() ?? "";
+  const company = payload.company;
   const attachments = Array.isArray(payload.attachments)
     ? payload.attachments.slice(0, 5)
     : [];
+
+  if (!company || !isCompanySlug(company)) {
+    return NextResponse.json({ error: "Choose a workspace." }, { status: 400 });
+  }
+
+  const profile = await loadAppUser(session.email);
+  if (!canAccessCompany(session, company, profile?.company)) {
+    return NextResponse.json({ error: "You cannot send from this workspace." }, { status: 403 });
+  }
 
   if (!to || !subject || !text) {
     return NextResponse.json(
@@ -48,6 +62,7 @@ export async function POST(request: Request) {
       to,
       subject,
       text,
+      company,
       attachments,
       replyTo: session.email,
     });

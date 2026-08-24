@@ -92,13 +92,19 @@ export function PipelinePage() {
 
 function StageDots({ current }: { current: Stage }) {
   const index = STAGES.findIndex((stage) => stage.id === current);
+  const dropped = current === "rejected";
+  const filled = dropped ? -1 : index;
   return (
     <div className="mt-3 flex gap-1">
       {STAGES.slice(0, 5).map((stage, stageIndex) => (
         <span
           key={stage.id}
           className={`h-1 flex-1 rounded-full ${
-            stageIndex <= index && current !== "rejected" ? "bg-accent" : "bg-line"
+            dropped
+              ? "bg-ink/20"
+              : stageIndex <= filled
+                ? "bg-accent"
+                : "bg-line"
           }`}
         />
       ))}

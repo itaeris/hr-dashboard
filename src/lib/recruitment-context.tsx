@@ -32,7 +32,7 @@ import type {
   Stage,
   VacancyStatus,
 } from "./types";
-import { isOpenVacancy, latestFromStage, nextInterviewAt, stageFromLatestStatus } from "./tracker";
+import { alignedLatestStatus, isOpenVacancy, latestFromStage, nextInterviewAt, stageFromLatestStatus } from "./tracker";
 
 type DataSource = "supabase" | "demo";
 
@@ -120,7 +120,7 @@ function joinViews(
       const candidate = candidates.find((item) => item.id === application.candidate_id);
       const job = jobs.find((item) => item.id === application.job_id);
       if (!candidate || !job) return null;
-      return { ...application, candidate, job };
+      return { ...application, latest_status: alignedLatestStatus(application), candidate, job };
     })
     .filter((item): item is ApplicationView => item !== null)
     .sort(

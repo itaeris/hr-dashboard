@@ -19,9 +19,6 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "HR Recruitment",
   },
-  icons: {
-    apple: "/icons/apple-touch-icon.png",
-  },
   formatDetection: {
     telephone: false,
   },

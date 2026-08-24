@@ -1,3 +1,4 @@
+import { COMPANY_EMAIL_LOGOS, EMAIL_LOGO_CID, emailBodyHtml } from "./email/signature";
 import { formatSheetDate } from "./format";
 import type { ApplicationView, CompanySlug } from "./types";
 
@@ -6,6 +7,7 @@ export const EMAIL_TEMPLATE_KINDS = [
   "user-interview",
   "studi-case",
   "offering",
+  "rejected",
 ] as const;
 
 export type EmailTemplateKind = (typeof EMAIL_TEMPLATE_KINDS)[number];
@@ -42,6 +44,10 @@ export const EMAIL_TEMPLATE_META: Record<
   offering: {
     label: "Offering Letter",
     hint: "Offer email with the letter attached",
+  },
+  rejected: {
+    label: "Rejected",
+    hint: "Polite decline after the process",
   },
 };
 
@@ -100,6 +106,21 @@ Warm regards,
 We are delighted to offer you the {{role}} position at {{company}}.
 
 Please find the offering letter attached. Review the details, and reply to this email if anything needs clarifying. We would love to welcome you to the team.
+
+Warm regards,
+{{company}} Talent Team`,
+      attachments: [],
+    },
+    {
+      kind: "rejected",
+      subject: `Update on your application — {{role}} at {{company}}`,
+      body: `Hi {{candidate_name}},
+
+Thank you for your interest in the {{role}} role at {{company}}, and for the time you spent with our team.
+
+After careful consideration, we have decided not to move forward with your application. This was not an easy decision, and we truly appreciate the effort you put into the process.
+
+We wish you all the best in your next opportunity.
 
 Warm regards,
 {{company}} Talent Team`,
@@ -167,6 +188,14 @@ export function templateVars(
 }
 
 export function suggestedTemplate(item: ApplicationView): EmailTemplateKind {
+  if (
+    item.stage === "rejected" ||
+    item.latest_status === "Dropped" ||
+    item.latest_status === "Rejected" ||
+    item.latest_status === "Offer Rejected"
+  ) {
+    return "rejected";
+  }
   if (
     item.latest_status === "Offering" ||
     item.latest_status === "Offer Accepted" ||
@@ -239,25 +268,70 @@ async function attachmentPayload(file: EmailAttachment) {
   };
 }
 
+async function logoPayload(slug: CompanySlug) {
+  const logo = COMPANY_EMAIL_LOGOS[slug];
+  const response = await fetch(logo.publicPath);
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return {
+    name: logo.fileName.replaceAll('"', ""),
+    type: response.headers.get("content-type") || "image/png",
+    base64: btoa(binary),
+  };
+}
+
 export async function buildEmlFile(input: {
   to: string;
   subject: string;
   body: string;
   attachments: EmailAttachment[];
+  company: CompanySlug;
 }) {
-  const boundary = `=_hr_${crypto.randomUUID().replaceAll("-", "")}`;
+  const mixed = `=_hr_mixed_${crypto.randomUUID().replaceAll("-", "")}`;
+  const related = `=_hr_related_${crypto.randomUUID().replaceAll("-", "")}`;
+  const alt = `=_hr_alt_${crypto.randomUUID().replaceAll("-", "")}`;
+  const logo = await logoPayload(input.company);
+  const html = emailBodyHtml(input.body, input.company);
   const chunks = [
     `MIME-Version: 1.0`,
     `Date: ${new Date().toUTCString()}`,
     `To: ${input.to}`,
     `Subject: ${encodeHeader(input.subject)}`,
-    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    `Content-Type: multipart/mixed; boundary="${mixed}"`,
     ``,
-    `--${boundary}`,
+    `--${mixed}`,
+    `Content-Type: multipart/related; boundary="${related}"`,
+    ``,
+    `--${related}`,
+    `Content-Type: multipart/alternative; boundary="${alt}"`,
+    ``,
+    `--${alt}`,
     `Content-Type: text/plain; charset="utf-8"`,
     `Content-Transfer-Encoding: 8bit`,
     ``,
     input.body.replaceAll("\r\n", "\n").replaceAll("\n", "\r\n"),
+    ``,
+    `--${alt}`,
+    `Content-Type: text/html; charset="utf-8"`,
+    `Content-Transfer-Encoding: 8bit`,
+    ``,
+    html.replaceAll("\r\n", "\n").replaceAll("\n", "\r\n"),
+    ``,
+    `--${alt}--`,
+    ``,
+    `--${related}`,
+    `Content-Type: ${logo.type}; name="${logo.name}"`,
+    `Content-Transfer-Encoding: base64`,
+    `Content-Disposition: inline; filename="${logo.name}"`,
+    `Content-ID: <${EMAIL_LOGO_CID}>`,
+    ``,
+    foldBase64(logo.base64),
+    ``,
+    `--${related}--`,
   ];
 
   for (const file of input.attachments) {
@@ -265,7 +339,7 @@ export async function buildEmlFile(input: {
     const safeName = payload.name.replaceAll('"', "");
     chunks.push(
       ``,
-      `--${boundary}`,
+      `--${mixed}`,
       `Content-Type: ${payload.type}; name="${safeName}"`,
       `Content-Transfer-Encoding: base64`,
       `Content-Disposition: attachment; filename="${safeName}"`,
@@ -274,7 +348,7 @@ export async function buildEmlFile(input: {
     );
   }
 
-  chunks.push(``, `--${boundary}--`, ``);
+  chunks.push(``, `--${mixed}--`, ``);
   return chunks.join("\r\n");
 }
 

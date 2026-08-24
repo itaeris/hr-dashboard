@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  outputFileTracingIncludes: {
+    "/api/email/send": [
+      "./public/logo/aerisbeaute/Aeris new logo-01.png",
+      "./public/logo/fti/FA_FromThisIsland_Charcoal.png",
+    ],
+  },
   async headers() {
     return [
       {

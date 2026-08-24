@@ -10,6 +10,7 @@ import {
 } from "@/lib/email-templates";
 import { useRecruitment } from "@/lib/recruitment-context";
 import { useState } from "react";
+import { EmailSignaturePreview } from "./email-signature-preview";
 import { FileAttachList } from "./file-attach";
 import { Field, PageFade, fieldClass } from "./ui";
 
@@ -54,7 +55,8 @@ export function EmailTemplatesPage() {
         <code className="break-all text-ink">{"{{candidate_name}}"}</code>,{" "}
         <code className="break-all text-ink">{"{{role}}"}</code>,{" "}
         <code className="break-all text-ink">{"{{company}}"}</code>. Attach a file here
-        and it will be included when you send from a candidate.
+        and it will be included when you send from a candidate. The company logo is
+        added as a signature on send.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -115,6 +117,7 @@ export function EmailTemplatesPage() {
                 label="Attach file to this template"
               />
             </Field>
+            <EmailSignaturePreview slug={slug} />
           </div>
         </div>
       ) : null}

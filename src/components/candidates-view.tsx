@@ -3,6 +3,7 @@
 import { formatTableDate } from "@/lib/format";
 import { useRecruitment } from "@/lib/recruitment-context";
 import {
+  alignedLatestStatus,
   hrToUserSla,
   screeningSla,
   stageAging,
@@ -77,7 +78,7 @@ export function CandidatesPage() {
       const haystack = `${item.candidate.full_name} ${item.job.title} ${item.candidate.source}`.toLowerCase();
       return (
         haystack.includes(query.toLowerCase()) &&
-        (status === "all" || item.latest_status === status) &&
+        (status === "all" || alignedLatestStatus(item) === status) &&
         (jobId === "all" || item.job_id === jobId)
       );
     });
@@ -165,7 +166,7 @@ export function CandidatesPage() {
                     {cell(item.expected_salary)}
                   </Td>
                   <Td nowrap>
-                    <Pill>{item.latest_status}</Pill>
+                    <Pill>{alignedLatestStatus(item)}</Pill>
                   </Td>
                   <Td nowrap muted>
                     {cell(formatTableDate(item.approaching_date))}

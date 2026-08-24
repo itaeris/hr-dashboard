@@ -17,6 +17,7 @@ import { useRecruitment } from "@/lib/recruitment-context";
 import type { ApplicationView } from "@/lib/types";
 import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { EmailSignaturePreview } from "./email-signature-preview";
 import { FileAttachList } from "./file-attach";
 import { Field, ModalFrame, fieldClass } from "./ui";
 
@@ -91,7 +92,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       const response = await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, body, attachments }),
+        body: JSON.stringify({ to, subject, body, attachments, company: slug }),
       });
       const payload = (await response.json()) as { error?: string };
       if (!response.ok) {
@@ -108,7 +109,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
   async function downloadEml() {
     setBusy(true);
     try {
-      const eml = await buildEmlFile({ to, subject, body, attachments });
+      const eml = await buildEmlFile({ to, subject, body, attachments, company: slug });
       downloadTextFile(
         `${EMAIL_TEMPLATE_META[kind].label} — ${item.candidate.full_name}.eml`,
         eml,
@@ -158,6 +159,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       <Field label="Attachments">
         <FileAttachList files={attachments} onChange={setAttachments} />
       </Field>
+      <EmailSignaturePreview slug={slug} />
       {status ? <p className="text-sm text-accent">{status}</p> : null}
       {error ? <p className="text-sm text-accent">{error}</p> : null}
       <div className="flex flex-col gap-2 pt-2 sm:flex-row">
