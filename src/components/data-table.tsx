@@ -73,7 +73,7 @@ export function Td({
         nowrap ? "whitespace-nowrap" : ""
       } ${muted ? "text-muted" : ""} ${
         sticky
-          ? "sticky left-0 z-10 bg-paper-raised shadow-[1px_0_0_var(--line)] group-hover:bg-paper"
+          ? "sticky left-0 z-10 bg-paper-raised shadow-[1px_0_0_var(--line)] group-hover:bg-paper group-data-[highlight=hired]:bg-hire-soft group-data-[highlight=hired]:group-hover:bg-hire-soft-hover"
           : ""
       } ${groupStart ? "border-l border-line/80" : ""} ${className}`}
     >
@@ -85,16 +85,23 @@ export function Td({
 export function TableRow({
   children,
   onClick,
+  highlight,
 }: {
   children: ReactNode;
   onClick?: () => void;
+  highlight?: "hired";
 }) {
   return (
     <tr
       onClick={onClick}
+      data-highlight={highlight}
       className={`group border-0 last:[&>td]:border-b-0 ${
         onClick ? "cursor-pointer" : ""
-      } hover:[&>td]:bg-paper`}
+      } ${
+        highlight === "hired"
+          ? "[&>td]:bg-hire-soft hover:[&>td]:bg-hire-soft-hover"
+          : "hover:[&>td]:bg-paper"
+      }`}
     >
       {children}
     </tr>

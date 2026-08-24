@@ -10,6 +10,8 @@
   --ink: #1c1412;
   --muted: #7a6b66;
   --line: #e8ddd4;
+  --hire-soft: #e7f3ea;
+  --hire-soft-hover: #d8ecdd;
 }
 
 @theme inline {
@@ -22,6 +24,8 @@
   --color-ink: var(--ink);
   --color-muted: var(--muted);
   --color-line: var(--line);
+  --color-hire-soft: var(--hire-soft);
+  --color-hire-soft-hover: var(--hire-soft-hover);
   --font-sans: var(--font-poppins);
   --font-display: var(--font-poppins);
 }

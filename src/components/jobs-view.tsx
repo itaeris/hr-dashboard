@@ -15,6 +15,7 @@ import {
 } from "./data-table";
 import { TableSkeleton } from "./skeletons";
 import { AddJobModal, EditJobModal, JobPreviewModal } from "./modals";
+import { PositionChip } from "./display";
 import { IconPencil, IconPlus, IconTrash } from "./icons";
 import { PageFade } from "./ui";
 
@@ -94,7 +95,9 @@ export function JobsPage() {
                 <Td sticky nowrap muted>
                   {job.hire_type}
                 </Td>
-                <Td className="min-w-[180px] font-medium">{job.title}</Td>
+                <Td className="min-w-[180px]">
+                  <PositionChip title={job.title} />
+                </Td>
                 <Td nowrap>{job.level}</Td>
                 <Td>{job.department}</Td>
                 <Td>{cell(job.hiring_manager)}</Td>

@@ -10,7 +10,7 @@ import {
 } from "@/lib/schedule-events";
 import { useMemo, useState } from "react";
 import { CandidateDrawer } from "./candidate-drawer";
-import { Avatar } from "./display";
+import { Avatar, PositionChip } from "./display";
 import { Select } from "./fields";
 import { OverviewSkeleton } from "./skeletons";
 import { PageFade } from "./ui";
@@ -124,8 +124,9 @@ export function TimelinePage() {
                             {event.label}
                           </span>
                         </div>
-                        <p className="mt-0.5 truncate text-xs text-muted">
-                          {event.item.job.title} · {event.item.latest_status}
+                        <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted">
+                          <PositionChip title={event.item.job.title} />
+                          <span>· {event.item.latest_status}</span>
                         </p>
                       </div>
                     </div>

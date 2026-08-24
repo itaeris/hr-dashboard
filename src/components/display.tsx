@@ -1,4 +1,5 @@
 import { initials, stageLabel } from "@/lib/format";
+import { positionTone } from "@/lib/position-color";
 import type { Stage } from "@/lib/types";
 
 export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
@@ -9,6 +10,25 @@ export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md"
       }`}
     >
       {initials(name)}
+    </span>
+  );
+}
+
+export function PositionChip({
+  title,
+  className = "",
+}: {
+  title: string;
+  className?: string;
+}) {
+  const tone = positionTone(title);
+  return (
+    <span
+      title={title}
+      className={`inline-flex max-w-[220px] truncate rounded-full px-2.5 py-0.5 text-[11px] font-medium ${className}`}
+      style={{ backgroundColor: tone.bg, color: tone.fg }}
+    >
+      {title}
     </span>
   );
 }

@@ -5,6 +5,7 @@ import { useRecruitment } from "@/lib/recruitment-context";
 import {
   alignedLatestStatus,
   hrToUserSla,
+  isHired,
   screeningSla,
   stageAging,
   stuckFlag,
@@ -24,9 +25,9 @@ import {
   cell,
 } from "./data-table";
 import { CvCell } from "./cv-preview";
-import { Avatar } from "./display";
+import { Avatar, PositionChip } from "./display";
 import { TableSkeleton } from "./skeletons";
-import { IconSearch } from "./icons";
+import { IconArrowLeft, IconSearch } from "./icons";
 import { Select } from "./fields";
 import { PageFade, fieldClass } from "./ui";
 
@@ -63,6 +64,22 @@ const COLUMNS = [
   { label: "Time to fill", align: "center" as const },
 ] as const;
 
+const PAGE_SIZE = 10;
+
+type SortKey = "az" | "za" | "newest" | "oldest";
+
+function pageItems(current: number, total: number) {
+  if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
+  const items: Array<number | "gap"> = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) items.push("gap");
+  for (let page = start; page <= end; page += 1) items.push(page);
+  if (end < total - 1) items.push("gap");
+  items.push(total);
+  return items;
+}
+
 function boolLabel(value: boolean) {
   return value ? "Yes" : "No";
 }
@@ -72,6 +89,8 @@ export function CandidatesPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<LatestStatus | "all">("all");
   const [jobId, setJobId] = useState("all");
+  const [sort, setSort] = useState<SortKey>("newest");
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     return views.filter((item) => {
@@ -83,6 +102,37 @@ export function CandidatesPage() {
       );
     });
   }, [jobId, query, status, views]);
+
+  const sorted = useMemo(() => {
+    const next = [...filtered];
+    next.sort((left, right) => {
+      if (sort === "az" || sort === "za") {
+        const compared = left.candidate.full_name.localeCompare(
+          right.candidate.full_name,
+          undefined,
+          { numeric: true, sensitivity: "base" },
+        );
+        return sort === "az" ? compared : -compared;
+      }
+      const leftTime = new Date(left.updated_at || left.applied_at).getTime();
+      const rightTime = new Date(right.updated_at || right.applied_at).getTime();
+      return sort === "newest" ? rightTime - leftTime : leftTime - rightTime;
+    });
+    return next;
+  }, [filtered, sort]);
+
+  const filterKey = `${query}:${status}:${jobId}:${sort}`;
+  const [activeKey, setActiveKey] = useState(filterKey);
+  if (activeKey !== filterKey) {
+    setActiveKey(filterKey);
+    setPage(1);
+  }
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const paged = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const from = sorted.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const to = Math.min(currentPage * PAGE_SIZE, sorted.length);
 
   if (loading) return <TableSkeleton filters />;
 
@@ -116,6 +166,17 @@ export function CandidatesPage() {
             ...jobs.map((job) => ({ value: job.id, label: job.title })),
           ]}
         />
+        <Select
+          className="w-full min-w-0 lg:max-w-48"
+          value={sort}
+          onChange={(next) => setSort(next as SortKey)}
+          options={[
+            { value: "az", label: "A–Z" },
+            { value: "za", label: "Z–A" },
+            { value: "newest", label: "Newest first" },
+            { value: "oldest", label: "Oldest first" },
+          ]}
+        />
       </div>
 
       <TableCard minWidth="2280px">
@@ -134,24 +195,31 @@ export function CandidatesPage() {
           </tr>
         </thead>
         <tbody>
-          {filtered.length === 0 ? (
+          {sorted.length === 0 ? (
             <tr>
               <td colSpan={COLUMNS.length} className="px-5 py-12 text-sm text-muted">
                 No matching candidates.
               </td>
             </tr>
           ) : (
-            filtered.map((item) => {
+            paged.map((item) => {
               const stuck = stuckFlag(item);
+              const hired = isHired(item);
               return (
-                <TableRow key={item.id} onClick={() => setSelectedId(item.id)}>
+                <TableRow
+                  key={item.id}
+                  highlight={hired ? "hired" : undefined}
+                  onClick={() => setSelectedId(item.id)}
+                >
                   <Td sticky nowrap>
                     <span className="flex items-center gap-2.5">
                       <Avatar name={item.candidate.full_name} size="sm" />
                       <span className="font-medium">{item.candidate.full_name}</span>
                     </span>
                   </Td>
-                  <Td nowrap>{item.job.title}</Td>
+                  <Td nowrap>
+                    <PositionChip title={item.job.title} />
+                  </Td>
                   <Td muted>{item.candidate.source}</Td>
                   <Td>
                     <CvCell url={item.cv_url} />
@@ -250,6 +318,54 @@ export function CandidatesPage() {
           )}
         </tbody>
       </TableCard>
+      {sorted.length > 0 ? (
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted">
+            {from}–{to} of {sorted.length}
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              aria-label="Previous page"
+              disabled={currentPage <= 1}
+              onClick={() => setPage(currentPage - 1)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <IconArrowLeft className="h-4 w-4" />
+            </button>
+            {pageItems(currentPage, pageCount).map((item, index) =>
+              item === "gap" ? (
+                <span key={`gap-${index}`} className="px-1 text-sm text-muted">
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  type="button"
+                  aria-current={item === currentPage ? "page" : undefined}
+                  onClick={() => setPage(item)}
+                  className={`inline-flex h-9 min-w-9 items-center justify-center rounded-full px-2.5 text-sm ${
+                    item === currentPage
+                      ? "bg-accent font-medium text-white"
+                      : "border border-line text-ink hover:bg-paper"
+                  }`}
+                >
+                  {item}
+                </button>
+              ),
+            )}
+            <button
+              type="button"
+              aria-label="Next page"
+              disabled={currentPage >= pageCount}
+              onClick={() => setPage(currentPage + 1)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink hover:bg-paper disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <IconArrowLeft className="h-4 w-4 rotate-180" />
+            </button>
+          </div>
+        </div>
+      ) : null}
       <CandidateDrawer />
     </PageFade>
   );

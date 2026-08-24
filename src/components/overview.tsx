@@ -7,7 +7,7 @@ import { STAGES } from "@/lib/types";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { CandidateDrawer } from "./candidate-drawer";
-import { Avatar, StageChip } from "./display";
+import { Avatar, PositionChip, StageChip } from "./display";
 import { OverviewSkeleton } from "./skeletons";
 import { PageFade } from "./ui";
 
@@ -106,7 +106,7 @@ export function OverviewPage() {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{item.candidate.full_name}</p>
-                      <p className="truncate text-xs text-muted">{item.job.title}</p>
+                      <PositionChip title={item.job.title} className="mt-1 max-w-full" />
                     </div>
                     <p className="shrink-0 text-xs text-accent">{formatDateTime(at)}</p>
                   </button>
@@ -135,8 +135,9 @@ export function OverviewPage() {
                   <Avatar name={item.candidate.full_name} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{item.candidate.full_name}</p>
-                    <p className="truncate text-xs text-muted">
-                      {item.job.title} · {daysAgo(item.updated_at)}
+                    <p className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted">
+                      <PositionChip title={item.job.title} />
+                      <span>· {daysAgo(item.updated_at)}</span>
                     </p>
                   </div>
                   <StageChip stage={item.stage} />
@@ -157,7 +158,9 @@ export function OverviewPage() {
                 const count = views.filter((item) => item.job_id === job.id).length;
                 return (
                   <div key={job.id} className="rounded-2xl border border-line p-4">
-                    <p className="text-sm font-medium">{job.title}</p>
+                    <p className="text-sm font-medium">
+                      <PositionChip title={job.title} className="max-w-full" />
+                    </p>
                     <p className="mt-1 text-xs text-muted">
                       {job.department} · {job.level} · {job.recruiter_pic}
                     </p>

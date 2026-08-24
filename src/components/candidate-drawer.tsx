@@ -17,7 +17,7 @@ import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CandidateForm } from "./candidate-form";
 import { CvCell } from "./cv-preview";
-import { Avatar } from "./display";
+import { Avatar, PositionChip } from "./display";
 import { IconClose, IconMail, IconPencil, IconPhone, IconTrash } from "./icons";
 import { ScrollArea } from "./scroll-area";
 import { SendEmailModal } from "./send-email-modal";
@@ -91,7 +91,9 @@ export function CandidateDrawer() {
                   <h2 className="break-words font-display text-xl leading-tight sm:text-2xl">
                     {selected.candidate.full_name}
                   </h2>
-                  <p className="mt-0.5 text-sm text-muted">{selected.job.title}</p>
+                  <div className="mt-1">
+                    <PositionChip title={selected.job.title} />
+                  </div>
                 </div>
                 <div className="hidden shrink-0 items-center gap-2 sm:flex">
                   <DrawerActions
@@ -339,7 +341,7 @@ function CandidateDetail({
         <p className="mb-3 text-xs uppercase tracking-[0.16em] text-muted">Identity</p>
         <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:gap-4 lg:grid-cols-3">
           <Detail label="Candidate" value={item.candidate.full_name} />
-          <Detail label="Position" value={item.job.title} />
+          <Detail label="Position" value={<PositionChip title={item.job.title} />} />
           <Detail label="Source" value={item.candidate.source} />
           <Detail label="CV" value={item.cv_url ? <CvCell url={item.cv_url} /> : null} />
           <Detail label="Email" value={item.candidate.email} />

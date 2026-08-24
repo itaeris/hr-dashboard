@@ -147,6 +147,10 @@ export function alignedLatestStatus(
   return latestFromStage(item.stage);
 }
 
+export function isHired(item: Pick<ApplicationRow, "stage" | "latest_status">) {
+  return item.stage === "hired" || item.latest_status === "Joined";
+}
+
 export function blankDate(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
   return text ? new Date(text).toISOString() : null;

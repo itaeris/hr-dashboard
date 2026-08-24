@@ -5,7 +5,7 @@ import { useRecruitment } from "@/lib/recruitment-context";
 import { useMemo, useState } from "react";
 import { CandidateDrawer } from "./candidate-drawer";
 import { GoogleCalendarSync } from "./google-calendar-sync";
-import { Avatar } from "./display";
+import { Avatar, PositionChip } from "./display";
 import { IconChevronDown } from "./icons";
 import { OverviewSkeleton } from "./skeletons";
 import { PageFade } from "./ui";
@@ -87,7 +87,7 @@ function EventList({
           <Avatar name={event.item.candidate.full_name} size="sm" />
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{event.item.candidate.full_name}</p>
-            <p className="truncate text-xs text-muted">{event.item.job.title}</p>
+            <PositionChip title={event.item.job.title} className="mt-1 max-w-full" />
             <span
               className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] ${KIND_STYLE[event.kind]}`}
             >

@@ -6,7 +6,7 @@ import { STAGES, type Stage } from "@/lib/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { CandidateDrawer } from "./candidate-drawer";
-import { Avatar } from "./display";
+import { Avatar, PositionChip } from "./display";
 import { PipelineSkeleton } from "./skeletons";
 import { ScrollArea } from "./scroll-area";
 import { PageFade } from "./ui";
@@ -67,7 +67,7 @@ export function PipelinePage() {
                           <p className="truncate text-sm font-medium">
                             {item.candidate.full_name}
                           </p>
-                          <p className="truncate text-xs text-muted">{item.job.title}</p>
+                          <PositionChip title={item.job.title} className="mt-1 max-w-full" />
                         </div>
                       </div>
                       <div className="mt-3 flex items-center justify-between text-[11px] text-muted">
