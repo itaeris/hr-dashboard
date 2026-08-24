@@ -67,10 +67,10 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
   const error = state?.error ?? (oauthError ? OAUTH_ERRORS[oauthError] ?? OAUTH_ERRORS.oauth : null);
 
   return (
-    <div className="flex min-h-dvh flex-col lg:grid lg:grid-cols-2">
+    <div className="login-shell flex flex-col lg:grid lg:h-auto lg:min-h-dvh lg:grid-cols-2 lg:overflow-visible">
       <BrandPanel />
-      <section className="relative z-10 -mt-8 flex min-h-0 flex-1 flex-col lg:mt-0 lg:items-center lg:justify-center lg:bg-paper lg:px-8 lg:py-10">
-        <div className="flex min-h-0 flex-1 flex-col rounded-t-[32px] bg-paper-raised px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_48px_rgba(28,20,18,0.42),0_-4px_12px_rgba(28,20,18,0.18)] lg:min-h-0 lg:w-full lg:max-w-[420px] lg:flex-none lg:rounded-[28px] lg:border lg:border-white/70 lg:p-8 lg:shadow-[0_24px_60px_-32px_rgba(40,24,20,0.4)]">
+      <section className="relative z-10 flex min-h-0 flex-1 flex-col max-lg:absolute max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-[calc(38dvh-2rem)] sm:max-lg:top-[calc(40dvh-2rem)] lg:static lg:items-center lg:justify-center lg:bg-paper lg:px-8 lg:py-10">
+        <div className="flex h-full min-h-0 flex-1 flex-col rounded-t-[32px] bg-paper-raised px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_48px_rgba(28,20,18,0.42),0_-4px_12px_rgba(28,20,18,0.18)] lg:h-auto lg:min-h-0 lg:w-full lg:max-w-[420px] lg:flex-none lg:rounded-[28px] lg:border lg:border-white/70 lg:p-8 lg:shadow-[0_24px_60px_-32px_rgba(40,24,20,0.4)]">
           <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line lg:hidden" />
           <motion.div
             initial={{ opacity: 0, y: 16 }}
