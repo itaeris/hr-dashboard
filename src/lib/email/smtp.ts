@@ -9,11 +9,6 @@ import {
 } from "@/lib/email/signature";
 import type { CompanySlug } from "@/lib/types";
 
-const LOGO_DISK_PATH: Record<CompanySlug, string> = {
-  "aeris-beaute": join(process.cwd(), "public/logo/aerisbeaute/Aeris new logo-01.png"),
-  "from-this-island": join(process.cwd(), "public/logo/fti/FA_FromThisIsland_Charcoal.png"),
-};
-
 export function isSmtpConfigured() {
   return Boolean(
     process.env.MAIL_HOST &&
@@ -45,7 +40,14 @@ function toNodemailerAttachment(file: EmailAttachment) {
 
 async function readEmailLogo(slug: CompanySlug) {
   try {
-    return await readFile(LOGO_DISK_PATH[slug]);
+    if (slug === "from-this-island") {
+      return await readFile(
+        join(process.cwd(), "public/logo/fti/FA_FromThisIsland_Charcoal.png"),
+      );
+    }
+    return await readFile(
+      join(process.cwd(), "public/logo/aerisbeaute/Aeris new logo-01.png"),
+    );
   } catch {
     const origin =
       process.env.AUTH_URL?.replace(/\/$/, "") ||
