@@ -35,9 +35,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${poppins.variable} h-full antialiased`}
+      className={`${poppins.variable} min-h-full antialiased lg:h-full`}
     >
-      <body className="h-full font-sans">
+      <body className="min-h-full font-sans lg:h-full">
         {children}
         <PwaRegister />
       </body>

@@ -12,17 +12,5 @@ export default async function LoginPage({
 }) {
   const { error } = await searchParams;
   const allowed = error && error in { domain: 1, oauth: 1, config: 1, denied: 1 } ? error : undefined;
-  return (
-    <div className="relative flex min-h-full items-center justify-center overflow-x-clip bg-[#F4EEE6] px-4 py-8 text-ink sm:px-6 sm:py-10">
-      <div className="pointer-events-none absolute -left-24 top-[-80px] h-[420px] w-[420px] rounded-full bg-[#E8D2D4]/70 blur-3xl" />
-      <div className="pointer-events-none absolute -right-24 bottom-[-80px] h-[420px] w-[420px] rounded-full bg-[#C9DDD8]/80 blur-3xl" />
-      <div className="relative w-full">
-        <LoginForm oauthError={allowed} />
-        <p className="mx-auto mt-6 max-w-md text-center text-xs text-muted">
-          Two roles: Admin manages access, HR runs the daily pipeline. New Google
-          logins start as HR.
-        </p>
-      </div>
-    </div>
-  );
+  return <LoginForm oauthError={allowed} />;
 }

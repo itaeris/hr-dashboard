@@ -34,7 +34,7 @@ html,
 body {
   background: var(--paper);
   color: var(--ink);
-  overflow-x: clip;
+  overflow-x: hidden;
 }
 
 body {

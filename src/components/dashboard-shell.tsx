@@ -59,14 +59,14 @@ export function DashboardShell({
   const brand = COMPANIES[slug];
 
   return (
-    <div style={themeStyle(brand.theme)} className="h-full bg-paper text-ink">
+    <div style={themeStyle(brand.theme)} className="min-h-dvh bg-paper text-ink lg:h-full">
       <RecruitmentProvider slug={slug} userEmail={user.email}>
-        <div className="flex h-full min-w-0">
+        <div className="flex min-h-dvh min-w-0 lg:h-full">
           <Sidebar slug={slug} user={user} />
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
             <Topbar user={user} />
-            <main className="flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 pb-[calc(5.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 lg:px-8 lg:pb-4">
-              <div className="no-native-scrollbar flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+            <main className="flex min-w-0 flex-1 flex-col px-4 pt-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 lg:min-h-0 lg:overflow-hidden lg:px-8 lg:pb-4">
+              <div className="min-w-0 flex-1 pb-4 lg:min-h-0 lg:overflow-y-auto lg:pb-0 lg:no-native-scrollbar">
                 {children}
               </div>
             </main>
@@ -407,7 +407,7 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
           onClick={() => setSheet(null)}
         >
           <div
-            className="absolute inset-x-3 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] rounded-[22px] border border-line bg-paper-raised p-2 shadow-xl"
+            className="absolute inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] rounded-[22px] border border-line bg-paper-raised p-2 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             {(sheet === "tracker" ? TRACKER_LINKS : REQUEST_LINKS).map((item) => {
@@ -433,7 +433,7 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 gap-1 border-t border-line bg-paper-raised/95 px-1.5 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 grid grid-cols-5 gap-1 rounded-[28px] border border-line bg-paper-raised/95 px-1.5 py-1.5 shadow-[0_12px_32px_-16px_rgba(40,24,20,0.45)] backdrop-blur lg:hidden">
         <Link
           href={`/${slug}`}
           className={`flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] ${

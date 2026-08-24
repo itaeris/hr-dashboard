@@ -94,6 +94,23 @@ export function IconArrowLeft(props: IconProps) {
   );
 }
 
+export function IconArrowRight(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="m9 5 7 7-7 7" />
+    </Icon>
+  );
+}
+
+export function IconLock(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="5" y="11" width="14" height="9" rx="2" />
+      <path d="M8 11V8.2A4 4 0 0 1 12 4a4 4 0 0 1 4 4.2V11" />
+    </Icon>
+  );
+}
+
 export function IconChevronDown(props: IconProps) {
   return (
     <Icon {...props}>
