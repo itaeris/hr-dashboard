@@ -9,11 +9,34 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
 });
 
+function siteUrl() {
+  if (process.env.AUTH_URL) return process.env.AUTH_URL;
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: "HR Recruitment",
   applicationName: "HR Recruitment",
   description:
     "Recruitment dashboard for Aeris Beaute and From This Island.",
+  openGraph: {
+    type: "website",
+    siteName: "HR Recruitment",
+    title: "HR Recruitment",
+    description:
+      "Recruitment dashboard for Aeris Beaute and From This Island.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HR Recruitment",
+    description:
+      "Recruitment dashboard for Aeris Beaute and From This Island.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

@@ -3,6 +3,17 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Sign in · HR Recruitment",
+  openGraph: {
+    title: "HR Recruitment",
+    description:
+      "Recruitment dashboard for Aeris Beaute and From This Island.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HR Recruitment",
+    description:
+      "Recruitment dashboard for Aeris Beaute and From This Island.",
+  },
 };
 
 export default async function LoginPage({

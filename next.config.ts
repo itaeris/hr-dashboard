@@ -7,6 +7,22 @@ const nextConfig: NextConfig = {
       "./public/logo/aerisbeaute/Aeris new logo-01.png",
       "./public/logo/fti/FA_FromThisIsland_Charcoal.png",
     ],
+    "/opengraph-image": [
+      "./public/logo/aerisbeaute/Aeris new logo-white-01.png",
+      "./public/logo/fti/FTI_Logogram_White.png",
+    ],
+    "/twitter-image": [
+      "./public/logo/aerisbeaute/Aeris new logo-white-01.png",
+      "./public/logo/fti/FTI_Logogram_White.png",
+    ],
+    "/login/opengraph-image": [
+      "./public/logo/aerisbeaute/Aeris new logo-white-01.png",
+      "./public/logo/fti/FTI_Logogram_White.png",
+    ],
+    "/login/twitter-image": [
+      "./public/logo/aerisbeaute/Aeris new logo-white-01.png",
+      "./public/logo/fti/FTI_Logogram_White.png",
+    ],
   },
   async headers() {
     return [

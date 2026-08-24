@@ -10,7 +10,12 @@ export function proxy(request: NextRequest) {
     pathname === "/recruitment-request" ||
     pathname === "/api/auth/google" ||
     pathname === "/api/auth/google/callback" ||
-    pathname === "/api/auth/google/calendar";
+    pathname === "/api/auth/google/calendar" ||
+    pathname === "/icon" ||
+    pathname.startsWith("/icon.") ||
+    pathname.startsWith("/apple-icon") ||
+    pathname.includes("opengraph-image") ||
+    pathname.includes("twitter-image");
 
   if (!session && !isPublic) {
     const login = new URL("/login", request.url);
@@ -30,6 +35,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/|logo/|.*\\.png$|.*\\.svg$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|icons/|logo/|icon$|apple-icon|opengraph-image|twitter-image|.*\\.png$|.*\\.svg$|.*\\.ico$).*)",
   ],
 };

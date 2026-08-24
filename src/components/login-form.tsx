@@ -69,15 +69,15 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
   return (
     <div className="flex min-h-dvh flex-col lg:grid lg:grid-cols-2">
       <BrandPanel />
-      <section className="relative z-10 -mt-7 flex min-h-0 flex-1 flex-col lg:mt-0 lg:items-center lg:justify-center lg:bg-paper lg:px-8 lg:py-10">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.22, ease }}
-          className="flex min-h-0 flex-1 flex-col rounded-t-[32px] bg-paper-raised px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-16px_40px_-24px_rgba(40,24,20,0.45)] lg:min-h-0 lg:w-full lg:max-w-[420px] lg:flex-none lg:rounded-[28px] lg:border lg:border-white/70 lg:p-8 lg:shadow-[0_24px_60px_-32px_rgba(40,24,20,0.4)]"
-        >
+      <section className="relative z-10 -mt-8 flex min-h-0 flex-1 flex-col lg:mt-0 lg:items-center lg:justify-center lg:bg-paper lg:px-8 lg:py-10">
+        <div className="flex min-h-0 flex-1 flex-col rounded-t-[32px] bg-paper-raised px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_48px_rgba(28,20,18,0.42),0_-4px_12px_rgba(28,20,18,0.18)] lg:min-h-0 lg:w-full lg:max-w-[420px] lg:flex-none lg:rounded-[28px] lg:border lg:border-white/70 lg:p-8 lg:shadow-[0_24px_60px_-32px_rgba(40,24,20,0.4)]">
           <div className="mx-auto mb-4 h-1 w-10 shrink-0 rounded-full bg-line lg:hidden" />
-          <div className="min-h-0 flex-1 overflow-y-auto lg:overflow-visible">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease }}
+            className="min-h-0 flex-1 overflow-y-auto lg:overflow-visible"
+          >
             <h1 className="font-display text-3xl leading-tight text-ink">Welcome back</h1>
             <p className="mt-2 text-sm text-muted">
               Sign in to continue to HR Recruitment
@@ -154,11 +154,11 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
               <IconGoogle className="h-4 w-4" />
               Sign in with Google
             </a>
-          </div>
+          </motion.div>
           <p className="mt-auto shrink-0 pt-5 text-center text-xs text-muted lg:hidden">
             Aeris Beaute · From This Island
           </p>
-        </motion.div>
+        </div>
       </section>
     </div>
   );
