@@ -41,11 +41,11 @@ export function AdminHome({
   }, []);
 
   return (
-    <div className="relative min-h-full overflow-x-clip bg-[#F4EEE6] text-ink">
+    <div className="app-frame relative min-h-dvh overflow-x-clip bg-[#F4EEE6] text-ink">
       <div className="pointer-events-none absolute -left-24 top-[-80px] h-[420px] w-[420px] rounded-full bg-[#E8D2D4]/70 blur-3xl" />
       <div className="pointer-events-none absolute -right-24 bottom-[-80px] h-[420px] w-[420px] rounded-full bg-[#C9DDD8]/80 blur-3xl" />
 
-      <div className="relative flex min-h-full w-full min-w-0 flex-col px-4 py-5 sm:px-8 sm:py-8">
+      <div className="relative flex min-h-dvh w-full min-w-0 flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-8 sm:pb-8 sm:pt-[max(2rem,env(safe-area-inset-top))]">
         <motion.header
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

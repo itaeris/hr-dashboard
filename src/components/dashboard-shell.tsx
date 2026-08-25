@@ -59,13 +59,13 @@ export function DashboardShell({
   const brand = COMPANIES[slug];
 
   return (
-    <div style={themeStyle(brand.theme)} className="min-h-dvh bg-paper text-ink lg:h-full">
+    <div style={themeStyle(brand.theme)} className="app-frame min-h-dvh bg-paper text-ink lg:h-full">
       <RecruitmentProvider slug={slug} userEmail={user.email}>
-        <div className="flex min-h-dvh min-w-0 lg:h-full">
+        <div className="app-frame flex min-h-dvh min-w-0 lg:h-full">
           <Sidebar slug={slug} user={user} />
           <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
             <Topbar user={user} />
-            <main className="flex min-w-0 flex-1 flex-col px-4 pt-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 lg:min-h-0 lg:overflow-hidden lg:px-8 lg:pb-4">
+            <main className="flex min-w-0 flex-1 flex-col px-4 pt-4 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 lg:min-h-0 lg:overflow-hidden lg:px-8 lg:pb-4">
               <div className="min-w-0 flex-1 pb-4 lg:min-h-0 lg:overflow-y-auto lg:pb-0 lg:no-native-scrollbar">
                 {children}
               </div>
@@ -289,7 +289,7 @@ function Topbar({ user }: { user: AuthUser }) {
 
   return (
     <>
-      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-paper/85 px-4 py-3 backdrop-blur-md sm:gap-4 sm:px-6 sm:py-4 lg:px-8">
+      <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-paper/85 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur-md sm:gap-4 sm:px-6 sm:pb-4 sm:pt-[calc(1rem+env(safe-area-inset-top))] lg:px-8">
         <div className="min-w-0">
           <p className="truncate text-[11px] uppercase tracking-[0.2em] text-muted">
             {brand.name}
@@ -338,7 +338,7 @@ function Topbar({ user }: { user: AuthUser }) {
           onClick={() => setAccountOpen(false)}
         >
           <div
-            className="absolute right-3 top-[4.25rem] w-[min(18rem,calc(100vw-1.5rem))] rounded-[20px] border border-line bg-paper-raised p-4 shadow-xl"
+            className="absolute right-3 top-[calc(4.5rem+env(safe-area-inset-top))] w-[min(18rem,calc(100vw-1.5rem))] rounded-[20px] border border-line bg-paper-raised p-4 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <p className="truncate text-sm font-medium">{user.name}</p>
@@ -407,7 +407,7 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
           onClick={() => setSheet(null)}
         >
           <div
-            className="absolute inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] rounded-[22px] border border-line bg-paper-raised p-2 shadow-xl"
+            className="absolute inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] rounded-[22px] border border-line bg-paper-raised p-2 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             {(sheet === "tracker" ? TRACKER_LINKS : REQUEST_LINKS).map((item) => {
@@ -433,7 +433,8 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 grid grid-cols-5 gap-1 rounded-[28px] border border-line bg-paper-raised/95 px-1.5 py-1.5 shadow-[0_12px_32px_-16px_rgba(40,24,20,0.45)] backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-paper from-40% to-transparent px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3 lg:hidden">
+        <div className="grid grid-cols-5 gap-1 rounded-[28px] border border-line bg-paper-raised/95 px-1.5 py-1.5 shadow-[0_12px_32px_-16px_rgba(40,24,20,0.45)] backdrop-blur">
         <Link
           href={`/${slug}`}
           className={`flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] ${
@@ -481,6 +482,7 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
           <IconClipboard className="h-4 w-4" />
           Request
         </button>
+        </div>
       </nav>
     </>
   );

@@ -37,6 +37,17 @@ body {
   overflow-x: hidden;
 }
 
+html.pwa,
+html.pwa body {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
+html.pwa .app-frame {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+}
+
 .login-shell {
   min-height: 100dvh;
 }
