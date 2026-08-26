@@ -94,7 +94,7 @@ export function JobsPage() {
     <PageFade>
       <div className="mb-5 flex flex-col items-stretch gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <p className="max-w-xl text-sm text-muted">
-          Vacancy Tracker — columns follow the Aeris recruitment template.
+          Vacancy Tracker - columns follow the Aeris recruitment template.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Select

@@ -56,6 +56,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
   const [subject, setSubject] = useState(
     fillTemplate(initialTemplate?.subject ?? "", initialVars),
   );
+  const [cc, setCc] = useState(initialTemplate?.cc ?? "");
   const [body, setBody] = useState(fillTemplate(initialTemplate?.body ?? "", initialVars));
   const [attachments, setAttachments] = useState<EmailAttachment[]>(
     initialTemplate?.attachments ?? [],
@@ -71,14 +72,15 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       attachments.length > 0
         ? `\n\n—\nPlease attach: ${attachments.map((file) => file.name).join(", ")}`
         : "";
-    return gmailComposeUrl(to, subject, `${body}${extra}`);
-  }, [attachments, body, subject, to]);
+    return gmailComposeUrl(to, subject, `${body}${extra}`, cc);
+  }, [attachments, body, cc, subject, to]);
 
   function applyKind(next: EmailTemplateKind) {
     const template = loadTemplates(slug, brand.name).find((entry) => entry.kind === next);
     const vars = templateVars(item, brand.name, next);
     setKind(next);
     setSubject(fillTemplate(template?.subject ?? "", vars));
+    setCc(template?.cc ?? "");
     setBody(fillTemplate(template?.body ?? "", vars));
     setAttachments(template?.attachments ?? []);
   }
@@ -92,7 +94,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       const response = await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, subject, body, attachments, company: slug }),
+        body: JSON.stringify({ to, cc, subject, body, attachments, company: slug }),
       });
       const payload = (await response.json()) as { error?: string };
       if (!response.ok) {
@@ -109,7 +111,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
   async function downloadEml() {
     setBusy(true);
     try {
-      const eml = await buildEmlFile({ to, subject, body, attachments, company: slug });
+      const eml = await buildEmlFile({ to, cc, subject, body, attachments, company: slug });
       downloadTextFile(
         `${EMAIL_TEMPLATE_META[kind].label} — ${item.candidate.full_name}.eml`,
         eml,
@@ -146,6 +148,14 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
           value={subject}
           onChange={(event) => setSubject(event.target.value)}
           className={fieldClass}
+        />
+      </Field>
+      <Field label="CC">
+        <input
+          value={cc}
+          onChange={(event) => setCc(event.target.value)}
+          className={fieldClass}
+          placeholder="Optional — hiring.manager@aerisbeaute.com"
         />
       </Field>
       <Field label="Body">

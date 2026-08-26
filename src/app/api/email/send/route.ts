@@ -3,7 +3,7 @@ import { loadAppUser } from "@/lib/auth/app-users";
 import { getSession } from "@/lib/auth/session";
 import { isCompanySlug } from "@/lib/companies";
 import { isSmtpConfigured, sendSmtpMail } from "@/lib/email/smtp";
-import type { EmailAttachment } from "@/lib/email-templates";
+import { ccAddressesError, parseCcAddresses, type EmailAttachment } from "@/lib/email-templates";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
 
   const payload = (await request.json()) as {
     to?: string;
+    cc?: string;
     subject?: string;
     body?: string;
     company?: string;
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
   };
 
   const to = payload.to?.trim() ?? "";
+  const ccRaw = payload.cc?.trim() ?? "";
   const subject = payload.subject?.trim() ?? "";
   const text = payload.body?.trim() ?? "";
   const company = payload.company;
@@ -53,6 +55,11 @@ export async function POST(request: Request) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to) || to.length > 254) {
     return NextResponse.json({ error: "Enter a valid recipient email." }, { status: 400 });
   }
+  const ccError = ccAddressesError(ccRaw);
+  if (ccError) {
+    return NextResponse.json({ error: ccError }, { status: 400 });
+  }
+  const cc = parseCcAddresses(ccRaw);
   if (subject.length > 200 || text.length > 20_000) {
     return NextResponse.json({ error: "Subject or body is too long." }, { status: 400 });
   }
@@ -60,6 +67,7 @@ export async function POST(request: Request) {
   try {
     await sendSmtpMail({
       to,
+      cc,
       subject,
       text,
       company,

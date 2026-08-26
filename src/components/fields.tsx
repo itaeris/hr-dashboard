@@ -112,6 +112,8 @@ export function Select({
   value,
   defaultValue = "",
   onChange,
+  onCreate,
+  createPlaceholder = "Add a new option…",
   placeholder = "Select",
   required = false,
   invalid = false,
@@ -122,6 +124,8 @@ export function Select({
   value?: string;
   defaultValue?: string;
   onChange?: (value: string) => void;
+  onCreate?: (value: string) => void;
+  createPlaceholder?: string;
   placeholder?: string;
   required?: boolean;
   invalid?: boolean;
@@ -129,10 +133,13 @@ export function Select({
 }) {
   const [open, setOpen] = useState(false);
   const [internal, setInternal] = useState(defaultValue);
+  const [draft, setDraft] = useState("");
   const selected = value ?? internal;
   const [triggerEl, setTriggerEl] = useState<HTMLButtonElement | null>(null);
   const menuId = useId();
-  const label = options.find((option) => option.value === selected)?.label;
+  const label =
+    options.find((option) => option.value === selected)?.label ??
+    (selected ? selected : undefined);
 
   useEffect(() => {
     if (!open) return;
@@ -158,6 +165,14 @@ export function Select({
     setInternal(next);
     onChange?.(next);
     setOpen(false);
+  }
+
+  function create() {
+    const next = draft.trim();
+    if (!next) return;
+    onCreate?.(next);
+    pick(next);
+    setDraft("");
   }
 
   return (
@@ -196,6 +211,31 @@ export function Select({
                   ))}
                 </div>
               </ScrollArea>
+              {onCreate ? (
+                <div className="flex gap-1 border-t border-line p-1.5">
+                  <input
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        create();
+                      }
+                    }}
+                    placeholder={createPlaceholder}
+                    className="min-w-0 flex-1 rounded-xl border border-line bg-paper px-3 py-2 text-sm text-ink outline-none placeholder:text-muted focus:border-accent"
+                  />
+                  <button
+                    type="button"
+                    onClick={create}
+                    disabled={!draft.trim()}
+                    className="shrink-0 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-white disabled:opacity-40"
+                  >
+                    Add
+                  </button>
+                </div>
+              ) : null}
             </div>
           </Popover>
         ) : null}

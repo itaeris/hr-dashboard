@@ -6,7 +6,6 @@ import { useRecruitment, type AddJobInput } from "@/lib/recruitment-context";
 import { blankDate, hireStatus, hiredCount, isOpenVacancy, slaAging, slaResult } from "@/lib/tracker";
 import {
   HIRE_TYPES,
-  LEVELS,
   OFFER_STAGES,
   PRIORITIES,
   VACANCY_STATUSES,
@@ -16,6 +15,7 @@ import {
   type Priority,
   type VacancyStatus,
 } from "@/lib/types";
+import { useVacancyLevels } from "@/lib/use-vacancy-levels";
 import { CandidateForm } from "./candidate-form";
 import { DatePicker, Select } from "./fields";
 import { Pill } from "./data-table";
@@ -86,6 +86,14 @@ function JobForm({
   submitLabel: string;
   onSubmit: (input: AddJobInput) => Promise<void>;
 }) {
+  const { levels, addLevel } = useVacancyLevels();
+  const selectedLevel = job?.level ?? (levels.includes("Staff") ? "Staff" : levels[0] ?? "");
+  const levelOptions = levels.includes(selectedLevel)
+    ? levels
+    : selectedLevel
+      ? [selectedLevel, ...levels]
+      : levels;
+
   return (
     <form
       onSubmit={async (event: FormEvent<HTMLFormElement>) => {
@@ -108,8 +116,12 @@ function JobForm({
         <Field label="Level">
           <Select
             name="level"
-            defaultValue={job?.level ?? "Staff"}
-            options={LEVELS.map((level) => ({ value: level, label: level }))}
+            defaultValue={selectedLevel}
+            options={levelOptions.map((level) => ({ value: level, label: level }))}
+            createPlaceholder="Add a new level…"
+            onCreate={(value) => {
+              void addLevel(value);
+            }}
           />
         </Field>
         <Field label="Department">
@@ -217,7 +229,7 @@ export function AddJobModal({
   const [error, setError] = useState("");
 
   return (
-    <ModalFrame open={open} onClose={onClose} title="Vacancy Tracker — new role" wide>
+    <ModalFrame open={open} onClose={onClose} title="Vacancy Tracker - new role" wide>
       <JobForm
         key={open ? "new-open" : "new-closed"}
         saving={saving}

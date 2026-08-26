@@ -65,6 +65,7 @@ async function readEmailLogo(slug: CompanySlug) {
 
 export async function sendSmtpMail(input: {
   to: string;
+  cc?: string[];
   subject: string;
   text: string;
   company: CompanySlug;
@@ -95,6 +96,7 @@ export async function sendSmtpMail(input: {
   await transporter.sendMail({
     from: `${fromName} <${fromAddress}>`,
     to: input.to,
+    cc: input.cc?.length ? input.cc : undefined,
     subject: input.subject,
     text: input.text,
     html: emailBodyHtml(input.text, input.company),

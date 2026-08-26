@@ -286,6 +286,7 @@ The app still gates access with its own login.
    - `supabase/migrate-tracker.sql` — if tables already exist from an older schema
    - `supabase/storage-cvs.sql` — CV upload bucket (`cvs`)
    - `supabase/recruitment-requests.sql` — request form schemas and submissions
+   - `supabase/vacancy-settings.sql` — editable vacancy Level dropdown
    - `supabase/auth-passwords.sql` — password changes from Settings
    - `supabase/google-calendar.sql` — Google Calendar refresh tokens
 3. Copy project URL and anon key into env.

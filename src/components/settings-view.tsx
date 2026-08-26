@@ -6,6 +6,7 @@ import { roleLabel } from "@/lib/auth/users";
 import { useActionState } from "react";
 import { GoogleCalendarSync } from "./google-calendar-sync";
 import { PageFade, Field, PasswordInput } from "./ui";
+import { VacancyLevelsSettings } from "./vacancy-levels-settings";
 
 export function SettingsPage({
   user,
@@ -26,6 +27,8 @@ export function SettingsPage({
       </p>
 
       <GoogleCalendarSync surface="settings" />
+
+      <VacancyLevelsSettings />
 
       <div className="rounded-[24px] border border-line bg-paper-raised p-5">
         <p className="text-[11px] uppercase tracking-[0.14em] text-muted">Account</p>

@@ -102,6 +102,18 @@ export function EmailTemplatesPage() {
                 className={fieldClass}
               />
             </Field>
+            <Field label="CC">
+              <input
+                value={current.cc}
+                onChange={(event) => update({ cc: event.target.value })}
+                className={fieldClass}
+                placeholder="hiring.manager@aerisbeaute.com"
+              />
+              <p className="mt-1.5 text-xs text-muted">
+                Optional. Separate multiple addresses with a comma. Used when
+                you send this template.
+              </p>
+            </Field>
             <Field label="Body">
               <textarea
                 value={current.body}

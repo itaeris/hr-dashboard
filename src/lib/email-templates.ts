@@ -21,6 +21,7 @@ export type EmailAttachment = {
 export type EmailTemplate = {
   kind: EmailTemplateKind;
   subject: string;
+  cc: string;
   body: string;
   attachments: EmailAttachment[];
 };
@@ -62,6 +63,7 @@ export function defaultTemplates(companyName: string): EmailTemplate[] {
     {
       kind: "interview",
       subject: `Invitation to HR Interview — {{role}} at {{company}}`,
+      cc: "",
       body: `Hi {{candidate_name}},
 
 Thank you for applying for the {{role}} role at {{company}}. We would like to invite you to an HR interview.
@@ -75,6 +77,7 @@ Warm regards,
     {
       kind: "user-interview",
       subject: `Invitation to User Interview — {{role}} at {{company}}`,
+      cc: "",
       body: `Hi {{candidate_name}},
 
 Thank you for speaking with our Talent team. We would like to invite you to a user interview for the {{role}} role at {{company}}.
@@ -88,6 +91,7 @@ Warm regards,
     {
       kind: "studi-case",
       subject: `Studi Case — {{role}} at {{company}}`,
+      cc: "",
       body: `Hi {{candidate_name}},
 
 Thank you for the conversation so far. As the next step for the {{role}} role at {{company}}, we would like you to complete a studi case.
@@ -101,6 +105,7 @@ Warm regards,
     {
       kind: "offering",
       subject: `Offer of Employment — {{role}} at {{company}}`,
+      cc: "",
       body: `Hi {{candidate_name}},
 
 We are delighted to offer you the {{role}} position at {{company}}.
@@ -114,6 +119,7 @@ Warm regards,
     {
       kind: "rejected",
       subject: `Update on your application — {{role}} at {{company}}`,
+      cc: "",
       body: `Hi {{candidate_name}},
 
 Thank you for your interest in the {{role}} role at {{company}}, and for the time you spent with our team.
@@ -149,6 +155,7 @@ export function loadTemplates(slug: CompanySlug, companyName: string) {
         ...item,
         subject: saved.subject || item.subject,
         body: saved.body || item.body,
+        cc: typeof saved.cc === "string" ? saved.cc : "",
         attachments: Array.isArray(saved.attachments) ? saved.attachments : [],
       };
     });
@@ -215,7 +222,30 @@ export function suggestedTemplate(item: ApplicationView): EmailTemplateKind {
   return "interview";
 }
 
-export function gmailComposeUrl(to: string, subject: string, body: string) {
+const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function parseCcAddresses(value: string) {
+  return value
+    .split(/[,;]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+export function ccAddressesError(value: string) {
+  const addresses = parseCcAddresses(value);
+  if (addresses.length > 8) return "Use at most 8 CC addresses.";
+  if (addresses.some((entry) => entry.length > 254 || !EMAIL_ADDRESS.test(entry))) {
+    return "Enter valid CC emails, separated by commas.";
+  }
+  return "";
+}
+
+export function gmailComposeUrl(
+  to: string,
+  subject: string,
+  body: string,
+  cc = "",
+) {
   const params = new URLSearchParams({
     view: "cm",
     fs: "1",
@@ -223,6 +253,8 @@ export function gmailComposeUrl(to: string, subject: string, body: string) {
     su: subject,
     body,
   });
+  const copied = parseCcAddresses(cc).join(",");
+  if (copied) params.set("cc", copied);
   return `https://mail.google.com/mail/?${params.toString()}`;
 }
 
@@ -290,16 +322,19 @@ export async function buildEmlFile(input: {
   body: string;
   attachments: EmailAttachment[];
   company: CompanySlug;
+  cc?: string;
 }) {
   const mixed = `=_hr_mixed_${crypto.randomUUID().replaceAll("-", "")}`;
   const related = `=_hr_related_${crypto.randomUUID().replaceAll("-", "")}`;
   const alt = `=_hr_alt_${crypto.randomUUID().replaceAll("-", "")}`;
   const logo = await logoPayload(input.company);
   const html = emailBodyHtml(input.body, input.company);
+  const copied = parseCcAddresses(input.cc ?? "").join(", ");
   const chunks = [
     `MIME-Version: 1.0`,
     `Date: ${new Date().toUTCString()}`,
     `To: ${input.to}`,
+    ...(copied ? [`Cc: ${copied}`] : []),
     `Subject: ${encodeHeader(input.subject)}`,
     `Content-Type: multipart/mixed; boundary="${mixed}"`,
     ``,
