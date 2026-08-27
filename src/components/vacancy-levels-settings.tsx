@@ -5,7 +5,7 @@ import { Field, fieldClass } from "@/components/ui";
 import { DEFAULT_VACANCY_LEVELS } from "@/lib/vacancy-levels";
 import { useVacancyLevels } from "@/lib/use-vacancy-levels";
 import { Reorder, useDragControls } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type LevelRow = { id: string; label: string };
 
@@ -22,14 +22,16 @@ function toRows(values: string[]): LevelRow[] {
 
 export function VacancyLevelsSettings() {
   const { levels, save } = useVacancyLevels();
-  const [rows, setRows] = useState<LevelRow[]>(() => toRows(DEFAULT_VACANCY_LEVELS));
+  const [rows, setRows] = useState<LevelRow[]>(() => toRows(levels));
+  const [source, setSource] = useState(levels);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  useEffect(() => {
-    if (levels.length > 0) setRows(toRows(levels));
-  }, [levels]);
+  if (levels !== source) {
+    setSource(levels);
+    setRows(toRows(levels));
+  }
 
   const list = rows.length > 0 ? rows : toRows([""]);
 

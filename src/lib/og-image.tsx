@@ -3,6 +3,9 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import sharp from "sharp";
 
+/* ImageResponse / Satori only supports <img>, not next/image. */
+/* eslint-disable @next/next/no-img-element */
+
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt = "HR Recruitment · Aeris Beaute and From This Island";
@@ -78,7 +81,12 @@ export async function generateOgImage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
-            <img src={aeris.src} width={aeris.width} height={aeris.height} />
+            <img
+              alt="Aeris Beaute"
+              src={aeris.src}
+              width={aeris.width}
+              height={aeris.height}
+            />
             <div
               style={{
                 width: 2,
@@ -88,7 +96,12 @@ export async function generateOgImage() {
                 background: "rgba(255,255,255,0.25)",
               }}
             />
-            <img src={fti.src} width={fti.width} height={fti.height} />
+            <img
+              alt="From This Island"
+              src={fti.src}
+              width={fti.width}
+              height={fti.height}
+            />
           </div>
           <div
             style={{
