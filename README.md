@@ -170,7 +170,7 @@ MAIL_FROM_ADDRESS=
 MAIL_FROM_NAME=HR Recruitment
 ```
 
-Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy (Clara, Nadia, Sari, …). Request forms and email templates still work locally.
+Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy (Clara, Nadia, Sari, …). Request forms and email templates still work locally, and email edits persist to Supabase when keys are set.
 
 `NEXT_PUBLIC_SUPABASE_*` is baked in at **build** time. On Vercel, set both keys for Production, then **Redeploy**. Adding them later without a rebuild keeps prod on demo data even if Supabase already has new rows.
 
@@ -287,6 +287,7 @@ The app still gates access with its own login.
    - `supabase/storage-cvs.sql` — CV upload bucket (`cvs`)
    - `supabase/recruitment-requests.sql` — request form schemas and submissions
    - `supabase/vacancy-settings.sql` — editable vacancy Level dropdown
+   - `supabase/email-templates.sql` — email Subject / CC / Body per workspace
    - `supabase/auth-passwords.sql` — password changes from Settings
    - `supabase/google-calendar.sql` — Google Calendar refresh tokens
 3. Copy project URL and anon key into env.

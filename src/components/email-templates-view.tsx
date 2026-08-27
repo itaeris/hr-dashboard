@@ -4,48 +4,77 @@ import {
   EMAIL_TEMPLATE_KINDS,
   EMAIL_TEMPLATE_META,
   loadTemplates,
+  loadTemplatesCached,
   saveTemplates,
+  saveTemplatesCached,
   type EmailTemplate,
   type EmailTemplateKind,
 } from "@/lib/email-templates";
 import { useRecruitment } from "@/lib/recruitment-context";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmailSignaturePreview } from "./email-signature-preview";
 import { FileAttachList } from "./file-attach";
 import { Field, PageFade, fieldClass } from "./ui";
 
 export function EmailTemplatesPage() {
   const { slug, brand } = useRecruitment();
-  const [kind, setKind] = useState<EmailTemplateKind>("interview");
   const sourceKey = `${slug}:${brand.name}`;
   const [activeKey, setActiveKey] = useState(sourceKey);
+  const [kind, setKind] = useState<EmailTemplateKind>("interview");
   const [templates, setTemplates] = useState<EmailTemplate[]>(() =>
-    loadTemplates(slug, brand.name),
+    loadTemplatesCached(slug, brand.name),
   );
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const saveTimer = useRef<number>(0);
+  const latest = useRef(templates);
+  const dirty = useRef(false);
+
   if (activeKey !== sourceKey) {
     setActiveKey(sourceKey);
-    setTemplates(loadTemplates(slug, brand.name));
+    setTemplates(loadTemplatesCached(slug, brand.name));
   }
+
+  useEffect(() => {
+    let active = true;
+    dirty.current = false;
+    void loadTemplates(slug, brand.name).then((next) => {
+      if (!active || dirty.current) return;
+      latest.current = next;
+      setTemplates(next);
+    });
+    return () => {
+      active = false;
+      window.clearTimeout(saveTimer.current);
+    };
+  }, [slug, brand.name]);
 
   const current = templates.find((item) => item.kind === kind) ?? templates[0];
 
   function update(patch: Partial<EmailTemplate>) {
-    setTemplates((currentTemplates) => {
-      const next = currentTemplates.map((item) =>
-        item.kind === kind ? { ...item, ...patch } : item,
-      );
-      try {
-        saveTemplates(slug, next);
-        setSaveError("");
-        setSaved(true);
-        window.setTimeout(() => setSaved(false), 1400);
-      } catch {
-        setSaveError("Could not save. Try a smaller attachment.");
-      }
-      return next;
-    });
+    const next = templates.map((item) =>
+      item.kind === kind ? { ...item, ...patch } : item,
+    );
+    dirty.current = true;
+    setTemplates(next);
+    latest.current = next;
+    saveTemplatesCached(slug, next);
+    window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      void saveTemplates(slug, latest.current)
+        .then(() => {
+          setSaveError("");
+          setSaved(true);
+          window.setTimeout(() => setSaved(false), 1400);
+        })
+        .catch((cause) => {
+          setSaveError(
+            cause instanceof Error
+              ? cause.message
+              : "Could not save to the database.",
+          );
+        });
+    }, 500);
   }
 
   return (
@@ -56,7 +85,8 @@ export function EmailTemplatesPage() {
         <code className="break-all text-ink">{"{{role}}"}</code>,{" "}
         <code className="break-all text-ink">{"{{company}}"}</code>. Attach a file here
         and it will be included when you send from a candidate. The company logo is
-        added as a signature on send.
+        added as a signature on send. Changes auto-save to this workspace in
+        Supabase.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2">

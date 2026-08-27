@@ -1,5 +1,6 @@
 import { COMPANY_EMAIL_LOGOS, EMAIL_LOGO_CID, emailBodyHtml } from "./email/signature";
 import { formatSheetDate } from "./format";
+import { getSupabaseBrowserClient } from "./supabase/client";
 import type { ApplicationView, CompanySlug } from "./types";
 
 export const EMAIL_TEMPLATE_KINDS = [
@@ -58,7 +59,93 @@ export const EMAIL_FILE_MAX_COUNT = 4;
 
 const STORAGE_KEY = (slug: CompanySlug) => `hr-email-templates:${slug}`;
 
-export function defaultTemplates(companyName: string): EmailTemplate[] {
+function mergeTemplates(fallback: EmailTemplate[], parsed: EmailTemplate[]) {
+  return fallback.map((item) => {
+    const saved = parsed.find((entry) => entry.kind === item.kind);
+    if (!saved) return item;
+    return {
+      ...item,
+      subject: saved.subject || item.subject,
+      body: saved.body || item.body,
+      cc: typeof saved.cc === "string" ? saved.cc : "",
+      attachments: Array.isArray(saved.attachments) ? saved.attachments : [],
+    };
+  });
+}
+
+function readLocalTemplates(slug: CompanySlug, fallback: EmailTemplate[]) {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY(slug));
+    if (!raw) return fallback;
+    return mergeTemplates(fallback, JSON.parse(raw) as EmailTemplate[]);
+  } catch {
+    return fallback;
+  }
+}
+
+export function loadTemplatesCached(slug: CompanySlug, companyName: string) {
+  return readLocalTemplates(slug, defaultTemplates(companyName));
+}
+
+export async function loadTemplates(slug: CompanySlug, companyName: string) {
+  const fallback = defaultTemplates(companyName);
+  const local = readLocalTemplates(slug, fallback);
+
+  try {
+    const supabase = getSupabaseBrowserClient();
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("email_templates")
+        .select("templates")
+        .eq("company_slug", slug)
+        .maybeSingle();
+      if (!error && Array.isArray(data?.templates) && data.templates.length > 0) {
+        const merged = mergeTemplates(fallback, data.templates as EmailTemplate[]);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(STORAGE_KEY(slug), JSON.stringify(merged));
+        }
+        return merged;
+      }
+      if (!error && local !== fallback) {
+        await saveTemplates(slug, local);
+      }
+    }
+  } catch {
+    /* use local */
+  }
+
+  return local;
+}
+
+export function saveTemplatesCached(slug: CompanySlug, templates: EmailTemplate[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_KEY(slug), JSON.stringify(templates));
+}
+
+export async function saveTemplates(slug: CompanySlug, templates: EmailTemplate[]) {
+  saveTemplatesCached(slug, templates);
+
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) return;
+
+  const { error } = await supabase.from("email_templates").upsert(
+    {
+      company_slug: slug,
+      templates,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "company_slug" },
+  );
+  if (error) {
+    if (/does not exist|schema cache/i.test(error.message)) {
+      throw new Error("Run supabase/email-templates.sql in the SQL Editor.");
+    }
+    throw error;
+  }
+}
+
+export function defaultTemplates(companyName: string) {
   const templates: EmailTemplate[] = [
     {
       kind: "interview",
@@ -138,34 +225,6 @@ Warm regards,
     ...template,
     subject: template.subject.replaceAll("{{company}}", companyName),
   }));
-}
-
-export function loadTemplates(slug: CompanySlug, companyName: string) {
-  const fallback = defaultTemplates(companyName);
-  if (typeof window === "undefined") return fallback;
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY(slug));
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as EmailTemplate[];
-    return fallback.map((item) => {
-      const saved = parsed.find((entry) => entry.kind === item.kind);
-      if (!saved) return item;
-      return {
-        ...item,
-        subject: saved.subject || item.subject,
-        body: saved.body || item.body,
-        cc: typeof saved.cc === "string" ? saved.cc : "",
-        attachments: Array.isArray(saved.attachments) ? saved.attachments : [],
-      };
-    });
-  } catch {
-    return fallback;
-  }
-}
-
-export function saveTemplates(slug: CompanySlug, templates: EmailTemplate[]) {
-  window.localStorage.setItem(STORAGE_KEY(slug), JSON.stringify(templates));
 }
 
 export function fillTemplate(text: string, vars: Record<string, string>) {

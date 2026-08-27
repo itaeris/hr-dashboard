@@ -8,6 +8,7 @@ import {
   fillTemplate,
   gmailComposeUrl,
   loadTemplates,
+  loadTemplatesCached,
   suggestedTemplate,
   templateVars,
   type EmailAttachment,
@@ -15,7 +16,7 @@ import {
 } from "@/lib/email-templates";
 import { useRecruitment } from "@/lib/recruitment-context";
 import type { ApplicationView } from "@/lib/types";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { EmailSignaturePreview } from "./email-signature-preview";
 import { FileAttachList } from "./file-attach";
@@ -48,10 +49,10 @@ export function SendEmailModal({
 function SendEmailComposer({ item }: { item: ApplicationView }) {
   const { slug, brand } = useRecruitment();
   const initialKind = suggestedTemplate(item);
-  const initialTemplate = loadTemplates(slug, brand.name).find(
-    (entry) => entry.kind === initialKind,
-  );
+  const cached = loadTemplatesCached(slug, brand.name);
+  const initialTemplate = cached.find((entry) => entry.kind === initialKind);
   const initialVars = templateVars(item, brand.name, initialKind);
+  const [templates, setTemplates] = useState(cached);
   const [kind, setKind] = useState<EmailTemplateKind>(initialKind);
   const [subject, setSubject] = useState(
     fillTemplate(initialTemplate?.subject ?? "", initialVars),
@@ -66,6 +67,24 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
   const [error, setError] = useState("");
   const to = item.candidate.email ?? "";
 
+  useEffect(() => {
+    let live = true;
+    void loadTemplates(slug, brand.name).then((next) => {
+      if (!live) return;
+      setTemplates(next);
+      const template = next.find((entry) => entry.kind === initialKind);
+      const vars = templateVars(item, brand.name, initialKind);
+      setKind(initialKind);
+      setSubject(fillTemplate(template?.subject ?? "", vars));
+      setCc(template?.cc ?? "");
+      setBody(fillTemplate(template?.body ?? "", vars));
+      setAttachments(template?.attachments ?? []);
+    });
+    return () => {
+      live = false;
+    };
+  }, [brand.name, initialKind, item, slug]);
+
   const gmailUrl = useMemo(() => {
     if (!to) return "";
     const extra =
@@ -76,7 +95,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
   }, [attachments, body, cc, subject, to]);
 
   function applyKind(next: EmailTemplateKind) {
-    const template = loadTemplates(slug, brand.name).find((entry) => entry.kind === next);
+    const template = templates.find((entry) => entry.kind === next);
     const vars = templateVars(item, brand.name, next);
     setKind(next);
     setSubject(fillTemplate(template?.subject ?? "", vars));
