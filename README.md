@@ -40,7 +40,7 @@ The public hire request form also accepts **KIN** as a company. KIN has no dashb
 ```mermaid
 flowchart TD
   A[Open app] --> B{Session cookie?}
-  B -->|No| C[/login]
+  B -->|No| C["/login"]
   C --> D{Sign in}
   D -->|Email + password| E[Verify hash]
   D -->|Google| F{Company domain?}
@@ -48,12 +48,12 @@ flowchart TD
   F -->|Yes| G[Set session]
   E -->|OK| G
   E -->|Fail| C
-  B -->|Yes| H[/ brand picker]
+  B -->|Yes| H["/ brand picker"]
   G --> H
   H --> I{Company}
-  I -->|Aeris Beaute| J[/aeris-beaute]
-  I -->|From This Island| K[/from-this-island]
-  J --> L[Overview / Pipeline / Progress / Vacancy / Emails / Request / Settings]
+  I -->|Aeris Beaute| J["/aeris-beaute"]
+  I -->|From This Island| K["/from-this-island"]
+  J --> L["Overview / Pipeline / Progress / Vacancy / Emails / Request / Settings"]
   K --> L
 ```
 
@@ -61,7 +61,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  A[/recruitment-request] --> B[Pick company]
+  A["/recruitment-request"] --> B[Pick company]
   B --> C{Company}
   C -->|AERIS| D[Load AERIS form schema]
   C -->|FTI| E[Load FTI form schema]
@@ -93,7 +93,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  A[Open Progress / Pipeline / Vacancy] --> B{NEXT_PUBLIC_SUPABASE_* set at build?}
+  A["Open Progress / Pipeline / Vacancy"] --> B{NEXT_PUBLIC_SUPABASE_* set at build?}
   B -->|No| C[Demo data]
   B -->|Yes| D[Query Supabase]
   D -->|OK| E[Live rows]
