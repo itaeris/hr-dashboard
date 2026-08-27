@@ -52,11 +52,14 @@ export type AddCandidateInput = {
   approaching_date: string | null;
   response_date: string | null;
   hr_interview_date: string | null;
+  hr_interview_record_url: string;
   hr_interview_note: string;
   shared_with_user: boolean;
   user_interview_date: string | null;
+  user_interview_record_url: string;
   user_remarks: string;
   third_interview_date: string | null;
+  third_interview_record_url: string;
   offer_date: string | null;
   offer_result: OfferResult;
   join_date: string | null;
@@ -278,11 +281,14 @@ export function RecruitmentProvider({
             approaching_date: input.approaching_date,
             response_date: input.response_date,
             hr_interview_date: input.hr_interview_date,
+            hr_interview_record_url: input.hr_interview_record_url,
             hr_interview_note: input.hr_interview_note,
             shared_with_user: input.shared_with_user,
             user_interview_date: input.user_interview_date,
+            user_interview_record_url: input.user_interview_record_url,
             user_remarks: input.user_remarks,
             third_interview_date: input.third_interview_date,
+            third_interview_record_url: input.third_interview_record_url,
             offer_date: input.offer_date,
             offer_result: input.offer_result || null,
             join_date: input.join_date,
@@ -336,11 +342,14 @@ export function RecruitmentProvider({
         approaching_date: input.approaching_date ?? now,
         response_date: input.response_date,
         hr_interview_date: input.hr_interview_date,
+        hr_interview_record_url: input.hr_interview_record_url,
         hr_interview_note: input.hr_interview_note,
         shared_with_user: input.shared_with_user,
         user_interview_date: input.user_interview_date,
+        user_interview_record_url: input.user_interview_record_url,
         user_remarks: input.user_remarks,
         third_interview_date: input.third_interview_date,
+        third_interview_record_url: input.third_interview_record_url,
         offer_date: input.offer_date,
         offer_result: input.offer_result,
         join_date: input.join_date,
@@ -395,11 +404,14 @@ export function RecruitmentProvider({
         approaching_date: input.approaching_date,
         response_date: input.response_date,
         hr_interview_date: input.hr_interview_date,
+        hr_interview_record_url: input.hr_interview_record_url,
         hr_interview_note: input.hr_interview_note,
         shared_with_user: input.shared_with_user,
         user_interview_date: input.user_interview_date,
+        user_interview_record_url: input.user_interview_record_url,
         user_remarks: input.user_remarks,
         third_interview_date: input.third_interview_date,
+        third_interview_record_url: input.third_interview_record_url,
         offer_date: input.offer_date,
         offer_result: input.offer_result,
         join_date: input.join_date,
@@ -439,11 +451,14 @@ export function RecruitmentProvider({
             approaching_date: nextApplication.approaching_date,
             response_date: nextApplication.response_date,
             hr_interview_date: nextApplication.hr_interview_date,
+            hr_interview_record_url: nextApplication.hr_interview_record_url,
             hr_interview_note: nextApplication.hr_interview_note,
             shared_with_user: nextApplication.shared_with_user,
             user_interview_date: nextApplication.user_interview_date,
+            user_interview_record_url: nextApplication.user_interview_record_url,
             user_remarks: nextApplication.user_remarks,
             third_interview_date: nextApplication.third_interview_date,
+            third_interview_record_url: nextApplication.third_interview_record_url,
             offer_date: nextApplication.offer_date,
             offer_result: nextApplication.offer_result || null,
             join_date: nextApplication.join_date,

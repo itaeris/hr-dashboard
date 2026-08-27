@@ -17,7 +17,7 @@ import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CandidateForm } from "./candidate-form";
 import { CvCell } from "./cv-preview";
-import { Avatar, PositionChip } from "./display";
+import { Avatar, DriveLink, PositionChip } from "./display";
 import { IconClose, IconMail, IconPencil, IconPhone, IconTrash } from "./icons";
 import { ScrollArea } from "./scroll-area";
 import { SendEmailModal } from "./send-email-modal";
@@ -367,8 +367,20 @@ function CandidateDetail({
           <Detail label="Approaching" value={formatTableDate(item.approaching_date)} />
           <Detail label="Response" value={formatTableDate(item.response_date)} />
           <Detail label="HR interview" value={formatTableDate(item.hr_interview_date)} />
+          <Detail
+            label="HR record"
+            value={item.hr_interview_record_url ? <DriveLink url={item.hr_interview_record_url} /> : null}
+          />
           <Detail label="User interview" value={formatTableDate(item.user_interview_date)} />
+          <Detail
+            label="User record"
+            value={item.user_interview_record_url ? <DriveLink url={item.user_interview_record_url} /> : null}
+          />
           <Detail label="C-level" value={formatTableDate(item.third_interview_date)} />
+          <Detail
+            label="C-level record"
+            value={item.third_interview_record_url ? <DriveLink url={item.third_interview_record_url} /> : null}
+          />
           <Detail label="Offer date" value={formatTableDate(item.offer_date)} />
           <Detail label="Offer result" value={item.offer_result} />
           <Detail label="Join date" value={formatTableDate(item.join_date)} />

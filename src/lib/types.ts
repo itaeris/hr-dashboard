@@ -88,11 +88,14 @@ export type ApplicationRow = {
   approaching_date: string | null;
   response_date: string | null;
   hr_interview_date: string | null;
+  hr_interview_record_url: string;
   hr_interview_note: string;
   shared_with_user: boolean;
   user_interview_date: string | null;
+  user_interview_record_url: string;
   user_remarks: string;
   third_interview_date: string | null;
+  third_interview_record_url: string;
   offer_date: string | null;
   offer_result: OfferResult;
   join_date: string | null;

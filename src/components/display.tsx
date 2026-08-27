@@ -1,6 +1,25 @@
+"use client";
+
 import { initials, stageLabel } from "@/lib/format";
 import { positionTone } from "@/lib/position-color";
 import type { Stage } from "@/lib/types";
+
+export function DriveLink({ url }: { url?: string | null }) {
+  const trimmed = url?.trim() ?? "";
+  if (!trimmed) return null;
+  const href = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(event) => event.stopPropagation()}
+      className="inline-flex max-w-full truncate text-[12px] font-medium text-accent hover:underline"
+    >
+      Open recording
+    </a>
+  );
+}
 
 export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
   return (

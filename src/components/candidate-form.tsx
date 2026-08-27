@@ -37,11 +37,14 @@ export function readCandidateForm(
     approaching_date: blankDate(form.get("approaching_date")),
     response_date: blankDate(form.get("response_date")),
     hr_interview_date: blankDate(form.get("hr_interview_date")),
+    hr_interview_record_url: String(form.get("hr_interview_record_url") ?? "").trim(),
     hr_interview_note: String(form.get("hr_interview_note") ?? ""),
     shared_with_user: form.get("shared_with_user") === "on",
     user_interview_date: blankDate(form.get("user_interview_date")),
+    user_interview_record_url: String(form.get("user_interview_record_url") ?? "").trim(),
     user_remarks: String(form.get("user_remarks") ?? ""),
     third_interview_date: blankDate(form.get("third_interview_date")),
+    third_interview_record_url: String(form.get("third_interview_record_url") ?? "").trim(),
     offer_date: blankDate(form.get("offer_date")),
     offer_result: String(form.get("offer_result") ?? "") as OfferResult,
     join_date: blankDate(form.get("join_date")),
@@ -179,16 +182,46 @@ export function CandidateForm({
             defaultValue={isoToYmd(item?.hr_interview_date ?? null)}
           />
         </Field>
+        <Field label="HR Interview Record (Drive)">
+          <input
+            name="hr_interview_record_url"
+            type="text"
+            inputMode="url"
+            placeholder="https://drive.google.com/..."
+            defaultValue={item?.hr_interview_record_url ?? ""}
+            className={fieldClass}
+          />
+        </Field>
         <Field label="User Interview Date">
           <DatePicker
             name="user_interview_date"
             defaultValue={isoToYmd(item?.user_interview_date ?? null)}
           />
         </Field>
+        <Field label="User Interview Record (Drive)">
+          <input
+            name="user_interview_record_url"
+            type="text"
+            inputMode="url"
+            placeholder="https://drive.google.com/..."
+            defaultValue={item?.user_interview_record_url ?? ""}
+            className={fieldClass}
+          />
+        </Field>
         <Field label="3rd Interview (C-Level)">
           <DatePicker
             name="third_interview_date"
             defaultValue={isoToYmd(item?.third_interview_date ?? null)}
+          />
+        </Field>
+        <Field label="C-Level Record (Drive)">
+          <input
+            name="third_interview_record_url"
+            type="text"
+            inputMode="url"
+            placeholder="https://drive.google.com/..."
+            defaultValue={item?.third_interview_record_url ?? ""}
+            className={fieldClass}
           />
         </Field>
         <Field label="Offer Date">

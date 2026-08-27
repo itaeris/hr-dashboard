@@ -288,6 +288,7 @@ The app still gates access with its own login.
    - `supabase/recruitment-requests.sql` — request form schemas and submissions
    - `supabase/vacancy-settings.sql` — editable vacancy Level dropdown
    - `supabase/email-templates.sql` — email Subject / CC / Body per workspace
+   - `supabase/interview-records.sql` — Google Drive links for interview recordings
    - `supabase/auth-passwords.sql` — password changes from Settings
    - `supabase/google-calendar.sql` — Google Calendar refresh tokens
 3. Copy project URL and anon key into env.

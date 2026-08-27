@@ -33,7 +33,7 @@ import {
   cell,
 } from "./data-table";
 import { CvCell } from "./cv-preview";
-import { Avatar, PositionChip } from "./display";
+import { Avatar, DriveLink, PositionChip } from "./display";
 import { TableSkeleton } from "./skeletons";
 import { IconSearch } from "./icons";
 import { Select } from "./fields";
@@ -54,11 +54,14 @@ const COLUMNS = [
   { label: "Approaching" },
   { label: "Response" },
   { label: "HR interview" },
+  { label: "HR record" },
   { label: "HR note" },
   { label: "Shared" },
   { label: "User interview" },
+  { label: "User record" },
   { label: "User remarks" },
   { label: "C-level" },
+  { label: "C-level record" },
   { label: "Offer date" },
   { label: "Offer result" },
   { label: "Join date" },
@@ -231,6 +234,13 @@ export function CandidatesPage() {
                   <Td nowrap muted>
                     {cell(formatTableDate(item.hr_interview_date))}
                   </Td>
+                  <Td>
+                    {item.hr_interview_record_url ? (
+                      <DriveLink url={item.hr_interview_record_url} />
+                    ) : (
+                      <EmptyValue />
+                    )}
+                  </Td>
                   <Td muted className="max-w-[200px] truncate">
                     {cell(item.hr_interview_note)}
                   </Td>
@@ -238,11 +248,25 @@ export function CandidatesPage() {
                   <Td nowrap muted>
                     {cell(formatTableDate(item.user_interview_date))}
                   </Td>
+                  <Td>
+                    {item.user_interview_record_url ? (
+                      <DriveLink url={item.user_interview_record_url} />
+                    ) : (
+                      <EmptyValue />
+                    )}
+                  </Td>
                   <Td muted className="max-w-[180px] truncate">
                     {cell(item.user_remarks)}
                   </Td>
                   <Td nowrap muted>
                     {cell(formatTableDate(item.third_interview_date))}
+                  </Td>
+                  <Td>
+                    {item.third_interview_record_url ? (
+                      <DriveLink url={item.third_interview_record_url} />
+                    ) : (
+                      <EmptyValue />
+                    )}
                   </Td>
                   <Td nowrap muted>
                     {cell(formatTableDate(item.offer_date))}
