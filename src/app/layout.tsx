@@ -1,4 +1,5 @@
 import { PwaRegister } from "@/components/pwa-register";
+import { PRODUCTION_ORIGIN } from "@/lib/auth/google";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -10,7 +11,10 @@ const poppins = Poppins({
 });
 
 function siteUrl() {
-  if (process.env.AUTH_URL) return process.env.AUTH_URL;
+  if (process.env.AUTH_URL) return process.env.AUTH_URL.replace(/\/$/, "");
+  if (process.env.VERCEL_ENV === "production") {
+    return PRODUCTION_ORIGIN;
+  }
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }

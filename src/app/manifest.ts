@@ -1,12 +1,20 @@
+import { PRODUCTION_ORIGIN } from "@/lib/auth/google";
 import type { MetadataRoute } from "next";
 
+const origin = (
+  process.env.AUTH_URL?.replace(/\/$/, "") || PRODUCTION_ORIGIN
+).replace(/\/$/, "");
+
 export default function manifest(): MetadataRoute.Manifest {
+  const local = process.env.NODE_ENV === "development";
+
   return {
     name: "HR Recruitment",
     short_name: "HR",
     description: "Recruitment dashboard for Aeris Beaute and From This Island.",
-    start_url: "/",
-    scope: "/",
+    id: `${origin}/`,
+    start_url: local ? "/" : `${origin}/`,
+    scope: local ? "/" : `${origin}/`,
     display: "standalone",
     orientation: "any",
     background_color: "#F7F1EA",

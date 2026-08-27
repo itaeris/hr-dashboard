@@ -22,7 +22,7 @@ export function safeCalendarNext(value: string | null) {
   return value.replace(/\/$/, "");
 }
 
-export const PRODUCTION_ORIGIN = "https://hr-dashboard-aeris-fti.vercel.app";
+export const PRODUCTION_ORIGIN = "https://hr-recruitment-aeris-fti.vercel.app";
 
 export function allowedOrigins() {
   const extra = process.env.AUTH_URL?.replace(/\/$/, "");
