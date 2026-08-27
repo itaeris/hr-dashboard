@@ -19,8 +19,14 @@ export function proxy(request: NextRequest) {
 
   if (!session && !isPublic) {
     const login = new URL("/login", request.url);
-    const next = pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "";
-    if (next && next !== "/" && !next.includes("://")) {
+    const next =
+      pathname.startsWith("/") &&
+      !pathname.startsWith("//") &&
+      !pathname.includes("\\") &&
+      !pathname.includes("://")
+        ? pathname
+        : "";
+    if (next && next !== "/") {
       login.searchParams.set("next", next);
     }
     return NextResponse.redirect(login);

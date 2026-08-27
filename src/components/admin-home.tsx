@@ -7,7 +7,7 @@ import {
   type RoleState,
 } from "@/app/actions/auth";
 import { loadBrandProgress, type BrandProgress } from "@/lib/admin-stats";
-import type { AppUser } from "@/lib/auth/app-users";
+import type { AppUser } from "@/lib/auth/access";
 import { workspaceLabel } from "@/lib/auth/access";
 import type { AuthUser } from "@/lib/auth/users";
 import { roleLabel } from "@/lib/auth/users";

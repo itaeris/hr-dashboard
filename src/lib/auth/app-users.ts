@@ -1,18 +1,17 @@
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import "server-only";
+
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import {
   companyFromEmail,
   defaultAccessForRole,
   homePath,
+  type AppUser,
   type CompanyAccess,
 } from "./access";
+import { getStoredUser } from "./password-store";
 import { findUserByEmail, type AuthUser, type Role } from "./users";
 
-export type AppUser = {
-  email: string;
-  name: string;
-  role: Role;
-  company: CompanyAccess;
-};
+export type { AppUser } from "./access";
 
 export const SEED_APP_USERS: AppUser[] = [
   {
@@ -55,7 +54,7 @@ function asRole(value: string | undefined): Role {
 
 export async function loadAppUser(email: string): Promise<AppUser | null> {
   const key = normalize(email);
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (supabase) {
     const { data, error } = await supabase
       .from("hr_app_users")
@@ -77,7 +76,7 @@ export async function loadAppUser(email: string): Promise<AppUser | null> {
 
 export async function listAppUsers(): Promise<AppUser[]> {
   const byEmail = new Map<string, AppUser>();
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   let fromSupabase = false;
 
   if (supabase) {
@@ -128,7 +127,7 @@ export async function saveAppUser(input: AppUser) {
 
   removed.delete(next.email);
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (supabase) {
     const { error } = await supabase.from("hr_app_users").upsert({
       email: next.email,
@@ -152,7 +151,7 @@ export async function deleteAppUser(email: string) {
   removed.add(key);
   memory.delete(key);
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (supabase) {
     const { error } = await supabase.from("hr_app_users").delete().eq("email", key);
     if (error) {
@@ -166,15 +165,17 @@ export async function resolveAuthUser(partial: {
   id: string;
   email: string;
   name: string;
-}): Promise<AuthUser> {
+}): Promise<AuthUser | null> {
   const email = normalize(partial.email);
   const profile = await loadAppUser(email);
   const seed = findUserByEmail(email);
+  const stored = seed ? null : await getStoredUser(email);
+  if (!profile && !seed && !stored) return null;
   return {
-    id: seed?.id ?? partial.id,
+    id: seed?.id ?? stored?.id ?? partial.id,
     email,
-    name: profile?.name || seed?.name || partial.name || email.split("@")[0],
-    role: profile?.role ?? seed?.role ?? "hr",
+    name: profile?.name || seed?.name || stored?.name || partial.name || email.split("@")[0],
+    role: profile?.role ?? seed?.role ?? stored?.role ?? "hr",
   };
 }
 

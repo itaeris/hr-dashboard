@@ -17,12 +17,14 @@ export function ScrollArea({
   className = "",
   xGutter = "pt-3 pb-1",
   compact = false,
+  overlay = false,
 }: {
   children: ReactNode;
   axis?: Axis;
   className?: string;
   xGutter?: string;
   compact?: boolean;
+  overlay?: boolean;
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [metrics, setMetrics] = useState({
@@ -72,8 +74,20 @@ export function ScrollArea({
         ? "overflow-y-auto overflow-x-hidden"
         : "overflow-auto";
 
+  const yBar = showY ? (
+    <Scrollbar
+      orientation="y"
+      scroll={metrics.st}
+      content={metrics.sh}
+      viewport={metrics.ch}
+      onScroll={(value) => {
+        if (viewportRef.current) viewportRef.current.scrollTop = value;
+      }}
+    />
+  ) : null;
+
   return (
-    <div className={`flex min-h-0 min-w-0 flex-col ${className}`}>
+    <div className={`relative flex min-h-0 min-w-0 flex-col ${className}`}>
       <div className="flex min-h-0 min-w-0 flex-1">
         <div
           ref={viewportRef}
@@ -81,20 +95,17 @@ export function ScrollArea({
         >
           {children}
         </div>
-        {showY ? (
+        {showY && !overlay ? (
           <div className={`hidden shrink-0 md:block ${compact ? "py-2 pl-3 pr-1" : "py-2 pl-5 pr-3"}`}>
-            <Scrollbar
-              orientation="y"
-              scroll={metrics.st}
-              content={metrics.sh}
-              viewport={metrics.ch}
-              onScroll={(value) => {
-                if (viewportRef.current) viewportRef.current.scrollTop = value;
-              }}
-            />
+            {yBar}
           </div>
         ) : null}
       </div>
+      {showY && overlay ? (
+        <div className="pointer-events-none absolute inset-y-3 right-1 z-10 hidden w-1.5 md:block">
+          <div className="pointer-events-auto h-full">{yBar}</div>
+        </div>
+      ) : null}
       {showX ? (
         <div className={`shrink-0 px-4 ${xGutter}`}>
           <Scrollbar

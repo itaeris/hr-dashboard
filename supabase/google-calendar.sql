@@ -10,6 +10,4 @@ create table if not exists public.hr_google_tokens (
 alter table public.hr_google_tokens enable row level security;
 
 drop policy if exists hr_google_tokens_all on public.hr_google_tokens;
-create policy hr_google_tokens_all
-  on public.hr_google_tokens for all
-  using (true) with check (true);
+revoke all on table public.hr_google_tokens from anon, authenticated;

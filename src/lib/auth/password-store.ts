@@ -1,4 +1,6 @@
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import "server-only";
+
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { findUserByEmail, type Role, type StoredUser } from "./users";
 
 export type PasswordOverride = {
@@ -13,7 +15,7 @@ const memory = new Map<string, PasswordOverride>();
 
 export async function loadPasswordOverride(email: string) {
   const normalized = email.trim().toLowerCase();
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (supabase) {
     const { data, error } = await supabase
       .from("hr_auth_passwords")
@@ -32,7 +34,7 @@ export async function savePasswordOverride(row: PasswordOverride) {
     email: row.email.trim().toLowerCase(),
   };
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (supabase) {
     const { error } = await supabase.from("hr_auth_passwords").upsert({
       email: next.email,
@@ -54,7 +56,7 @@ export async function savePasswordOverride(row: PasswordOverride) {
 export async function deletePasswordOverride(email: string) {
   const normalized = email.trim().toLowerCase();
   memory.delete(normalized);
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (!supabase) return;
   await supabase.from("hr_auth_passwords").delete().eq("email", normalized);
 }

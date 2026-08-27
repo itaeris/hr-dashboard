@@ -13,6 +13,4 @@ create table if not exists public.hr_auth_passwords (
 alter table public.hr_auth_passwords enable row level security;
 
 drop policy if exists hr_auth_passwords_all on public.hr_auth_passwords;
-create policy hr_auth_passwords_all
-  on public.hr_auth_passwords for all
-  using (true) with check (true);
+revoke all on table public.hr_auth_passwords from anon, authenticated;

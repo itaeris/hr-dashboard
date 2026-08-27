@@ -20,7 +20,7 @@ import {
   getStoredUser,
   savePasswordOverride,
 } from "@/lib/auth/password-store";
-import { clearLoginFailures, loginAllowed } from "@/lib/auth/rate-limit";
+import { clearLoginFailures, clientIpFrom, loginAllowed, passwordChangeAllowed } from "@/lib/auth/rate-limit";
 import { clearSession, getSession, setSession } from "@/lib/auth/session";
 import { toPublicUser, type Role } from "@/lib/auth/users";
 import { isCompanySlug } from "@/lib/companies";
@@ -30,9 +30,7 @@ import { headers } from "next/headers";
 export type LoginState = { error: string } | null;
 
 async function requestIp() {
-  const list = await headers();
-  const forwarded = list.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || list.get("x-real-ip") || "local";
+  return clientIpFrom(await headers());
 }
 
 export async function loginAction(
@@ -122,6 +120,12 @@ export async function changePasswordAction(
 ): Promise<PasswordState> {
   const session = await getSession();
   if (!session) return { error: "Sign in again to change your password." };
+
+  const ip = await requestIp();
+  const limit = passwordChangeAllowed(ip, session.email);
+  if (!limit.ok) {
+    return { error: "Too many password changes. Try again in a few minutes." };
+  }
 
   const current = String(formData.get("current_password") ?? "");
   const next = String(formData.get("new_password") ?? "");

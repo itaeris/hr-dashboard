@@ -291,10 +291,11 @@ The app still gates access with its own login.
    - `supabase/interview-records.sql` — Google Drive links for interview recordings
    - `supabase/auth-passwords.sql` — password changes from Settings
    - `supabase/google-calendar.sql` — Google Calendar refresh tokens
-3. Copy project URL and anon key into env.
+   - `supabase/lock-auth-tables.sql` — deny anon access to users / passwords / calendar tokens
+3. Copy project URL, anon key, and **service role** key into env (`SUPABASE_SERVICE_ROLE_KEY`).
 4. Restart / redeploy.
 
-Row Level Security in the schema is open for an internal MVP. Tighten it before a wider rollout.
+Auth tables (`hr_app_users`, `hr_auth_passwords`, `hr_google_tokens`) are server-only. Do not expose the service role key to the browser.
 
 If `recruitment_form_settings` was created as a single row (`id = 1`), re-run `supabase/recruitment-requests.sql` so schemas are stored per company (`AERIS`, `FTI`, `KIN`).
 

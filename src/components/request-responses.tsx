@@ -19,6 +19,7 @@ import {
   cell,
 } from "./data-table";
 import { IconClose, IconSearch } from "./icons";
+import { ScrollArea } from "./scroll-area";
 import { PageFade, fieldClass } from "./ui";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -158,7 +159,8 @@ export function RequestResponsesPage() {
                   <IconClose className="h-4 w-4" />
                 </button>
               </div>
-              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+              <ScrollArea axis="y" compact className="min-h-0 flex-1">
+                <div className="space-y-3">
                 {(schema?.fields ?? Object.keys(selected.payload).map((id) => ({ id, label: id })))
                   .filter((field) => selected.payload[field.id])
                   .map((field) => (
@@ -171,7 +173,8 @@ export function RequestResponsesPage() {
                       </p>
                     </div>
                   ))}
-              </div>
+                </div>
+              </ScrollArea>
             </motion.div>
           </motion.div>
         ) : null}

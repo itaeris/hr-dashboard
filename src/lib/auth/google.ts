@@ -1,4 +1,6 @@
 import { findUserByEmail, toPublicUser, type AuthUser } from "./users";
+import { createHash, randomBytes } from "crypto";
+import { safeEqual } from "./session-token";
 
 export const ALLOWED_GOOGLE_DOMAINS = [
   "aerisbeaute.com",
@@ -6,6 +8,7 @@ export const ALLOWED_GOOGLE_DOMAINS = [
 ] as const;
 
 export const GOOGLE_STATE_COOKIE = "hr_oauth_state";
+export const GOOGLE_PKCE_COOKIE = "hr_oauth_pkce";
 export const GOOGLE_INTENT_COOKIE = "hr_oauth_intent";
 export const GOOGLE_NEXT_COOKIE = "hr_oauth_next";
 export const GOOGLE_CALENDAR_SCOPE = [
@@ -43,6 +46,17 @@ export function googleCallbackUrl(origin: string) {
   return `${appOrigin(origin)}/api/auth/google/callback`;
 }
 
+export function createPkce() {
+  const verifier = randomBytes(32).toString("base64url");
+  const challenge = createHash("sha256").update(verifier).digest("base64url");
+  return { verifier, challenge };
+}
+
+export function oauthStateMatches(received: string | null, saved: string | undefined) {
+  if (!received || !saved) return false;
+  return safeEqual(received, saved);
+}
+
 export function isAllowedGoogleEmail(email: string) {
   const domain = email.split("@")[1]?.toLowerCase();
   return Boolean(
@@ -60,16 +74,10 @@ export function userFromGoogleProfile(profile: {
   email_verified?: boolean;
 }): AuthUser | null {
   const email = profile.email.trim().toLowerCase();
-  if (!email || profile.email_verified === false) return null;
+  if (!email || profile.email_verified !== true) return null;
   if (!isAllowedGoogleEmail(email)) return null;
 
   const existing = findUserByEmail(email);
-  if (existing) return toPublicUser(existing);
-
-  return {
-    id: `g_${profile.sub}`,
-    email,
-    name: profile.name?.trim() || email.split("@")[0],
-    role: "hr",
-  };
+  if (!existing) return null;
+  return toPublicUser(existing);
 }

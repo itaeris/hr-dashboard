@@ -3,6 +3,13 @@ import type { AuthUser, Role } from "./users";
 
 export type CompanyAccess = CompanySlug | "both";
 
+export type AppUser = {
+  email: string;
+  name: string;
+  role: Role;
+  company: CompanyAccess;
+};
+
 export function companyFromEmail(email: string): CompanySlug {
   const normalized = email.trim().toLowerCase();
   if (

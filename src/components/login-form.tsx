@@ -18,6 +18,7 @@ import { useActionState } from "react";
 
 const OAUTH_ERRORS: Record<string, string> = {
   domain: "Use a Google account from @aerisbeaute.com or @fromthisisland.com.",
+  uninvited: "This Google account is not provisioned. Ask an admin to add you.",
   oauth: "Google sign-in failed. Try again.",
   config: "Google sign-in is not configured yet.",
   denied: "Google sign-in was cancelled.",
@@ -76,7 +77,7 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease }}
-            className="min-h-0 flex-1 overflow-y-auto lg:overflow-visible"
+            className="min-h-0 flex-1 overflow-y-auto no-native-scrollbar lg:overflow-visible"
           >
             <h1 className="font-display text-3xl leading-tight text-ink">Welcome back</h1>
             <p className="mt-2 text-sm text-muted">
@@ -87,7 +88,12 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
               <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
                 <label>
                   Company website
-                  <input name="company_website" tabIndex={-1} autoComplete="off" />
+                  <input
+                    name="company_website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    defaultValue=""
+                  />
                 </label>
               </div>
               <label className="block space-y-1.5">

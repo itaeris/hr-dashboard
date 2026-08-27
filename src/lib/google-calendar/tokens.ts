@@ -1,6 +1,8 @@
+import "server-only";
+
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypto";
 import { authSecret } from "@/lib/auth/session-token";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type { CompanySlug } from "@/lib/types";
 import { calendarCompanyFromEmail } from "./scope";
 
@@ -55,7 +57,7 @@ export async function saveGoogleRefreshToken(
   const refresh_cipher = encrypt(refreshToken);
   memory.set(scoped, refreshToken);
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (!supabase) return;
   const { error } = await supabase.from("hr_google_tokens").upsert({
     email: scoped,
@@ -73,7 +75,7 @@ export async function loadGoogleRefreshToken(email: string, slug: CompanySlug) {
     if (cached) return cached;
   }
 
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (!supabase) return null;
   for (const lookup of lookupKeys(email, slug)) {
     const { data, error } = await supabase
@@ -95,7 +97,7 @@ export async function deleteGoogleRefreshToken(email: string, slug: CompanySlug)
   for (const lookup of lookupKeys(email, slug)) {
     memory.delete(lookup);
   }
-  const supabase = getSupabaseBrowserClient();
+  const supabase = getSupabaseServerClient();
   if (!supabase) return;
   for (const lookup of lookupKeys(email, slug)) {
     await supabase.from("hr_google_tokens").delete().eq("email", lookup);

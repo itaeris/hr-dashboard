@@ -17,6 +17,4 @@ on conflict (email) do nothing;
 alter table public.hr_app_users enable row level security;
 
 drop policy if exists hr_app_users_all on public.hr_app_users;
-create policy hr_app_users_all
-  on public.hr_app_users for all
-  using (true) with check (true);
+revoke all on table public.hr_app_users from anon, authenticated;

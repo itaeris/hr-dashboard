@@ -42,7 +42,7 @@ function sign(payload: string) {
   return createHmac("sha256", authSecret()).update(payload).digest("base64url");
 }
 
-function equal(left: string, right: string) {
+export function safeEqual(left: string, right: string) {
   const a = Buffer.from(left);
   const b = Buffer.from(right);
   if (a.length !== b.length) return false;
@@ -64,7 +64,7 @@ export function decodeSession(token: string | undefined | null): Session | null 
   if (dot <= 0) return null;
   const payload = token.slice(0, dot);
   const signature = token.slice(dot + 1);
-  if (!equal(sign(payload), signature)) return null;
+  if (!safeEqual(sign(payload), signature)) return null;
   try {
     const session = JSON.parse(
       Buffer.from(payload, "base64url").toString("utf8"),

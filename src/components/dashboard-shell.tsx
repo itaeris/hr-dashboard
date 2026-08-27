@@ -27,6 +27,7 @@ import { logoutAction } from "@/app/actions/auth";
 import type { AuthUser } from "@/lib/auth/users";
 import { roleLabel } from "@/lib/auth/users";
 import { AddCandidateModal, AddJobModal } from "./modals";
+import { ScrollArea } from "./scroll-area";
 
 const NAV = [
   { href: "", label: "Overview", icon: IconGrid },
@@ -65,10 +66,17 @@ export function DashboardShell({
           <Sidebar slug={slug} user={user} />
           <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
             <Topbar user={user} />
-            <main className="flex min-w-0 flex-1 flex-col px-4 pt-4 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 lg:min-h-0 lg:overflow-hidden lg:px-8 lg:pb-4">
-              <div className="min-w-0 flex-1 pb-4 lg:min-h-0 lg:overflow-y-auto lg:pb-0 lg:no-native-scrollbar">
-                {children}
-              </div>
+            <main className="flex min-w-0 flex-1 flex-col pt-4 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:pt-6 lg:min-h-0 lg:overflow-hidden lg:pb-4">
+              <ScrollArea
+                axis="y"
+                compact
+                overlay
+                className="min-h-0 min-w-0 flex-1 pb-4 lg:pb-0"
+              >
+                <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col px-4 sm:px-6 lg:px-8">
+                  {children}
+                </div>
+              </ScrollArea>
             </main>
           </div>
         </div>
