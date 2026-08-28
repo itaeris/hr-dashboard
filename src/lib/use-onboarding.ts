@@ -15,6 +15,14 @@ export function useOnboarding(slug: CompanySlug) {
   const [settings, setSettings] = useState<OnboardingSettings | null>(null);
   const [requests, setRequests] = useState<OnboardingRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadedSlug, setLoadedSlug] = useState(slug);
+
+  if (loadedSlug !== slug) {
+    setLoadedSlug(slug);
+    setSettings(null);
+    setRequests([]);
+    setLoading(true);
+  }
 
   const reload = useCallback(async () => {
     const [nextSettings, nextRequests] = await Promise.all([
@@ -27,9 +35,19 @@ export function useOnboarding(slug: CompanySlug) {
   }, [slug]);
 
   useEffect(() => {
-    setLoading(true);
-    void reload();
-  }, [reload]);
+    let live = true;
+    void Promise.all([loadOnboardingSettings(slug), loadOnboardingRequests(slug)]).then(
+      ([nextSettings, nextRequests]) => {
+        if (!live) return;
+        setSettings(nextSettings);
+        setRequests(nextRequests);
+        setLoading(false);
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [slug]);
 
   const saveSettings = useCallback(
     async (next: OnboardingSettings) => {
