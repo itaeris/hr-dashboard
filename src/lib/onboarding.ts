@@ -15,6 +15,7 @@ export type OnboardingRequest = {
   company_slug: CompanySlug;
   application_id: string;
   work_email: string;
+  work_password: string;
   request_kind: RequestKind;
   laptop_needed: boolean;
   laptop_status: ProvisionStatus;
@@ -162,6 +163,7 @@ function parseRequest(raw: unknown, slug: CompanySlug): OnboardingRequest | null
     company_slug: slug,
     application_id: String(value.application_id),
     work_email: String(value.work_email ?? ""),
+    work_password: String(value.work_password ?? "").slice(0, 128),
     request_kind: parseRequestKind(value.request_kind),
     laptop_needed: value.laptop_needed !== false,
     laptop_status: status(value.laptop_status),
@@ -320,6 +322,7 @@ export function createOnboardingRequest(
     company_slug: slug,
     application_id: item.id,
     work_email: suggestedWorkEmail(item.candidate.full_name, slug),
+    work_password: "",
     request_kind: "new",
     laptop_needed: true,
     laptop_status: "pending",

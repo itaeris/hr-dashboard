@@ -15,6 +15,7 @@ import {
   type EmailTemplateKind,
 } from "@/lib/email-templates";
 import { useRecruitment } from "@/lib/recruitment-context";
+import { useOnboarding } from "@/lib/use-onboarding";
 import type { ApplicationView } from "@/lib/types";
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -48,10 +49,20 @@ export function SendEmailModal({
 
 function SendEmailComposer({ item }: { item: ApplicationView }) {
   const { slug, brand } = useRecruitment();
+  const { requests } = useOnboarding(slug);
+  const onboarding = requests.find((row) => row.application_id === item.id);
+  const extras = useMemo(
+    () => ({
+      slug,
+      work_email: onboarding?.work_email,
+      work_password: onboarding?.work_password,
+    }),
+    [onboarding?.work_email, onboarding?.work_password, slug],
+  );
   const initialKind = suggestedTemplate(item);
   const cached = loadTemplatesCached(slug, brand.name);
   const initialTemplate = cached.find((entry) => entry.kind === initialKind);
-  const initialVars = templateVars(item, brand.name, initialKind);
+  const initialVars = templateVars(item, brand.name, initialKind, extras);
   const [templates, setTemplates] = useState(cached);
   const [kind, setKind] = useState<EmailTemplateKind>(initialKind);
   const [subject, setSubject] = useState(
@@ -73,7 +84,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       if (!live) return;
       setTemplates(next);
       const template = next.find((entry) => entry.kind === initialKind);
-      const vars = templateVars(item, brand.name, initialKind);
+      const vars = templateVars(item, brand.name, initialKind, extras);
       setKind(initialKind);
       setSubject(fillTemplate(template?.subject ?? "", vars));
       setCc(template?.cc ?? "");
@@ -83,7 +94,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
     return () => {
       live = false;
     };
-  }, [brand.name, initialKind, item, slug]);
+  }, [brand.name, extras, initialKind, item, slug]);
 
   const gmailUrl = useMemo(() => {
     if (!to) return "";
@@ -96,7 +107,7 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
 
   function applyKind(next: EmailTemplateKind) {
     const template = templates.find((entry) => entry.kind === next);
-    const vars = templateVars(item, brand.name, next);
+    const vars = templateVars(item, brand.name, next, extras);
     setKind(next);
     setSubject(fillTemplate(template?.subject ?? "", vars));
     setCc(template?.cc ?? "");

@@ -12,6 +12,7 @@ create table if not exists public.onboarding_requests (
   company_slug text not null,
   application_id text not null,
   work_email text not null default '',
+  work_password text not null default '',
   request_kind text not null default 'new',
   laptop_needed boolean not null default true,
   laptop_status text not null default 'pending',

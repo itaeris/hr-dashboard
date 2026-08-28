@@ -19,10 +19,10 @@ import {
 import { useRecruitment } from "@/lib/recruitment-context";
 import { useOnboarding } from "@/lib/use-onboarding";
 import type { ApplicationView } from "@/lib/types";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Avatar, PositionChip } from "./display";
 import { IconCheck, IconLaptop, IconPlus } from "./icons";
-import { ModalFrame, PageFade, Field, fieldClass } from "./ui";
+import { ModalFrame, PageFade, Field, fieldClass, PasswordInput } from "./ui";
 import { Pill } from "./data-table";
 
 export function OnboardingItPage() {
@@ -233,6 +233,7 @@ function OnboardingBoard({ mode }: { mode: "it" | "joiners" }) {
       )}
 
       <RequestEditor
+        key={editing?.row.id ?? "closed"}
         open={Boolean(editing)}
         item={editing?.item ?? null}
         row={editing?.row ?? null}
@@ -360,11 +361,6 @@ function RequestEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    setDraft(row);
-    setError("");
-  }, [row?.id]);
-
   if (!item || !draft) {
     return <ModalFrame open={open} onClose={onClose} title="IT request" wide>{null}</ModalFrame>;
   }
@@ -465,6 +461,28 @@ function RequestEditor({
             onChange={(event) => setDraft({ ...draft, work_email: event.target.value })}
             className={fieldClass}
           />
+        </Field>
+
+        <Field label="Google account password">
+          <PasswordInput
+            value={draft.work_password}
+            readOnly={desk === "hr"}
+            autoComplete="off"
+            placeholder={
+              desk === "it"
+                ? "Temporary password for this hire"
+                : "IT fills this after creating the account"
+            }
+            onChange={(event) => {
+              if (desk === "hr") return;
+              setDraft({ ...draft, work_password: event.target.value });
+            }}
+          />
+          <p className="mt-1.5 text-xs text-muted">
+            {desk === "it"
+              ? "Filled after the Google account is created. HR uses it in the Onboarding Welcoming email."
+              : "Shown in the Onboarding Welcoming email when you send it."}
+          </p>
         </Field>
 
         <div>

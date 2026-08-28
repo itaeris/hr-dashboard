@@ -76,6 +76,7 @@ export const EMAIL_MERGE_FIELDS: Record<EmailTemplateKind, string[]> = {
     "aeris_password",
     "fti_email",
     "fti_password",
+    "work_password",
   ],
 };
 
@@ -295,6 +296,11 @@ export function templateVars(
   item: ApplicationView,
   companyName: string,
   kind: EmailTemplateKind,
+  extras?: {
+    slug?: CompanySlug;
+    work_email?: string;
+    work_password?: string;
+  },
 ) {
   const date =
     kind === "user-interview"
@@ -304,6 +310,17 @@ export function templateVars(
         : null;
   const formatted = date ? formatSheetDate(date) : "";
   const name = item.candidate.full_name;
+  const slug = extras?.slug;
+  const workEmail = extras?.work_email?.trim() || "";
+  const workPassword = extras?.work_password ?? "";
+  const aerisEmail =
+    slug === "aeris-beaute" && workEmail
+      ? workEmail
+      : suggestedWorkEmail(name, "aeris-beaute");
+  const ftiEmail =
+    slug === "from-this-island" && workEmail
+      ? workEmail
+      : suggestedWorkEmail(name, "from-this-island");
 
   return {
     candidate_name: name,
@@ -314,10 +331,11 @@ export function templateVars(
     join_date: formatWelcomeDate(item.join_date) || "TBC",
     start_time: "09.00 AM",
     dress_code: "casual",
-    aeris_email: suggestedWorkEmail(name, "aeris-beaute"),
-    aeris_password: "",
-    fti_email: suggestedWorkEmail(name, "from-this-island"),
-    fti_password: "",
+    aeris_email: aerisEmail,
+    aeris_password: slug === "aeris-beaute" ? workPassword : "",
+    fti_email: ftiEmail,
+    fti_password: slug === "from-this-island" ? workPassword : "",
+    work_password: workPassword,
   };
 }
 

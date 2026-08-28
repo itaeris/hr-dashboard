@@ -78,18 +78,26 @@ export function EmailTemplatesPage() {
 
   return (
     <PageFade>
-      <p className="max-w-2xl text-sm text-muted">
-        Edit the candidate emails. Merge fields for this template:{" "}
-        {mergeFields.map((field, index) => (
-          <span key={field}>
-            {index > 0 ? ", " : null}
-            <code className="break-all text-ink">{`{{${field}}}`}</code>
-          </span>
-        ))}
-        . Attach a file here and it will be included when you send from a candidate.
-        The company logo is added as a signature on send. Changes auto-save to this
-        workspace in Supabase.
-      </p>
+      <div className="max-w-3xl space-y-3">
+        <p className="text-sm text-muted">
+          Edit the candidate emails. Merge fields for this template:
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {mergeFields.map((field) => (
+            <code
+              key={field}
+              className="whitespace-nowrap rounded-full border border-line bg-paper-raised px-2.5 py-1 text-xs text-ink"
+            >
+              {`{{${field}}}`}
+            </code>
+          ))}
+        </div>
+        <p className="text-sm text-muted">
+          Attach a file here and it will be included when you send from a candidate.
+          The company logo is added as a signature on send. Changes auto-save to this
+          workspace in Supabase.
+        </p>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {EMAIL_TEMPLATE_KINDS.map((item) => {
