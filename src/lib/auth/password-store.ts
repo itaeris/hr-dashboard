@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-import { findUserByEmail, type Role, type StoredUser } from "./users";
+import { findUserByEmail, parseRole, type Role, type StoredUser } from "./users";
 
 export type PasswordOverride = {
   email: string;
@@ -75,7 +75,7 @@ export async function getStoredUser(email: string): Promise<StoredUser | null> {
       id: `pwd_${normalized}`,
       email: normalized,
       name: override.name?.trim() || normalized.split("@")[0],
-      role: override.role === "admin" ? "admin" : "hr",
+      role: parseRole(override.role),
       passwordSalt: override.salt,
       passwordHash: override.hash,
     };

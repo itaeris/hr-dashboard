@@ -9,8 +9,8 @@ import {
 import { loadBrandProgress, type BrandProgress } from "@/lib/admin-stats";
 import type { AppUser } from "@/lib/auth/access";
 import { workspaceLabel } from "@/lib/auth/access";
-import type { AuthUser } from "@/lib/auth/users";
-import { roleLabel } from "@/lib/auth/users";
+import type { AuthUser, Role } from "@/lib/auth/users";
+import { parseRole, roleLabel } from "@/lib/auth/users";
 import { COMPANY_LIST, COMPANIES, themeStyle } from "@/lib/companies";
 import type { CompanySlug } from "@/lib/types";
 import { motion } from "framer-motion";
@@ -153,7 +153,7 @@ function RoleSettings({
   const [confirmEmail, setConfirmEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"hr" | "admin">("hr");
+  const [role, setRole] = useState<Role>("hr");
   const [company, setCompany] = useState("aeris-beaute");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -202,7 +202,8 @@ function RoleSettings({
     >
       <h2 className="font-display text-2xl sm:text-3xl">User roles</h2>
       <p className="mt-1 text-sm text-muted">
-        Only admin can open both brands. HR is locked to one workspace.
+        Only admin can open both brands. HR is locked to one workspace. IT can
+        cover one or both brands and manages onboarding requests.
       </p>
 
       <div className="mt-5 space-y-3 md:hidden">
@@ -292,12 +293,14 @@ function RoleSettings({
             name="role"
             value={role}
             onChange={(value) => {
-              const next = value === "admin" ? "admin" : "hr";
+              const next = parseRole(value);
               setRole(next);
-              setCompany(next === "admin" ? "both" : company === "both" ? "aeris-beaute" : company);
+              if (next === "admin") setCompany("both");
+              else if (next === "hr" && company === "both") setCompany("aeris-beaute");
             }}
             options={[
               { value: "hr", label: "HR" },
+              { value: "it", label: "IT" },
               { value: "admin", label: "Admin" },
             ]}
           />
@@ -310,7 +313,9 @@ function RoleSettings({
             options={[
               { value: "aeris-beaute", label: COMPANIES["aeris-beaute"].name },
               { value: "from-this-island", label: COMPANIES["from-this-island"].name },
-              { value: "both", label: "Both brands" },
+              ...(role === "hr"
+                ? []
+                : [{ value: "both", label: "Both brands" }]),
             ]}
           />
         </Field>

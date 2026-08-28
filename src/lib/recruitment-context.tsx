@@ -33,6 +33,7 @@ import type {
   VacancyStatus,
 } from "./types";
 import { alignedLatestStatus, isOpenVacancy, latestFromStage, nextInterviewAt, stageFromLatestStatus } from "./tracker";
+import type { Role } from "./auth/users";
 
 type DataSource = "supabase" | "demo";
 
@@ -88,6 +89,7 @@ export type AddJobInput = {
 type RecruitmentContextValue = {
   slug: CompanySlug;
   userEmail: string;
+  userRole: Role;
   brand: CompanyConfig;
   company: CompanyRow | null;
   jobs: JobRow[];
@@ -153,10 +155,12 @@ function isThisMonth(iso: string) {
 export function RecruitmentProvider({
   slug,
   userEmail,
+  userRole,
   children,
 }: {
   slug: CompanySlug;
   userEmail: string;
+  userRole: Role;
   children: ReactNode;
 }) {
   const brand = COMPANIES[slug];
@@ -747,6 +751,7 @@ export function RecruitmentProvider({
     () => ({
       slug,
       userEmail,
+      userRole,
       brand,
       company,
       jobs,
@@ -785,6 +790,7 @@ export function RecruitmentProvider({
       slug,
       source,
       userEmail,
+      userRole,
       toggleJobStatus,
       updateJob,
       updateCandidate,

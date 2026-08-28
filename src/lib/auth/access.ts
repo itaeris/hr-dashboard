@@ -23,15 +23,15 @@ export function companyFromEmail(email: string): CompanySlug {
 
 export function canAccessCompany(user: AuthUser, slug: CompanySlug, assigned?: CompanyAccess) {
   if (user.role === "admin") return true;
-  if (!assigned || assigned === "both") {
-    return assigned === "both" ? true : companyFromEmail(user.email) === slug;
-  }
+  if (assigned === "both") return true;
+  if (!assigned) return companyFromEmail(user.email) === slug;
   return assigned === slug;
 }
 
 export function homePath(user: AuthUser, assigned?: CompanyAccess) {
-  if (user.role === "admin") return "/";
   const slug = assigned && assigned !== "both" ? assigned : companyFromEmail(user.email);
+  if (user.role === "admin") return "/";
+  if (user.role === "it") return `/${slug}/onboarding`;
   return `/${slug}`;
 }
 

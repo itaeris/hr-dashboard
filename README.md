@@ -292,6 +292,7 @@ The app still gates access with its own login.
    - `supabase/auth-passwords.sql` — password changes from Settings
    - `supabase/google-calendar.sql` — Google Calendar refresh tokens
    - `supabase/lock-auth-tables.sql` — deny anon access to users / passwords / calendar tokens
+   - `supabase/onboarding.sql` — IT laptop / Workspace / Lark requests before new joiners
 3. Copy project URL, anon key, and **service role** key into env (`SUPABASE_SERVICE_ROLE_KEY`).
 4. Restart / redeploy.
 

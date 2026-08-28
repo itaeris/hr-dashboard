@@ -67,12 +67,8 @@ export function EmailTemplatesPage() {
           setSaved(true);
           window.setTimeout(() => setSaved(false), 1400);
         })
-        .catch((cause) => {
-          setSaveError(
-            cause instanceof Error
-              ? cause.message
-              : "Could not save to the database.",
-          );
+        .catch(() => {
+          setSaveError("Could not save to the server. Draft is kept on this device.");
         });
     }, 500);
   }
@@ -83,7 +79,8 @@ export function EmailTemplatesPage() {
         Edit the candidate emails. Merge fields:{" "}
         <code className="break-all text-ink">{"{{candidate_name}}"}</code>,{" "}
         <code className="break-all text-ink">{"{{role}}"}</code>,{" "}
-        <code className="break-all text-ink">{"{{company}}"}</code>. Attach a file here
+        <code className="break-all text-ink">{"{{company}}"}</code>,{" "}
+        <code className="break-all text-ink">{"{{join_date}}"}</code>. Attach a file here
         and it will be included when you send from a candidate. The company logo is
         added as a signature on send. Changes auto-save to this workspace in
         Supabase.
@@ -119,7 +116,13 @@ export function EmailTemplatesPage() {
                 {EMAIL_TEMPLATE_META[current.kind].hint}
               </p>
             </div>
-            <p className="text-xs uppercase tracking-[0.16em] text-muted">
+            <p
+              className={`text-xs ${
+                saveError
+                  ? "text-[#E24B4A]"
+                  : "uppercase tracking-[0.16em] text-muted"
+              }`}
+            >
               {saveError || (saved ? "Saved" : "Auto-saves")}
             </p>
           </div>

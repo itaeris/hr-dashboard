@@ -7,6 +7,7 @@ import { useActionState } from "react";
 import { GoogleCalendarSync } from "./google-calendar-sync";
 import { PageFade, Field, PasswordInput } from "./ui";
 import { VacancyLevelsSettings } from "./vacancy-levels-settings";
+import { LaptopAppsSettings } from "./laptop-apps-settings";
 
 export function SettingsPage({
   user,
@@ -26,9 +27,13 @@ export function SettingsPage({
         Update the password for email sign-in. Google sign-in is unchanged.
       </p>
 
-      <GoogleCalendarSync surface="settings" />
-
-      <VacancyLevelsSettings />
+      {user.role === "it" ? null : (
+        <>
+          <GoogleCalendarSync surface="settings" />
+          <VacancyLevelsSettings />
+          <LaptopAppsSettings />
+        </>
+      )}
 
       <div className="rounded-[24px] border border-line bg-paper-raised p-5">
         <p className="text-[11px] uppercase tracking-[0.14em] text-muted">Account</p>

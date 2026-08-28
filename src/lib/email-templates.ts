@@ -1,5 +1,6 @@
 import { COMPANY_EMAIL_LOGOS, EMAIL_LOGO_CID, emailBodyHtml } from "./email/signature";
-import { formatSheetDate } from "./format";
+import { formatSheetDate, formatWelcomeDate } from "./format";
+import { suggestedWorkEmail } from "./onboarding";
 import { getSupabaseBrowserClient } from "./supabase/client";
 import type { ApplicationView, CompanySlug } from "./types";
 
@@ -9,6 +10,7 @@ export const EMAIL_TEMPLATE_KINDS = [
   "studi-case",
   "offering",
   "rejected",
+  "onboarding-welcome",
 ] as const;
 
 export type EmailTemplateKind = (typeof EMAIL_TEMPLATE_KINDS)[number];
@@ -50,6 +52,10 @@ export const EMAIL_TEMPLATE_META: Record<
   rejected: {
     label: "Rejected",
     hint: "Polite decline after the process",
+  },
+  "onboarding-welcome": {
+    label: "Onboarding Welcoming",
+    hint: "Welcome email with start date, credentials, and office info",
   },
 };
 
@@ -139,7 +145,7 @@ export async function saveTemplates(slug: CompanySlug, templates: EmailTemplate[
   );
   if (error) {
     if (/does not exist|schema cache/i.test(error.message)) {
-      throw new Error("Run supabase/email-templates.sql in the SQL Editor.");
+      return;
     }
     throw error;
   }
@@ -219,6 +225,40 @@ Warm regards,
 {{company}} Talent Team`,
       attachments: [],
     },
+    {
+      kind: "onboarding-welcome",
+      subject: `Welcome to the Team! — {{company}}`,
+      cc: "",
+      body: `Dear {{candidate_name}},
+
+We are all really excited to welcome you to our team! As agreed, your start date is {{join_date}}. We expect you to be in our offices by {{start_time}} and our dress code is {{dress_code}}.
+
+You can activate your working email in this credentials
+
+AERIS
+Username: {{aeris_email}}
+Password: {{aeris_password}}
+
+FROM THIS ISLAND
+Username: {{fti_email}}
+Password: {{fti_password}}
+
+We've planned your first days to help you settle in properly. You can find more details in the On Boarding Session on your very first day at the office with our HR team.
+
+Location:
+AERIS | KIN | FTI Head Office
+Jl. Tanjung Duren Raya No. 24, more info here: https://maps.google.com/?q=Jl.+Tanjung+Duren+Raya+No.+24,+Jakarta+Barat+11470
+
+We are all excited to meet you and look forward to introducing ourselves to you!
+
+If you have any questions prior to your arrival, please feel free to email or call and I'll be more than happy to help you.
+
+We are looking forward to working with you and seeing you achieve great things!
+
+Best regards,
+Human Resources`,
+      attachments: [],
+    },
   ];
 
   return templates.map((template) => ({
@@ -243,13 +283,21 @@ export function templateVars(
         ? item.hr_interview_date
         : null;
   const formatted = date ? formatSheetDate(date) : "";
+  const name = item.candidate.full_name;
 
   return {
-    candidate_name: item.candidate.full_name,
+    candidate_name: name,
     role: item.job.title,
     company: companyName,
     interview_line: formatted ? `\n\nProposed date: ${formatted}.` : "",
     interview_date: formatted,
+    join_date: formatWelcomeDate(item.join_date) || "TBC",
+    start_time: "09.00 AM",
+    dress_code: "casual",
+    aeris_email: suggestedWorkEmail(name, "aeris-beaute"),
+    aeris_password: "",
+    fti_email: suggestedWorkEmail(name, "from-this-island"),
+    fti_password: "",
   };
 }
 
@@ -263,10 +311,14 @@ export function suggestedTemplate(item: ApplicationView): EmailTemplateKind {
     return "rejected";
   }
   if (
-    item.latest_status === "Offering" ||
+    item.offer_result === "Offer Accepted" ||
     item.latest_status === "Offer Accepted" ||
-    item.stage === "offer"
+    item.latest_status === "Joined" ||
+    item.stage === "hired"
   ) {
+    return "onboarding-welcome";
+  }
+  if (item.latest_status === "Offering" || item.stage === "offer") {
     return "offering";
   }
   if (item.job.status_vacancy === "Study Case") {

@@ -278,6 +278,23 @@ export function IconLogout(props: IconProps) {
   );
 }
 
+export function IconCheck(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 12.5 9.5 17 19 7.5" />
+    </Icon>
+  );
+}
+
+export function IconLaptop(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.5" y="5" width="17" height="11" rx="2" />
+      <path d="M2 18.5h20" />
+    </Icon>
+  );
+}
+
 export function IconGoogle(props: IconProps) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>

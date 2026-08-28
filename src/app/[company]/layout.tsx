@@ -1,5 +1,6 @@
 import { DashboardShell } from "@/components/dashboard-shell";
 import { requireCompanyAccess } from "@/app/actions/auth";
+import { loadAppUser } from "@/lib/auth/app-users";
 import { COMPANIES, isCompanySlug } from "@/lib/companies";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -29,5 +30,10 @@ export default async function CompanyLayout({
   const { company } = await params;
   if (!isCompanySlug(company)) notFound();
   const user = await requireCompanyAccess(company);
-  return <DashboardShell slug={company} user={user}>{children}</DashboardShell>;
+  const profile = await loadAppUser(user.email);
+  return (
+    <DashboardShell slug={company} user={user} workspace={profile?.company}>
+      {children}
+    </DashboardShell>
+  );
 }

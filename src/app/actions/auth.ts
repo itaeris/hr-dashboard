@@ -22,7 +22,7 @@ import {
 } from "@/lib/auth/password-store";
 import { clearLoginFailures, clientIpFrom, loginAllowed, passwordChangeAllowed } from "@/lib/auth/rate-limit";
 import { clearSession, getSession, setSession } from "@/lib/auth/session";
-import { toPublicUser, type Role } from "@/lib/auth/users";
+import { parseRole, roleLabel, toPublicUser } from "@/lib/auth/users";
 import { isCompanySlug } from "@/lib/companies";
 import type { CompanySlug } from "@/lib/types";
 import { headers } from "next/headers";
@@ -180,14 +180,16 @@ export async function saveAppUserAction(
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
-  const role = String(formData.get("role") ?? "hr") as Role;
+  const role = parseRole(String(formData.get("role") ?? "hr"));
   const companyRaw = String(formData.get("company") ?? "");
   const password = String(formData.get("password") ?? "");
   const confirmPassword = String(formData.get("confirm_password") ?? "");
 
   if (!email || !email.includes("@")) return { error: "Enter a valid email." };
   if (!name) return { error: "Enter a name." };
-  if (role !== "admin" && role !== "hr") return { error: "Pick a valid role." };
+  if (role !== "admin" && role !== "hr" && role !== "it") {
+    return { error: "Pick a valid role." };
+  }
 
   const company =
     companyRaw === "both" || isCompanySlug(companyRaw) ? companyRaw : undefined;
@@ -224,9 +226,11 @@ export async function saveAppUserAction(
       company:
         role === "admin"
           ? "both"
-          : isCompanySlug(companyRaw)
-            ? companyRaw
-            : companyFromEmail(email),
+          : role === "it" && companyRaw === "both"
+            ? "both"
+            : isCompanySlug(companyRaw)
+              ? companyRaw
+              : companyFromEmail(email),
     });
     if (password) {
       const { salt, hash } = hashPassword(password);
@@ -241,7 +245,7 @@ export async function saveAppUserAction(
   return {
     success: password
       ? `Saved ${name} and updated the password.`
-      : `Saved ${name} as ${role === "admin" ? "Admin" : "HR"}.`,
+      : `Saved ${name} as ${roleLabel(role)}.`,
   };
 }
 

@@ -9,7 +9,7 @@ import {
   type CompanyAccess,
 } from "./access";
 import { getStoredUser } from "./password-store";
-import { findUserByEmail, type AuthUser, type Role } from "./users";
+import { findUserByEmail, parseRole, type AuthUser, type Role } from "./users";
 
 export type { AppUser } from "./access";
 
@@ -49,7 +49,7 @@ function asAccess(value: string | undefined, email: string, role: Role): Company
 }
 
 function asRole(value: string | undefined): Role {
-  return value === "admin" ? "admin" : "hr";
+  return parseRole(value);
 }
 
 export async function loadAppUser(email: string): Promise<AppUser | null> {
@@ -120,9 +120,11 @@ export async function saveAppUser(input: AppUser) {
     company:
       input.role === "admin"
         ? "both"
-        : input.company === "both"
-          ? companyFromEmail(input.email)
-          : input.company,
+        : input.role === "it" && input.company === "both"
+          ? "both"
+          : input.company === "both"
+            ? companyFromEmail(input.email)
+            : input.company,
   };
 
   removed.delete(next.email);

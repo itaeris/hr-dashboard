@@ -22,10 +22,12 @@ import {
   IconSettings,
   IconCalendar,
   IconTimeline,
+  IconLaptop,
 } from "./icons";
 import { logoutAction } from "@/app/actions/auth";
+import type { CompanyAccess } from "@/lib/auth/access";
 import type { AuthUser } from "@/lib/auth/users";
-import { roleLabel } from "@/lib/auth/users";
+import { canUseHrMenu, roleLabel } from "@/lib/auth/users";
 import { AddCandidateModal, AddJobModal } from "./modals";
 import { ScrollArea } from "./scroll-area";
 
@@ -35,7 +37,14 @@ const NAV = [
   { href: "/settings", label: "Settings", icon: IconSettings },
 ];
 
-const TRACKER_LINKS = [
+type NavLink = {
+  href: string;
+  label: string;
+  icon: typeof IconKanban;
+  exact?: boolean;
+};
+
+const TRACKER_LINKS: NavLink[] = [
   { href: "/pipeline", label: "Pipeline", icon: IconKanban },
   { href: "/candidates", label: "Progress", icon: IconPeople },
   { href: "/calendar", label: "Calendar", icon: IconCalendar },
@@ -43,29 +52,43 @@ const TRACKER_LINKS = [
   { href: "/jobs", label: "Vacancy", icon: IconBriefcase },
 ];
 
-const REQUEST_LINKS = [
+const REQUEST_LINKS: NavLink[] = [
   { href: "/request/form", label: "Form", icon: IconClipboard },
   { href: "/request/responses", label: "Responses", icon: IconClipboard },
+];
+
+const ONBOARDING_LINKS: NavLink[] = [
+  { href: "/onboarding", label: "IT request", icon: IconLaptop, exact: true },
+  { href: "/onboarding/joiners", label: "New joiners", icon: IconPeople },
+];
+
+const IT_NAV: NavLink[] = [
+  { href: "/onboarding", label: "Requests", icon: IconLaptop, exact: true },
+  { href: "/onboarding/joiners", label: "Ready", icon: IconPeople },
+  { href: "/settings", label: "Settings", icon: IconSettings },
 ];
 
 export function DashboardShell({
   slug,
   user,
+  workspace,
   children,
 }: {
   slug: CompanySlug;
   user: AuthUser;
+  workspace?: CompanyAccess;
   children: ReactNode;
 }) {
   const brand = COMPANIES[slug];
+  const canSwitch = user.role === "admin" || workspace === "both";
 
   return (
     <div style={themeStyle(brand.theme)} className="app-frame min-h-dvh bg-paper text-ink lg:h-full">
-      <RecruitmentProvider slug={slug} userEmail={user.email}>
+      <RecruitmentProvider slug={slug} userEmail={user.email} userRole={user.role}>
         <div className="app-frame flex min-h-dvh min-w-0 lg:h-full">
-          <Sidebar slug={slug} user={user} />
+          <Sidebar slug={slug} user={user} canSwitch={canSwitch} />
           <div className="flex min-w-0 flex-1 flex-col lg:min-h-0">
-            <Topbar user={user} />
+            <Topbar user={user} canSwitch={canSwitch} />
             <main className="flex min-w-0 flex-1 flex-col pt-4 pb-[calc(7.25rem+env(safe-area-inset-bottom))] sm:pt-6 lg:min-h-0 lg:overflow-hidden lg:pb-4">
               <ScrollArea
                 axis="y"
@@ -85,15 +108,25 @@ export function DashboardShell({
   );
 }
 
-function Sidebar({ slug, user }: { slug: CompanySlug; user: AuthUser }) {
+function Sidebar({
+  slug,
+  user,
+  canSwitch,
+}: {
+  slug: CompanySlug;
+  user: AuthUser;
+  canSwitch: boolean;
+}) {
   const pathname = usePathname();
   const brand = COMPANIES[slug];
   const other = slug === "aeris-beaute" ? COMPANIES["from-this-island"] : COMPANIES["aeris-beaute"];
+  const itDesk = user.role === "it";
+  const homeHref = itDesk ? `/${slug}/onboarding` : `/${slug}`;
 
   return (
     <aside className="sticky top-0 hidden h-screen w-[250px] shrink-0 flex-col border-r border-line bg-paper-raised/80 px-4 py-6 lg:flex">
       <Link
-        href={`/${slug}`}
+        href={homeHref}
         className={
           slug === "aeris-beaute"
             ? "flex flex-col gap-3 px-2"
@@ -109,68 +142,100 @@ function Sidebar({ slug, user }: { slug: CompanySlug; user: AuthUser }) {
         <div>
           <p className="font-display text-lg leading-tight">{brand.name}</p>
           <p className="text-[11px] uppercase tracking-[0.16em] text-muted">
-            Recruitment
+            {itDesk ? "IT desk" : "Recruitment"}
           </p>
         </div>
       </Link>
 
       <nav className="mt-10 flex flex-1 flex-col gap-1">
-        {NAV.filter((item) => item.href === "").map((item) => {
-          const href = `/${slug}`;
-          const active = pathname === href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={href}
-              className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition ${
-                active
-                  ? "bg-accent-soft font-medium text-accent-deep"
-                  : "text-muted hover:bg-paper hover:text-ink"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
-        <NavMenu
-          slug={slug}
-          pathname={pathname}
-          label="Tracker"
-          icon={IconKanban}
-          links={TRACKER_LINKS}
-          match={(path) =>
-            TRACKER_LINKS.some((item) => path.startsWith(`/${slug}${item.href}`))
-          }
-        />
-        {NAV.filter((item) => item.href !== "").map((item) => {
-          const href = `/${slug}${item.href}`;
-          const active = pathname.startsWith(href);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={href}
-              className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition ${
-                active
-                  ? "bg-accent-soft font-medium text-accent-deep"
-                  : "text-muted hover:bg-paper hover:text-ink"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
-        <NavMenu
-          slug={slug}
-          pathname={pathname}
-          label="Request"
-          icon={IconClipboard}
-          links={REQUEST_LINKS}
-          match={(path) => path.includes("/request/")}
-        />
+        {itDesk ? (
+          IT_NAV.map((item) => {
+            const href = `/${slug}${item.href}`;
+            const active = item.exact ? pathname === href : pathname.startsWith(href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={href}
+                className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition ${
+                  active
+                    ? "bg-accent-soft font-medium text-accent-deep"
+                    : "text-muted hover:bg-paper hover:text-ink"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            );
+          })
+        ) : (
+          <>
+            {NAV.filter((item) => item.href === "").map((item) => {
+              const href = `/${slug}`;
+              const active = pathname === href;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={href}
+                  className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition ${
+                    active
+                      ? "bg-accent-soft font-medium text-accent-deep"
+                      : "text-muted hover:bg-paper hover:text-ink"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+            <NavMenu
+              slug={slug}
+              pathname={pathname}
+              label="Tracker"
+              icon={IconKanban}
+              links={TRACKER_LINKS}
+              match={(path) =>
+                TRACKER_LINKS.some((item) => path.startsWith(`/${slug}${item.href}`))
+              }
+            />
+            <NavMenu
+              slug={slug}
+              pathname={pathname}
+              label="Onboarding"
+              icon={IconLaptop}
+              links={ONBOARDING_LINKS}
+              match={(path) => path.includes("/onboarding")}
+            />
+            {NAV.filter((item) => item.href !== "").map((item) => {
+              const href = `/${slug}${item.href}`;
+              const active = pathname.startsWith(href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={href}
+                  className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition ${
+                    active
+                      ? "bg-accent-soft font-medium text-accent-deep"
+                      : "text-muted hover:bg-paper hover:text-ink"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+            <NavMenu
+              slug={slug}
+              pathname={pathname}
+              label="Request"
+              icon={IconClipboard}
+              links={REQUEST_LINKS}
+              match={(path) => path.includes("/request/")}
+            />
+          </>
+        )}
       </nav>
 
       <div className="space-y-3 px-1">
@@ -180,9 +245,9 @@ function Sidebar({ slug, user }: { slug: CompanySlug; user: AuthUser }) {
             {roleLabel(user.role)}
           </p>
         </div>
-        {user.role === "admin" ? (
+        {canSwitch ? (
           <Link
-            href={`/${other.slug}`}
+            href={itDesk ? `/${other.slug}/onboarding` : `/${other.slug}`}
             className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm text-muted transition hover:bg-paper hover:text-ink"
           >
             <IconSwitch className="h-4 w-4" />
@@ -223,7 +288,7 @@ function NavMenu({
   pathname: string;
   label: string;
   icon: typeof IconKanban;
-  links: { href: string; label: string }[];
+  links: { href: string; label: string; icon?: typeof IconKanban; exact?: boolean }[];
   match: (pathname: string) => boolean;
 }) {
   const active = match(pathname);
@@ -250,7 +315,7 @@ function NavMenu({
         <div className="mt-1 ml-4 space-y-0.5 border-l border-line pl-3">
           {links.map((item) => {
             const href = `/${slug}${item.href}`;
-            const current = pathname.startsWith(href);
+            const current = item.exact ? pathname === href : pathname.startsWith(href);
             return (
               <Link
                 key={item.href}
@@ -271,7 +336,7 @@ function NavMenu({
   );
 }
 
-function Topbar({ user }: { user: AuthUser }) {
+function Topbar({ user, canSwitch }: { user: AuthUser; canSwitch: boolean }) {
   const { brand, slug } = useRecruitment();
   const pathname = usePathname();
   const [candidateOpen, setCandidateOpen] = useState(false);
@@ -279,21 +344,31 @@ function Topbar({ user }: { user: AuthUser }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const other =
     slug === "aeris-beaute" ? COMPANIES["from-this-island"] : COMPANIES["aeris-beaute"];
+  const itDesk = user.role === "it";
+  const hrMenu = canUseHrMenu(user.role);
 
   const title =
-    pathname.includes("/request/form")
-      ? "Request form"
-      : pathname.includes("/request/responses")
-        ? "Request responses"
-        : (TRACKER_LINKS.find((item) => pathname.startsWith(`/${slug}${item.href}`))
-            ?.label ??
-          NAV.find((item) => {
-            const href = `/${slug}${item.href}`;
-            return item.href === ""
-              ? pathname === `/${slug}`
-              : pathname.startsWith(href);
-          })?.label ??
-          "Dashboard");
+    pathname.includes("/onboarding/joiners")
+      ? itDesk
+        ? "Ready"
+        : "New joiners"
+      : pathname.includes("/onboarding")
+        ? itDesk
+          ? "Requests"
+          : "IT request"
+        : pathname.includes("/request/form")
+          ? "Request form"
+          : pathname.includes("/request/responses")
+            ? "Request responses"
+            : (TRACKER_LINKS.find((item) => pathname.startsWith(`/${slug}${item.href}`))
+                ?.label ??
+              NAV.find((item) => {
+                const href = `/${slug}${item.href}`;
+                return item.href === ""
+                  ? pathname === `/${slug}`
+                  : pathname.startsWith(href);
+              })?.label ??
+              "Dashboard");
 
   return (
     <>
@@ -306,29 +381,33 @@ function Topbar({ user }: { user: AuthUser }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <Link
-            href={`/${slug}/candidates`}
-            className="inline-flex items-center justify-center rounded-full border border-line bg-paper-raised p-2 text-muted sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
-            aria-label="Search candidates"
-          >
-            <IconSearch className="h-4 w-4" />
-            <span className="hidden sm:inline">Search candidates</span>
-          </Link>
-          <button
-            type="button"
-            onClick={() => setJobOpen(true)}
-            className="hidden rounded-full border border-line px-3 py-2 text-sm text-ink sm:inline-flex"
-          >
-            Vacancy
-          </button>
-          <button
-            type="button"
-            onClick={() => setCandidateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-accent p-2 text-sm font-medium text-white transition hover:bg-accent-hover sm:px-4 sm:py-2"
-          >
-            <IconPlus className="h-4 w-4" />
-            <span className="hidden sm:inline">Candidate</span>
-          </button>
+          {hrMenu ? (
+            <>
+              <Link
+                href={`/${slug}/candidates`}
+                className="inline-flex items-center justify-center rounded-full border border-line bg-paper-raised p-2 text-muted sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
+                aria-label="Search candidates"
+              >
+                <IconSearch className="h-4 w-4" />
+                <span className="hidden sm:inline">Search candidates</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setJobOpen(true)}
+                className="hidden rounded-full border border-line px-3 py-2 text-sm text-ink sm:inline-flex"
+              >
+                Vacancy
+              </button>
+              <button
+                type="button"
+                onClick={() => setCandidateOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-accent p-2 text-sm font-medium text-white transition hover:bg-accent-hover sm:px-4 sm:py-2"
+              >
+                <IconPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Candidate</span>
+              </button>
+            </>
+          ) : null}
           <button
             type="button"
             onClick={() => setAccountOpen((current) => !current)}
@@ -353,9 +432,9 @@ function Topbar({ user }: { user: AuthUser }) {
             <p className="mt-0.5 text-[11px] uppercase tracking-[0.16em] text-muted">
               {roleLabel(user.role)}
             </p>
-            {user.role === "admin" ? (
+            {canSwitch ? (
               <Link
-                href={`/${other.slug}`}
+                href={itDesk ? `/${other.slug}/onboarding` : `/${other.slug}`}
                 onClick={() => setAccountOpen(false)}
                 className="mt-3 flex items-center gap-2 rounded-2xl px-2 py-2 text-sm text-muted hover:bg-paper hover:text-ink"
               >
@@ -385,17 +464,21 @@ function Topbar({ user }: { user: AuthUser }) {
         </div>
       ) : null}
 
-      <MobileNav slug={slug} />
+      <MobileNav slug={slug} itDesk={itDesk} />
 
-      <AddCandidateModal open={candidateOpen} onClose={() => setCandidateOpen(false)} />
-      <AddJobModal open={jobOpen} onClose={() => setJobOpen(false)} />
+      {hrMenu ? (
+        <>
+          <AddCandidateModal open={candidateOpen} onClose={() => setCandidateOpen(false)} />
+          <AddJobModal open={jobOpen} onClose={() => setJobOpen(false)} />
+        </>
+      ) : null}
     </>
   );
 }
 
-function MobileNav({ slug }: { slug: CompanySlug }) {
+function MobileNav({ slug, itDesk }: { slug: CompanySlug; itDesk: boolean }) {
   const pathname = usePathname();
-  const [sheet, setSheet] = useState<"tracker" | "request" | null>(null);
+  const [sheet, setSheet] = useState<"tracker" | "request" | "onboarding" | null>(null);
   const [sheetPath, setSheetPath] = useState(pathname);
   if (sheetPath !== pathname) {
     setSheetPath(pathname);
@@ -406,6 +489,40 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
     pathname.startsWith(`/${slug}${link.href}`),
   );
   const requestActive = pathname.includes("/request/");
+  const onboardingActive = pathname.includes("/onboarding");
+
+  if (itDesk) {
+    return (
+      <nav className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-paper from-40% to-transparent px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3 lg:hidden">
+        <div className="grid grid-cols-3 gap-0.5 rounded-[28px] border border-line bg-paper-raised/95 px-1 py-1.5 shadow-[0_12px_32px_-16px_rgba(40,24,20,0.45)] backdrop-blur sm:gap-1 sm:px-1.5">
+          {IT_NAV.map((item) => {
+            const href = `/${slug}${item.href}`;
+            const current = item.exact ? pathname === href : pathname.startsWith(href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={href}
+                className={`flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] ${
+                  current ? "text-accent" : "text-muted"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    );
+  }
+
+  const sheetLinks =
+    sheet === "tracker"
+      ? TRACKER_LINKS
+      : sheet === "onboarding"
+        ? ONBOARDING_LINKS
+        : REQUEST_LINKS;
 
   return (
     <>
@@ -418,9 +535,11 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
             className="absolute inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] rounded-[22px] border border-line bg-paper-raised p-2 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
-            {(sheet === "tracker" ? TRACKER_LINKS : REQUEST_LINKS).map((item) => {
+            {(sheet ? sheetLinks : []).map((item) => {
               const href = `/${slug}${item.href}`;
-              const current = pathname.startsWith(href);
+              const current = item.exact
+                ? pathname === href
+                : pathname.startsWith(href);
               const Icon = item.icon;
               return (
                 <Link
@@ -442,7 +561,7 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
       ) : null}
 
       <nav className="fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t from-paper from-40% to-transparent px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3 lg:hidden">
-        <div className="grid grid-cols-5 gap-1 rounded-[28px] border border-line bg-paper-raised/95 px-1.5 py-1.5 shadow-[0_12px_32px_-16px_rgba(40,24,20,0.45)] backdrop-blur">
+        <div className="grid grid-cols-6 gap-0.5 rounded-[28px] border border-line bg-paper-raised/95 px-1 py-1.5 shadow-[0_12px_32px_-16px_rgba(40,24,20,0.45)] backdrop-blur sm:gap-1 sm:px-1.5">
         <Link
           href={`/${slug}`}
           className={`flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] ${
@@ -461,6 +580,16 @@ function MobileNav({ slug }: { slug: CompanySlug }) {
         >
           <IconKanban className="h-4 w-4" />
           Tracker
+        </button>
+        <button
+          type="button"
+          onClick={() => setSheet((current) => (current === "onboarding" ? null : "onboarding"))}
+          className={`flex flex-col items-center gap-1 rounded-xl py-2 text-[10px] ${
+            onboardingActive || sheet === "onboarding" ? "text-accent" : "text-muted"
+          }`}
+        >
+          <IconLaptop className="h-4 w-4" />
+          Onboard
         </button>
         <Link
           href={`/${slug}/emails`}

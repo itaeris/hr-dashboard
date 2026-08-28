@@ -34,7 +34,13 @@ export function emailBodyHtml(
 ) {
   const logo = COMPANY_EMAIL_LOGOS[slug];
   const brand = COMPANIES[slug];
-  const paragraphs = escapeHtml(text).replaceAll("\r\n", "\n").replaceAll("\n", "<br>");
+  const paragraphs = escapeHtml(text)
+    .replaceAll("\r\n", "\n")
+    .replaceAll("\n", "<br>")
+    .replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" style="color:#9A4A5C;word-break:break-all;">$1</a>',
+    );
 
   return `<!DOCTYPE html>
 <html>

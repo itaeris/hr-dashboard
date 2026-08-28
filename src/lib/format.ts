@@ -41,6 +41,18 @@ export function formatSheetDate(iso: string | null) {
   }).format(new Date(iso));
 }
 
+export function formatWelcomeDate(iso: string | null) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
 export function isoToYmd(iso: string | null) {
   if (!iso) return "";
   const date = new Date(iso);

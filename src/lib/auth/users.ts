@@ -1,4 +1,4 @@
-export type Role = "admin" | "hr";
+export type Role = "admin" | "hr" | "it";
 
 export type AuthUser = {
   id: string;
@@ -38,6 +38,21 @@ export function toPublicUser(user: StoredUser): AuthUser {
   };
 }
 
+export function parseRole(value: string | undefined | null): Role {
+  if (value === "admin" || value === "it" || value === "hr") return value;
+  return "hr";
+}
+
 export function roleLabel(role: Role) {
-  return role === "admin" ? "Admin" : "HR";
+  if (role === "admin") return "Admin";
+  if (role === "it") return "IT";
+  return "HR";
+}
+
+export function isItRole(role: Role) {
+  return role === "it";
+}
+
+export function canUseHrMenu(role: Role) {
+  return role === "admin" || role === "hr";
 }

@@ -71,7 +71,7 @@ export function decodeSession(token: string | undefined | null): Session | null 
     ) as Session;
     if (!session?.email || !session?.role || !session.exp) return null;
     if (session.exp < Date.now()) return null;
-    if (session.role !== "admin" && session.role !== "hr") return null;
+    if (session.role !== "admin" && session.role !== "hr" && session.role !== "it") return null;
     return session;
   } catch {
     return null;
