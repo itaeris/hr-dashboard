@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  EMAIL_MERGE_FIELDS,
   EMAIL_TEMPLATE_KINDS,
   EMAIL_TEMPLATE_META,
   loadTemplates,
@@ -73,17 +74,21 @@ export function EmailTemplatesPage() {
     }, 500);
   }
 
+  const mergeFields = EMAIL_MERGE_FIELDS[kind] ?? EMAIL_MERGE_FIELDS.interview;
+
   return (
     <PageFade>
       <p className="max-w-2xl text-sm text-muted">
-        Edit the candidate emails. Merge fields:{" "}
-        <code className="break-all text-ink">{"{{candidate_name}}"}</code>,{" "}
-        <code className="break-all text-ink">{"{{role}}"}</code>,{" "}
-        <code className="break-all text-ink">{"{{company}}"}</code>,{" "}
-        <code className="break-all text-ink">{"{{join_date}}"}</code>. Attach a file here
-        and it will be included when you send from a candidate. The company logo is
-        added as a signature on send. Changes auto-save to this workspace in
-        Supabase.
+        Edit the candidate emails. Merge fields for this template:{" "}
+        {mergeFields.map((field, index) => (
+          <span key={field}>
+            {index > 0 ? ", " : null}
+            <code className="break-all text-ink">{`{{${field}}}`}</code>
+          </span>
+        ))}
+        . Attach a file here and it will be included when you send from a candidate.
+        The company logo is added as a signature on send. Changes auto-save to this
+        workspace in Supabase.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2">
@@ -152,6 +157,7 @@ export function EmailTemplatesPage() {
                 value={current.body}
                 onChange={(event) => update({ body: event.target.value })}
                 rows={12}
+                spellCheck={false}
                 className={`${fieldClass} min-h-[240px] resize-y`}
               />
             </Field>

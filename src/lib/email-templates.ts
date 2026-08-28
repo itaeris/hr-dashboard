@@ -59,6 +59,26 @@ export const EMAIL_TEMPLATE_META: Record<
   },
 };
 
+export const EMAIL_MERGE_FIELDS: Record<EmailTemplateKind, string[]> = {
+  interview: ["candidate_name", "role", "company", "interview_line", "interview_date"],
+  "user-interview": ["candidate_name", "role", "company", "interview_line", "interview_date"],
+  "studi-case": ["candidate_name", "role", "company"],
+  offering: ["candidate_name", "role", "company"],
+  rejected: ["candidate_name", "role", "company"],
+  "onboarding-welcome": [
+    "candidate_name",
+    "role",
+    "company",
+    "join_date",
+    "start_time",
+    "dress_code",
+    "aeris_email",
+    "aeris_password",
+    "fti_email",
+    "fti_password",
+  ],
+};
+
 export const EMAIL_FILE_ACCEPT = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp";
 export const EMAIL_FILE_MAX_BYTES = 8 * 1024 * 1024;
 export const EMAIL_FILE_MAX_COUNT = 4;
