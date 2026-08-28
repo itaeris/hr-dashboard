@@ -369,6 +369,7 @@ function RequestEditor({
     return <ModalFrame open={open} onClose={onClose} title="IT request" wide>{null}</ModalFrame>;
   }
 
+  const currentItem = item;
   const currentDraft = draft;
   const mergedApps = mergeLaptopApps(currentDraft.laptop_apps, apps);
   const appsDone = laptopAppsComplete(currentDraft, apps);
@@ -391,7 +392,7 @@ function RequestEditor({
   }
 
   async function saveAndClose() {
-    const saved = await persist(draft);
+    const saved = await persist(currentDraft);
     if (saved) onClose();
   }
 
@@ -417,14 +418,14 @@ function RequestEditor({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           company: slug,
-          name: item.candidate.full_name,
-          role: item.job.title,
+          name: currentItem.candidate.full_name,
+          role: currentItem.job.title,
           workEmail: saved.work_email,
           requestKind: saved.request_kind,
           laptopNeeded: saved.laptop_needed,
           apps: saved.laptop_needed ? apps : [],
           notes: saved.notes,
-          joinDate: item.join_date,
+          joinDate: currentItem.join_date,
         }),
       });
       const payload = (await response.json()) as { notified?: boolean; reason?: string };
