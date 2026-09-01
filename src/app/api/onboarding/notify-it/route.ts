@@ -1,6 +1,6 @@
 import { canAccessCompany } from "@/lib/auth/access";
 import { listAppUsers, loadAppUser } from "@/lib/auth/app-users";
-import { PRODUCTION_ORIGIN } from "@/lib/auth/google";
+import { publicSiteUrl } from "@/lib/auth/google";
 import { getSession } from "@/lib/auth/session";
 import { COMPANIES, isCompanySlug } from "@/lib/companies";
 import { isSmtpConfigured, sendSmtpMail } from "@/lib/email/smtp";
@@ -9,14 +9,8 @@ import { NextResponse } from "next/server";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function dashboardOrigin(request: Request) {
-  if (process.env.AUTH_URL) return process.env.AUTH_URL.replace(/\/$/, "");
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  try {
-    return new URL(request.url).origin;
-  } catch {
-    return PRODUCTION_ORIGIN;
-  }
+function dashboardOrigin() {
+  return publicSiteUrl();
 }
 
 async function itDeskEmail(slug: string) {
@@ -102,7 +96,7 @@ export async function POST(request: Request) {
   const notes = String(payload.notes ?? "").trim().slice(0, 2000);
   const workEmail = String(payload.workEmail ?? "").trim().slice(0, 254);
   const joinDate = String(payload.joinDate ?? "").trim().slice(0, 40) || "TBC";
-  const deskUrl = `${dashboardOrigin(request)}/${company}/onboarding`;
+  const deskUrl = `${dashboardOrigin()}/${company}/onboarding`;
 
   const text = `Hi IT team,
 

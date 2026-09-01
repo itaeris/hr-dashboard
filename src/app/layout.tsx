@@ -1,5 +1,5 @@
 import { PwaRegister } from "@/components/pwa-register";
-import { PRODUCTION_ORIGIN } from "@/lib/auth/google";
+import { publicSiteUrl } from "@/lib/auth/google";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -10,36 +10,39 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
 });
 
-function siteUrl() {
-  if (process.env.AUTH_URL) return process.env.AUTH_URL.replace(/\/$/, "");
-  if (process.env.VERCEL_ENV === "production") {
-    return PRODUCTION_ORIGIN;
-  }
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
-  }
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "http://localhost:3000";
-}
+const site = publicSiteUrl();
+const description =
+  "Recruitment dashboard for Aeris Beaute and From This Island.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
+  metadataBase: new URL(site),
   title: "HR Recruitment",
   applicationName: "HR Recruitment",
-  description:
-    "Recruitment dashboard for Aeris Beaute and From This Island.",
+  description,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
+    locale: "en_US",
+    url: "/",
     siteName: "HR Recruitment",
     title: "HR Recruitment",
-    description:
-      "Recruitment dashboard for Aeris Beaute and From This Island.",
+    description,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "HR Recruitment · Aeris Beaute and From This Island",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "HR Recruitment",
-    description:
-      "Recruitment dashboard for Aeris Beaute and From This Island.",
+    description,
+    images: ["/twitter-image"],
   },
   appleWebApp: {
     capable: true,

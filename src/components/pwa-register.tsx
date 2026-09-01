@@ -1,9 +1,7 @@
 "use client";
 
-import { PRODUCTION_ORIGIN } from "@/lib/auth/google";
+import { LEGACY_ORIGINS, PRODUCTION_ORIGIN } from "@/lib/auth/google";
 import { useEffect } from "react";
-
-const LEGACY_ORIGINS = ["https://hr-dashboard-aeris-fti.vercel.app"];
 
 export function PwaRegister() {
   useEffect(() => {

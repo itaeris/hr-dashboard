@@ -1,9 +1,7 @@
-import { PRODUCTION_ORIGIN } from "@/lib/auth/google";
+import { publicSiteUrl } from "@/lib/auth/google";
 import type { MetadataRoute } from "next";
 
-const origin = (
-  process.env.AUTH_URL?.replace(/\/$/, "") || PRODUCTION_ORIGIN
-).replace(/\/$/, "");
+const origin = publicSiteUrl();
 
 export default function manifest(): MetadataRoute.Manifest {
   const local = process.env.NODE_ENV === "development";

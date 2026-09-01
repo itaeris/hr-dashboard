@@ -17,7 +17,14 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { company } = await params;
   if (!isCompanySlug(company)) return { title: "HR Recruitment" };
-  return { title: `${COMPANIES[company].name} · Recruitment` };
+  const path = `/${company}`;
+  const title = `${COMPANIES[company].name} · Recruitment`;
+  return {
+    title,
+    alternates: { canonical: path },
+    openGraph: { url: path, title },
+    twitter: { title },
+  };
 }
 
 export default async function CompanyLayout({

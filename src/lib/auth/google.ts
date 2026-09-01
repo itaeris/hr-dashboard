@@ -25,13 +25,31 @@ export function safeCalendarNext(value: string | null) {
   return value.replace(/\/$/, "");
 }
 
-export const PRODUCTION_ORIGIN = "https://hr-recruitment-aeris-fti.vercel.app";
+export const PRODUCTION_ORIGIN = "https://recruitment-fti.aerisbeaute.com";
+
+export const LEGACY_ORIGINS = [
+  "https://hr-recruitment-aeris-fti.vercel.app",
+  "https://hr-dashboard-aeris-fti.vercel.app",
+];
+
+export function publicSiteUrl() {
+  if (process.env.VERCEL_ENV === "production") return PRODUCTION_ORIGIN;
+  if (process.env.AUTH_URL?.startsWith("http")) {
+    return process.env.AUTH_URL.replace(/\/$/, "");
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:3000";
+}
 
 export function allowedOrigins() {
   const extra = process.env.AUTH_URL?.replace(/\/$/, "");
   return [
     "http://localhost:3000",
     PRODUCTION_ORIGIN,
+    ...LEGACY_ORIGINS,
     extra,
   ].filter((value, index, list): value is string => Boolean(value) && list.indexOf(value) === index);
 }
