@@ -20,6 +20,7 @@ export function proxy(request: NextRequest) {
     pathname === "/api/auth/google" ||
     pathname === "/api/auth/google/callback" ||
     pathname === "/api/auth/google/calendar" ||
+    pathname.startsWith("/api/cron/") ||
     pathname === "/icon" ||
     pathname.startsWith("/icon.") ||
     pathname.startsWith("/apple-icon") ||

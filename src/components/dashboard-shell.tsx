@@ -7,6 +7,8 @@ import { COMPANIES, themeStyle } from "@/lib/companies";
 import { RecruitmentProvider, useRecruitment } from "@/lib/recruitment-context";
 import type { CompanySlug } from "@/lib/types";
 import { CompanyMark } from "./company-mark";
+import { CandidateDrawer } from "./candidate-drawer";
+import { HeaderAlerts } from "./header-alerts";
 import {
   IconBriefcase,
   IconGrid,
@@ -101,6 +103,7 @@ export function DashboardShell({
                 </div>
               </ScrollArea>
             </main>
+            {canUseHrMenu(user.role) ? <CandidateDrawer /> : null}
           </div>
         </div>
       </RecruitmentProvider>
@@ -383,6 +386,7 @@ function Topbar({ user, canSwitch }: { user: AuthUser; canSwitch: boolean }) {
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {hrMenu ? (
             <>
+              <HeaderAlerts />
               <Link
                 href={`/${slug}/candidates`}
                 className="inline-flex items-center justify-center rounded-full border border-line bg-paper-raised p-2 text-muted sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"

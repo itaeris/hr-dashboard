@@ -1,9 +1,9 @@
 "use client";
 
 import { collectScheduleEvents, KIND_STYLE, type ScheduleEvent } from "@/lib/schedule-events";
+import { alertChip, collectScheduleAlerts, type ScheduleAlert } from "@/lib/schedule-alerts";
 import { useRecruitment } from "@/lib/recruitment-context";
 import { useMemo, useState } from "react";
-import { CandidateDrawer } from "./candidate-drawer";
 import { GoogleCalendarSync } from "./google-calendar-sync";
 import { Avatar, PositionChip } from "./display";
 import { IconChevronDown } from "./icons";
@@ -66,10 +66,12 @@ function EventList({
   events,
   empty,
   onOpen,
+  alerts,
 }: {
   events: ScheduleEvent[];
   empty: string;
   onOpen: (id: string) => void;
+  alerts: Map<string, ScheduleAlert>;
 }) {
   if (events.length === 0) {
     return <p className="text-sm text-muted">{empty}</p>;
@@ -77,12 +79,16 @@ function EventList({
 
   return (
     <div className="space-y-2">
-      {events.map((event) => (
+      {events.map((event) => {
+        const alert = alerts.get(event.id);
+        return (
         <button
           key={event.id}
           type="button"
           onClick={() => onOpen(event.item.id)}
-          className="flex w-full items-start gap-3 rounded-2xl border border-line px-3 py-3 text-left hover:bg-paper"
+          className={`flex w-full items-start gap-3 rounded-2xl border px-3 py-3 text-left hover:bg-paper ${
+            alert?.state === "overdue" ? "border-accent" : "border-line"
+          }`}
         >
           <Avatar name={event.item.candidate.full_name} size="sm" />
           <div className="min-w-0">
@@ -91,11 +97,12 @@ function EventList({
             <span
               className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] ${KIND_STYLE[event.kind]}`}
             >
-              {event.label}
+              {alert ? alertChip(alert) : event.label}
             </span>
           </div>
         </button>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -168,6 +175,10 @@ export function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState(today);
 
   const events = useMemo(() => collectScheduleEvents(views), [views]);
+  const alerts = useMemo(
+    () => new Map(collectScheduleAlerts(views).map((alert) => [alert.id, alert])),
+    [views],
+  );
   const byDay = useMemo(() => {
     const map = new Map<string, ScheduleEvent[]>();
     for (const event of events) {
@@ -274,6 +285,7 @@ export function CalendarPage() {
             events={selectedEvents}
             empty="No scheduled items this day."
             onOpen={setSelectedId}
+            alerts={alerts}
           />
         </div>
       ) : (
@@ -348,13 +360,12 @@ export function CalendarPage() {
                 events={selectedEvents}
                 empty="No scheduled items this day."
                 onOpen={setSelectedId}
+            alerts={alerts}
               />
             </div>
           </aside>
         </div>
       )}
-
-      <CandidateDrawer />
     </PageFade>
   );
 }

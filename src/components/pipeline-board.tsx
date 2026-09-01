@@ -1,19 +1,28 @@
 "use client";
 
 import { daysAgo } from "@/lib/format";
+import { emailedChip, latestSendByApplication } from "@/lib/email-sends";
+import { useEmailSends } from "@/lib/use-email-sends";
 import { useRecruitment } from "@/lib/recruitment-context";
+import {
+  alertChip,
+  collectScheduleAlerts,
+  primaryAlert,
+} from "@/lib/schedule-alerts";
 import { STAGES, type Stage } from "@/lib/types";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { CandidateDrawer } from "./candidate-drawer";
+import { useMemo, useState } from "react";
 import { Avatar, PositionChip } from "./display";
 import { PipelineSkeleton } from "./skeletons";
 import { ScrollArea } from "./scroll-area";
 import { PageFade } from "./ui";
 
 export function PipelinePage() {
-  const { views, loading, updateStage, setSelectedId } = useRecruitment();
+  const { slug, views, loading, updateStage, setSelectedId } = useRecruitment();
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const alerts = useMemo(() => collectScheduleAlerts(views), [views]);
+  const emailSends = useEmailSends(slug);
+  const emailed = useMemo(() => latestSendByApplication(emailSends), [emailSends]);
 
   if (loading) return <PipelineSkeleton />;
 
@@ -48,7 +57,12 @@ export function PipelinePage() {
               <ScrollArea axis="y" className="min-h-0 flex-1 px-3 pb-3">
                 <div className="flex flex-col gap-2">
                 <AnimatePresence initial={false}>
-                  {cards.map((item) => (
+                  {cards.map((item) => {
+                    const alert = primaryAlert(
+                      alerts.filter((row) => row.item.id === item.id),
+                    );
+                    const lastEmail = emailed.get(item.id);
+                    return (
                     <motion.button
                       layout
                       key={item.id}
@@ -59,7 +73,11 @@ export function PipelinePage() {
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.96 }}
-                      className="rounded-2xl border border-line bg-paper-raised p-3 text-left shadow-sm"
+                      className={`rounded-2xl border bg-paper-raised p-3 text-left shadow-sm ${
+                        alert?.state === "overdue" || lastEmail
+                          ? "border-accent"
+                          : "border-line"
+                      }`}
                     >
                       <div className="flex items-start gap-3">
                         <Avatar name={item.candidate.full_name} size="sm" />
@@ -72,11 +90,19 @@ export function PipelinePage() {
                       </div>
                       <div className="mt-3 flex items-center justify-between text-[11px] text-muted">
                         <span>{item.candidate.source}</span>
-                        <span>{daysAgo(item.updated_at)}</span>
+                        <span className={alert ? "font-medium text-accent" : undefined}>
+                          {alert ? alertChip(alert) : daysAgo(item.updated_at)}
+                        </span>
                       </div>
+                      {lastEmail ? (
+                        <p className="mt-2 text-[11px] font-medium text-accent">
+                          {emailedChip(lastEmail)} · {daysAgo(lastEmail.sent_at)}
+                        </p>
+                      ) : null}
                       <StageDots current={item.stage} />
                     </motion.button>
-                  ))}
+                    );
+                  })}
                 </AnimatePresence>
                 </div>
               </ScrollArea>
@@ -85,7 +111,6 @@ export function PipelinePage() {
         })}
         </div>
       </ScrollArea>
-      <CandidateDrawer />
     </PageFade>
   );
 }

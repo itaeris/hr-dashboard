@@ -14,6 +14,12 @@ import {
   type EmailAttachment,
   type EmailTemplateKind,
 } from "@/lib/email-templates";
+import {
+  loadEmailSends,
+  rememberLocalEmailSend,
+  type EmailSend,
+} from "@/lib/email-sends";
+import { formatDateTime } from "@/lib/format";
 import { useRecruitment } from "@/lib/recruitment-context";
 import { useOnboarding } from "@/lib/use-onboarding";
 import type { ApplicationView } from "@/lib/types";
@@ -22,6 +28,10 @@ import { createPortal } from "react-dom";
 import { EmailSignaturePreview } from "./email-signature-preview";
 import { FileAttachList } from "./file-attach";
 import { Field, ModalFrame, fieldClass } from "./ui";
+
+function sendKindLabel(send: EmailSend) {
+  return send.kind ? EMAIL_TEMPLATE_META[send.kind].label : "email";
+}
 
 export function SendEmailModal({
   open,
@@ -76,7 +86,10 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [sends, setSends] = useState<EmailSend[]>([]);
   const to = item.candidate.email ?? "";
+  const lastSend = sends[0];
+  const kindSent = sends.find((row) => row.kind === kind);
 
   useEffect(() => {
     let live = true;
@@ -95,6 +108,16 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       live = false;
     };
   }, [brand.name, extras, initialKind, item, slug]);
+
+  useEffect(() => {
+    let live = true;
+    void loadEmailSends(slug, item.id).then((rows) => {
+      if (live) setSends(rows);
+    });
+    return () => {
+      live = false;
+    };
+  }, [item.id, slug]);
 
   const gmailUrl = useMemo(() => {
     if (!to) return "";
@@ -124,11 +147,27 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       const response = await fetch("/api/email/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to, cc, subject, body, attachments, company: slug }),
+        body: JSON.stringify({
+          to,
+          cc,
+          subject,
+          body,
+          attachments,
+          company: slug,
+          applicationId: item.id,
+          kind,
+        }),
       });
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as { error?: string; send?: EmailSend };
       if (!response.ok) {
         throw new Error(payload.error || "Could not send email.");
+      }
+      if (payload.send) {
+        rememberLocalEmailSend(slug, payload.send);
+        setSends((current) => [
+          payload.send as EmailSend,
+          ...current.filter((row) => row.id !== payload.send?.id),
+        ]);
       }
       setStatus("Email sent.");
     } catch (cause) {
@@ -157,6 +196,23 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
       <p className="break-words text-sm text-muted">
         To <span className="font-medium text-ink">{item.candidate.full_name}</span> · {to}
       </p>
+      {lastSend ? (
+        <div className="rounded-2xl border border-accent/30 bg-accent-soft/70 px-3 py-2 text-sm text-accent-deep">
+          <p>
+            HR already sent {sends.length === 1 ? "an email" : `${sends.length} emails`} to this
+            candidate. Last sent {sendKindLabel(lastSend)} on {formatDateTime(lastSend.sent_at)}
+            {lastSend.sent_by ? ` by ${lastSend.sent_by}` : ""}.
+          </p>
+          {kindSent ? (
+            <p className="mt-1">
+              This {EMAIL_TEMPLATE_META[kind].label} template was already sent
+              {kindSent.id === lastSend.id
+                ? "."
+                : ` on ${formatDateTime(kindSent.sent_at)}.`}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         {EMAIL_TEMPLATE_KINDS.map((itemKind) => (
           <button
@@ -170,6 +226,9 @@ function SendEmailComposer({ item }: { item: ApplicationView }) {
             }`}
           >
             {EMAIL_TEMPLATE_META[itemKind].label}
+            {sends.some((row) => row.kind === itemKind) ? (
+              <span className={itemKind === kind ? "text-white/80" : "text-accent"}> · sent</span>
+            ) : null}
           </button>
         ))}
       </div>

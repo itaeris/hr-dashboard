@@ -2,11 +2,12 @@
 
 import { daysAgo, formatDateTime } from "@/lib/format";
 import { useRecruitment, useRecruitmentStats } from "@/lib/recruitment-context";
+import { alertChip, collectScheduleAlerts } from "@/lib/schedule-alerts";
 import { isOpenVacancy, nextInterviewAt } from "@/lib/tracker";
 import { STAGES } from "@/lib/types";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { CandidateDrawer } from "./candidate-drawer";
+import { useMemo } from "react";
 import { Avatar, PositionChip, StageChip } from "./display";
 import { OverviewSkeleton } from "./skeletons";
 import { PageFade } from "./ui";
@@ -14,6 +15,7 @@ import { PageFade } from "./ui";
 export function OverviewPage() {
   const { brand, views, jobs, loading, setSelectedId } = useRecruitment();
   const stats = useRecruitmentStats();
+  const alerts = useMemo(() => collectScheduleAlerts(views), [views]);
   const upcoming = views
     .map((item) => ({ item, at: nextInterviewAt(item) }))
     .filter((entry): entry is { item: (typeof views)[number]; at: string } => Boolean(entry.at))
@@ -90,6 +92,45 @@ export function OverviewPage() {
             </div>
           </article>
 
+          <div className="space-y-6">
+          <article className="rounded-[24px] border border-line bg-paper-raised p-4 sm:p-6">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-display text-xl sm:text-2xl">Due dates</h2>
+                <p className="mt-1 text-sm text-muted">
+                  Overdue and due today from each candidate&apos;s schedule.
+                </p>
+              </div>
+              <Link href={`/${brand.slug}/pipeline`} className="shrink-0 text-sm text-accent">
+                Open pipeline
+              </Link>
+            </div>
+            <div className="mt-5 space-y-3">
+              {alerts.length === 0 ? (
+                <p className="text-sm text-muted">No overdue or due-today dates.</p>
+              ) : (
+                alerts.slice(0, 8).map((alert) => (
+                  <button
+                    key={alert.id}
+                    type="button"
+                    onClick={() => setSelectedId(alert.item.id)}
+                    className="flex w-full flex-col items-start gap-2 rounded-2xl border border-line px-3 py-3 text-left hover:bg-paper sm:flex-row sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {alert.item.candidate.full_name}
+                      </p>
+                      <PositionChip title={alert.item.job.title} className="mt-1 max-w-full" />
+                    </div>
+                    <p className="shrink-0 text-xs font-medium text-accent">
+                      {alertChip(alert)}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </article>
+
           <article className="rounded-[24px] border border-line bg-paper-raised p-4 sm:p-6">
             <h2 className="font-display text-xl sm:text-2xl">Interview calendar</h2>
             <p className="mt-1 text-sm text-muted">Upcoming slots on the HR calendar.</p>
@@ -114,6 +155,7 @@ export function OverviewPage() {
               )}
             </div>
           </article>
+          </div>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -174,7 +216,6 @@ export function OverviewPage() {
           </article>
         </section>
       </div>
-      <CandidateDrawer />
     </PageFade>
   );
 }

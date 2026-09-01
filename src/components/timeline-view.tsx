@@ -9,7 +9,6 @@ import {
   type EventKind,
 } from "@/lib/schedule-events";
 import { useMemo, useState } from "react";
-import { CandidateDrawer } from "./candidate-drawer";
 import { Avatar, PositionChip } from "./display";
 import { Select } from "./fields";
 import { OverviewSkeleton } from "./skeletons";
@@ -140,8 +139,6 @@ export function TimelinePage() {
           ))}
         </div>
       )}
-
-      <CandidateDrawer />
     </PageFade>
   );
 }

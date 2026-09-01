@@ -22,7 +22,6 @@ import {
 } from "@/lib/table-page";
 import { LATEST_STATUSES, type LatestStatus } from "@/lib/types";
 import { useMemo, useState } from "react";
-import { CandidateDrawer } from "./candidate-drawer";
 import {
   EmptyValue,
   Pill,
@@ -336,7 +335,6 @@ export function CandidatesPage() {
         onPage={setPage}
         onPageSize={setPageSize}
       />
-      <CandidateDrawer />
     </PageFade>
   );
 }

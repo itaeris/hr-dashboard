@@ -1,7 +1,10 @@
 "use client";
 
-import { formatDate, formatSheetDate, formatTableDate } from "@/lib/format";
+import { daysAgo, formatDate, formatSheetDate, formatTableDate } from "@/lib/format";
+import { emailedChip, latestSendByApplication } from "@/lib/email-sends";
+import { useEmailSends } from "@/lib/use-email-sends";
 import { useRecruitment } from "@/lib/recruitment-context";
+import { alertChip, collectScheduleAlerts, primaryAlert } from "@/lib/schedule-alerts";
 import {
   alignedLatestStatus,
   hrToUserSla,
@@ -34,6 +37,27 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
       <div className="break-words text-sm text-ink">
         {empty ? <span className="text-line">–</span> : value}
       </div>
+    </div>
+  );
+}
+
+function ScheduleAlertNote({ itemId }: { itemId: string }) {
+  const { slug, views } = useRecruitment();
+  const item = views.find((row) => row.id === itemId);
+  const lastEmail = latestSendByApplication(useEmailSends(slug)).get(itemId);
+  if (!item && !lastEmail) return null;
+  const alert = item ? primaryAlert(collectScheduleAlerts([item])) : null;
+  if (!alert && !lastEmail) return null;
+  return (
+    <div className="mt-2 space-y-1">
+      {alert ? (
+        <p className="text-xs font-medium text-accent">{alertChip(alert)}</p>
+      ) : null}
+      {lastEmail ? (
+        <p className="text-xs font-medium text-accent">
+          {emailedChip(lastEmail)} · {daysAgo(lastEmail.sent_at)}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -94,6 +118,7 @@ export function CandidateDrawer() {
                   <div className="mt-1">
                     <PositionChip title={selected.job.title} />
                   </div>
+                  <ScheduleAlertNote itemId={selected.id} />
                 </div>
                 <div className="hidden shrink-0 items-center gap-2 sm:flex">
                   <DrawerActions

@@ -3,6 +3,8 @@ import { loadAppUser } from "@/lib/auth/app-users";
 import { getSession } from "@/lib/auth/session";
 import { isCompanySlug } from "@/lib/companies";
 import { isSmtpConfigured, sendSmtpMail } from "@/lib/email/smtp";
+import { recordEmailSend } from "@/lib/email-sends-server";
+import { isEmailTemplateKind } from "@/lib/email-sends";
 import { ccAddressesError, parseCcAddresses, type EmailAttachment } from "@/lib/email-templates";
 import { NextResponse } from "next/server";
 
@@ -25,6 +27,8 @@ export async function POST(request: Request) {
     subject?: string;
     body?: string;
     company?: string;
+    applicationId?: string;
+    kind?: string;
     attachments?: EmailAttachment[];
   };
 
@@ -74,8 +78,18 @@ export async function POST(request: Request) {
       attachments,
       replyTo: session.email,
     });
-    return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Could not send email." }, { status: 502 });
   }
+
+  const send = await recordEmailSend({
+    company,
+    applicationId: String(payload.applicationId ?? "").trim(),
+    candidateEmail: to,
+    kind: isEmailTemplateKind(String(payload.kind ?? "")) ? String(payload.kind) : "",
+    subject,
+    sentBy: session.email,
+  }).catch(() => null);
+
+  return NextResponse.json({ ok: true, send });
 }
