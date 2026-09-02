@@ -37,6 +37,7 @@ export async function POST(request: Request) {
     await syncRecruitmentApproval({
       id: row.id,
       status: row.approval_status,
+      step: row.approval_step,
       jobPosition: row.payload.job_position ?? "",
       company: row.company || row.payload.company || "",
       department: row.payload.department ?? "",

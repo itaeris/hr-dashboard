@@ -80,10 +80,12 @@ flowchart TD
   J --> K[Submit]
   K --> L[(recruitment_requests)]
   L --> M[Sync Lark Approval instance]
-  M --> N[N+1 to-do in Lark Approval]
-  N --> O["/recruitment-request/approval/id"]
-  O --> P[Approve or reject]
-  P --> Q[Update row + Lark task]
+  M --> N[Business Leader to-do]
+  N --> O[HR Approval]
+  O --> P[Handle]
+  P --> Q["/recruitment-request/approval/id"]
+  Q --> R[Approve, reject, or handle]
+  R --> S[Update row + Lark tasks]
 ```
 
 ### Admin request form and responses
@@ -153,7 +155,13 @@ Without Supabase, schemas and responses stay in `localStorage`.
 
 ### Lark Approval
 
-Submit creates a third-party approval instance so N+1 gets a to-do in the Lark **Approval** app. The task opens `/recruitment-request/approval/[id]` (same URL on desktop and mobile). Approve / Reject there updates the row and the Lark task.
+Submit creates a third-party approval instance that follows the native Lark process:
+
+1. **Business Leader Approval** — requester-selected Direct Supervisor (N+1). CC when agreed: Fitria Latifanisa, Nesya Wulaningtias, Lelyta Nugraheni, Caca.
+2. **HR Approval** — Lelyta Nugraheni or Fitria Latifanisa (anyone assigned).
+3. **Handle** — Caca, Nesya Wulaningtias, Lelyta Nugraheni, or Fitria Latifanisa (anyone assigned).
+
+Each to-do opens `/recruitment-request/approval/[id]` (same URL on desktop and mobile). The page advances one step at a time and updates Lark.
 
 **Lark Developer Console — Permissions & Scopes** (publish after adding):
 

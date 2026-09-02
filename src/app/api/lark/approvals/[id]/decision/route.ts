@@ -4,6 +4,7 @@ import {
   syncRecruitmentApproval,
 } from "@/lib/lark/approval";
 import { isLarkConfigured } from "@/lib/lark/client";
+import { nextApprovalStep } from "@/lib/recruitment-approval-flow";
 import {
   loadRecruitmentRequest,
   saveRecruitmentApproval,
@@ -29,14 +30,20 @@ export async function POST(
   if (row.approval_status !== "pending") {
     return NextResponse.json({
       approval_status: row.approval_status,
+      approval_step: row.approval_step,
       approval_comment: row.approval_comment,
     });
   }
 
+  const nextStep = action === "rejected" ? row.approval_step : nextApprovalStep(row.approval_step);
+  const nextStatus =
+    action === "rejected" ? "rejected" : nextStep === "done" ? "approved" : "pending";
+
   const session = await getSession();
   const decidedBy = session?.email || session?.name || "Lark approver";
   const saved = await saveRecruitmentApproval(id, {
-    approval_status: action,
+    approval_status: nextStatus,
+    approval_step: nextStep,
     approval_comment: payload.comment?.trim() ?? "",
     approval_decided_by: decidedBy,
   });
@@ -50,6 +57,7 @@ export async function POST(
       await syncRecruitmentApproval({
         id: saved.id,
         status: saved.approval_status,
+        step: saved.approval_step,
         jobPosition: saved.payload.job_position ?? "",
         company: saved.company || saved.payload.company || "",
         department: saved.payload.department ?? "",
@@ -61,6 +69,7 @@ export async function POST(
     } catch (cause) {
       return NextResponse.json({
         approval_status: saved.approval_status,
+        approval_step: saved.approval_step,
         approval_comment: saved.approval_comment,
         warning: cause instanceof Error ? cause.message : "Saved, but Lark Approval was not updated.",
       });
@@ -69,6 +78,7 @@ export async function POST(
 
   return NextResponse.json({
     approval_status: saved.approval_status,
+    approval_step: saved.approval_step,
     approval_comment: saved.approval_comment,
   });
 }

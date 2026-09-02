@@ -18,6 +18,7 @@ import {
   type RequestSchema,
   type RequestSchemaField,
 } from "@/lib/request-schema";
+import { approvalProcessPreview } from "@/lib/recruitment-approval-flow";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { DatePicker, Select } from "./fields";
@@ -102,15 +103,10 @@ export function RequestFormPage({
       answers.priority_level &&
       answers.direct_supervisor,
   );
-  const approvalSteps = useMemo(() => {
-    const steps = [
-      answers.direct_supervisor || "Direct Supervisor (N+1)",
-      "HR Business Partner",
-      answers.division || "Division Head",
-    ];
-    if ((answers.priority_level ?? "").startsWith("P0")) steps.push("Management");
-    return steps;
-  }, [answers.direct_supervisor, answers.division, answers.priority_level]);
+  const approvalSteps = useMemo(
+    () => approvalProcessPreview(answers.direct_supervisor ?? ""),
+    [answers.direct_supervisor],
+  );
 
   function set(id: string, value: string) {
     setAnswers((current) => {
@@ -157,7 +153,11 @@ export function RequestFormPage({
 
   async function onSubmit() {
     if (!schema || !company) return;
-    const payload: Record<string, string> = { ...answers, company };
+    const payload: Record<string, string> = {
+      ...answers,
+      company,
+      approval_step: "leader",
+    };
     const nextErrors = validateAnswers(schema, payload);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -214,7 +214,7 @@ export function RequestFormPage({
         });
         const larkPayload = (await lark.json()) as { error?: string };
         if (lark.ok) {
-          message = `Submitted. ${payload.direct_supervisor || "N+1"} will get a Lark Approval notification.`;
+          message = `Submitted. ${payload.direct_supervisor || "The business leader"} will get a Lark Approval to-do.`;
         } else if (larkPayload.error) {
           message = `Submitted. Lark notification failed: ${larkPayload.error}`;
         }
@@ -381,13 +381,16 @@ export function RequestFormPage({
                       <ol className="space-y-2">
                         {approvalSteps.map((step, index) => (
                           <li
-                            key={`${step}-${index}`}
-                            className="flex items-center gap-3 rounded-xl border border-line bg-paper px-3 py-2 text-sm"
+                            key={step.id}
+                            className="flex items-start gap-3 rounded-xl border border-line bg-paper px-3 py-2 text-sm"
                           >
-                            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent-soft text-xs text-accent-deep">
+                            <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs text-accent-deep">
                               {index + 1}
                             </span>
-                            {step}
+                            <span>
+                              <span className="block font-medium">{step.title}</span>
+                              <span className="mt-0.5 block text-xs text-muted">{step.detail}</span>
+                            </span>
                           </li>
                         ))}
                       </ol>

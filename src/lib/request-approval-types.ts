@@ -1,4 +1,7 @@
+import type { ApprovalStep } from "./recruitment-approval-flow";
+
 export type ApprovalStatus = "pending" | "approved" | "rejected";
+export type { ApprovalStep };
 
 export type StoredRecruitmentRequest = {
   id: string;
@@ -6,6 +9,7 @@ export type StoredRecruitmentRequest = {
   company: string;
   payload: Record<string, string>;
   approval_status: ApprovalStatus;
+  approval_step: ApprovalStep;
   approval_comment: string;
   approval_decided_at: string | null;
   approval_decided_by: string;

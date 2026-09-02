@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDate } from "@/lib/format";
+import { approvalStatusLabel, parseApprovalStep } from "@/lib/recruitment-approval-flow";
 import { useRecruitment } from "@/lib/recruitment-context";
 import { companyFromSlug, REQUEST_COMPANY_LABELS } from "@/lib/recruitment-request";
 import {
@@ -118,7 +119,12 @@ export function RequestResponsesPage() {
                 <Td sticky nowrap muted>
                   {formatDate(row.created_at)}
                 </Td>
-                <Td nowrap>{row.approval_status || "pending"}</Td>
+                <Td nowrap>
+                  {approvalStatusLabel(
+                    row.approval_status || "pending",
+                    parseApprovalStep(row.payload.approval_step),
+                  )}
+                </Td>
                 {PREVIEW_KEYS.map((key) => (
                   <Td key={key} nowrap>
                     {cell(row.payload[key])}

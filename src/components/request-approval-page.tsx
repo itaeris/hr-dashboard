@@ -3,6 +3,14 @@
 import { COMPANIES, themeStyle } from "@/lib/companies";
 import { formatDate } from "@/lib/format";
 import {
+  APPROVAL_STEP_LABELS,
+  HANDLE_MEMBERS,
+  HR_APPROVERS,
+  approvalProcessPreview,
+  parseApprovalStep,
+  type ApprovalStep,
+} from "@/lib/recruitment-approval-flow";
+import {
   REQUEST_COMPANY_LABELS,
   isRequestCompany,
   slugFromRequestCompany,
@@ -18,12 +26,35 @@ const STATUS_COPY: Record<ApprovalStatus, { label: string; className: string }> 
   rejected: { label: "Rejected", className: "bg-red-50 text-red-800" },
 };
 
+function stepCopy(step: ApprovalStep) {
+  if (step === "hr") {
+    return {
+      title: "HR Approval",
+      body: `${HR_APPROVERS.join(" or ")} can approve. One agreement is enough.`,
+      confirm: "Approve",
+    };
+  }
+  if (step === "handle") {
+    return {
+      title: "Handle",
+      body: `${HANDLE_MEMBERS.join(", ")}. One handler needs to complete this step.`,
+      confirm: "Handled",
+    };
+  }
+  return {
+    title: "Business Leader Approval",
+    body: "The requester’s selected business leader reviews this request. Approving CCs HR.",
+    confirm: "Approve",
+  };
+}
+
 export function RequestApprovalPage({
   request,
 }: {
   request: StoredRecruitmentRequest;
 }) {
   const [status, setStatus] = useState(request.approval_status);
+  const [step, setStep] = useState(request.approval_step);
   const [comment, setComment] = useState(request.approval_comment);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
@@ -37,6 +68,8 @@ export function RequestApprovalPage({
   const brand = COMPANIES[slugFromRequestCompany(company)];
   const title = request.payload.job_position || "Recruitment request";
   const pending = status === "pending";
+  const preview = approvalProcessPreview(request.payload.direct_supervisor ?? "");
+  const current = stepCopy(step);
 
   const fields = schema.fields.filter((field) => {
     if (field.id.endsWith("_id")) return false;
@@ -60,10 +93,12 @@ export function RequestApprovalPage({
       const payload = (await response.json()) as {
         error?: string;
         approval_status?: ApprovalStatus;
+        approval_step?: ApprovalStep;
         approval_comment?: string;
       };
       if (!response.ok) throw new Error(payload.error || "Could not save the decision.");
       setStatus(payload.approval_status ?? next);
+      setStep(parseApprovalStep(payload.approval_step));
       setComment(payload.approval_comment ?? draft.trim());
       setDraft("");
     } catch (cause) {
@@ -85,12 +120,45 @@ export function RequestApprovalPage({
             <span
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.12em] ${STATUS_COPY[status].className}`}
             >
-              {STATUS_COPY[status].label}
+              {status === "pending" ? current.title : STATUS_COPY[status].label}
             </span>
           </div>
           <p className="mt-2 text-sm text-muted">
             {REQUEST_COMPANY_LABELS[company]} · submitted {formatDate(request.created_at)}
           </p>
+
+          <ol className="mt-5 space-y-2">
+            {preview.map((item, index) => {
+              const active = pending && item.id === step;
+              const done = step === "done" || stageComplete(item.id, step, status);
+              return (
+                <li
+                  key={item.id}
+                  className={`flex items-start gap-3 rounded-xl border px-3 py-2 text-sm ${
+                    active
+                      ? "border-accent bg-accent-soft"
+                      : "border-line bg-paper-raised"
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                      done
+                        ? "bg-emerald-50 text-emerald-800"
+                        : active
+                          ? "bg-white text-accent-deep"
+                          : "bg-paper text-muted"
+                    }`}
+                  >
+                    {done ? "✓" : index + 1}
+                  </span>
+                  <span>
+                    <span className="block font-medium">{item.title}</span>
+                    <span className="mt-0.5 block text-xs text-muted">{item.detail}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
 
           <section className="mt-6 space-y-4 rounded-[24px] border border-line bg-paper-raised p-4 sm:p-7">
             {fields.map((field) => (
@@ -104,13 +172,12 @@ export function RequestApprovalPage({
           </section>
 
           <section className="mt-5 rounded-[24px] border border-line bg-paper-raised p-4 sm:p-7">
-            <h2 className="text-lg font-medium">Decision</h2>
+            <h2 className="text-lg font-medium">
+              {pending ? current.title : "Decision"}
+            </h2>
             {pending ? (
               <>
-                <p className="mt-1 text-sm text-muted">
-                  Direct Supervisor (N+1) reviews this request. The same action updates Lark
-                  Approval.
-                </p>
+                <p className="mt-1 text-sm text-muted">{current.body}</p>
                 <textarea
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
@@ -126,7 +193,7 @@ export function RequestApprovalPage({
                     onClick={() => void decide("approved")}
                     className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
                   >
-                    {saving ? "Saving…" : "Approve"}
+                    {saving ? "Saving…" : current.confirm}
                   </button>
                   <button
                     type="button"
@@ -140,7 +207,9 @@ export function RequestApprovalPage({
               </>
             ) : (
               <p className="mt-2 text-sm text-muted">
-                {status === "approved" ? "This request was approved." : "This request was rejected."}
+                {status === "approved"
+                  ? "This request was approved and handled."
+                  : `This request was rejected at ${APPROVAL_STEP_LABELS[step]}.`}
                 {comment ? ` ${comment}` : ""}
                 {request.approval_decided_by ? ` · ${request.approval_decided_by}` : ""}
               </p>
@@ -150,4 +219,15 @@ export function RequestApprovalPage({
       </div>
     </div>
   );
+}
+
+function stageComplete(
+  id: "leader" | "hr" | "handle",
+  step: ApprovalStep,
+  status: ApprovalStatus,
+) {
+  const order = { leader: 0, hr: 1, handle: 2 };
+  const current = step === "done" ? 3 : order[step];
+  if (status === "rejected") return order[id] < current;
+  return order[id] < current;
 }

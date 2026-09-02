@@ -1,9 +1,11 @@
 import "server-only";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { parseApprovalStep } from "./recruitment-approval-flow";
 import {
   parseApprovalStatus,
   type ApprovalStatus,
+  type ApprovalStep,
   type StoredRecruitmentRequest,
 } from "./request-approval-types";
 
@@ -20,6 +22,7 @@ function fromRow(row: Record<string, unknown>): StoredRecruitmentRequest {
     company: String(row.company ?? payload.company ?? ""),
     payload,
     approval_status: parseApprovalStatus(row.approval_status ?? payload.approval_status),
+    approval_step: parseApprovalStep(payload.approval_step),
     approval_comment: String(row.approval_comment ?? payload.approval_comment ?? ""),
     approval_decided_at:
       typeof row.approval_decided_at === "string" ? row.approval_decided_at : null,
@@ -43,6 +46,7 @@ export async function saveRecruitmentApproval(
   id: string,
   patch: {
     approval_status: ApprovalStatus;
+    approval_step: ApprovalStep;
     approval_comment: string;
     approval_decided_by: string;
   },
@@ -53,10 +57,12 @@ export async function saveRecruitmentApproval(
   const current = await loadRecruitmentRequest(id);
   if (!current) throw new Error("Request not found.");
 
+  const decided = patch.approval_status !== "pending";
   const decided_at = new Date().toISOString();
   const payload = {
     ...current.payload,
     approval_status: patch.approval_status,
+    approval_step: patch.approval_step,
     approval_comment: patch.approval_comment,
     approval_decided_by: patch.approval_decided_by,
   };
@@ -67,8 +73,8 @@ export async function saveRecruitmentApproval(
       payload,
       approval_status: patch.approval_status,
       approval_comment: patch.approval_comment,
-      approval_decided_at: decided_at,
       approval_decided_by: patch.approval_decided_by,
+      ...(decided ? { approval_decided_at: decided_at } : {}),
     })
     .eq("id", id)
     .select("*")
