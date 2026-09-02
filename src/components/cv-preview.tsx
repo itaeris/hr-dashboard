@@ -2,10 +2,18 @@
 
 import { cvMeta, isLocalDiskCvUrl, loadCvBlob, previewable } from "@/lib/cv";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { EmptyValue } from "./data-table";
 import { IconClose, IconFile } from "./icons";
+
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
 
 export function CvCell({ url }: { url: string | null }) {
   const [open, setOpen] = useState(false);
@@ -52,58 +60,9 @@ export function CvPreviewDialog({
 }) {
   const meta = cvMeta(url);
   const canPreview = previewable(meta.kind);
-  const [mounted, setMounted] = useState(false);
-  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const isClient = useIsClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!open || !canPreview) {
-      setPreviewSrc(null);
-      setLoadError("");
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    let objectUrl: string | null = null;
-
-    setLoading(true);
-    setLoadError("");
-    setPreviewSrc(null);
-
-    void (async () => {
-      try {
-        const blob = await loadCvBlob(url);
-        objectUrl = URL.createObjectURL(blob);
-        if (cancelled) {
-          URL.revokeObjectURL(objectUrl);
-          return;
-        }
-        setPreviewSrc(objectUrl);
-      } catch {
-        if (cancelled) return;
-        setLoadError(
-          isLocalDiskCvUrl(url)
-            ? "This CV was stored on the app server and is no longer available. Re-upload it so it is kept in cloud storage."
-            : "This file could not be previewed. Use Open file, or re-upload the CV.",
-        );
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [open, url, canPreview]);
-
-  if (!mounted) return null;
+  if (!isClient) return null;
 
   return createPortal(
     <AnimatePresence>
@@ -148,39 +107,8 @@ export function CvPreviewDialog({
               </div>
             </div>
             <div className="min-h-0 flex-1 bg-paper">
-              {meta.kind === "image" && previewSrc ? (
-                <div className="flex h-full items-center justify-center p-6">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={previewSrc}
-                    alt={meta.name}
-                    className="max-h-full max-w-full rounded-xl object-contain"
-                  />
-                </div>
-              ) : canPreview && previewSrc ? (
-                <iframe
-                  title={meta.name}
-                  src={previewSrc}
-                  className="h-full w-full border-0 bg-white"
-                />
-              ) : loadError ? (
-                <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-                  <IconFile className="h-8 w-8 text-muted" />
-                  <p className="max-w-sm text-sm text-muted">{loadError}</p>
-                  <a
-                    href={url}
-                    download={meta.name}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm font-medium text-accent hover:underline"
-                  >
-                    Open {meta.name}
-                  </a>
-                </div>
-              ) : canPreview && loading ? (
-                <div className="flex h-full items-center justify-center px-6 text-sm text-muted">
-                  Loading preview…
-                </div>
+              {canPreview ? (
+                <CvBlobPreview url={url} kind={meta.kind} name={meta.name} />
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
                   <IconFile className="h-8 w-8 text-muted" />
@@ -205,4 +133,96 @@ export function CvPreviewDialog({
     </AnimatePresence>,
     document.body,
   );
+}
+
+function CvBlobPreview({
+  url,
+  kind,
+  name,
+}: {
+  url: string;
+  kind: ReturnType<typeof cvMeta>["kind"];
+  name: string;
+}) {
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    void (async () => {
+      try {
+        const blob = await loadCvBlob(url);
+        objectUrl = URL.createObjectURL(blob);
+        if (cancelled) {
+          URL.revokeObjectURL(objectUrl);
+          return;
+        }
+        setPreviewSrc(objectUrl);
+      } catch {
+        if (cancelled) return;
+        setLoadError(
+          isLocalDiskCvUrl(url)
+            ? "This CV was stored on the app server and is no longer available. Re-upload it so it is kept in cloud storage."
+            : "This file could not be previewed. Use Open file, or re-upload the CV.",
+        );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url]);
+
+  if (kind === "image" && previewSrc) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={previewSrc}
+          alt={name}
+          className="max-h-full max-w-full rounded-xl object-contain"
+        />
+      </div>
+    );
+  }
+
+  if (previewSrc) {
+    return (
+      <iframe title={name} src={previewSrc} className="h-full w-full border-0 bg-white" />
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+        <IconFile className="h-8 w-8 text-muted" />
+        <p className="max-w-sm text-sm text-muted">{loadError}</p>
+        <a
+          href={url}
+          download={name}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm font-medium text-accent hover:underline"
+        >
+          Open {name}
+        </a>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center px-6 text-sm text-muted">
+        Loading preview…
+      </div>
+    );
+  }
+
+  return null;
 }

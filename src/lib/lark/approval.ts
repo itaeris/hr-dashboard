@@ -84,8 +84,6 @@ export async function syncRecruitmentApproval(input: {
     throw new Error("Direct supervisor is not a Lark user, so Approval cannot be notified.");
   }
 
-  await ensureRecruitmentApprovalDefinition();
-
   const now = Date.now();
   const ended = input.status === "pending" ? 0 : now;
   const taskStatus =

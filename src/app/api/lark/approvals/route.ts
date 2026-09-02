@@ -46,11 +46,14 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true, url: `/recruitment-request/approval/${id}` });
   } catch (cause) {
+    const raw = cause instanceof Error ? cause.message : "Could not notify Lark Approval.";
+    const error = /approval:approval|approval:external_approval|approval:external_instance|Access denied/i.test(
+      raw,
+    )
+      ? "Lark Approval permission is missing. Add approval:approval and approval:external_instance (or approval:external_approval) in the Lark Developer Console, publish the app, then submit again."
+      : raw;
     return NextResponse.json(
-      {
-        error: cause instanceof Error ? cause.message : "Could not notify Lark Approval.",
-        url: `/recruitment-request/approval/${id}`,
-      },
+      { error, url: `/recruitment-request/approval/${id}` },
       { status: 502 },
     );
   }
