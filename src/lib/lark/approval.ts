@@ -84,6 +84,16 @@ export async function syncRecruitmentApproval(input: {
     throw new Error("Direct supervisor is not a Lark user, so Approval cannot be notified.");
   }
 
+  try {
+    await ensureRecruitmentApprovalDefinition();
+  } catch (cause) {
+    const message =
+      cause instanceof Error ? cause.message : "Could not create the Lark approval definition.";
+    throw new Error(
+      `${message} If you already created a definition in Lark, copy its approval code into LARK_APPROVAL_CODE.`,
+    );
+  }
+
   const now = Date.now();
   const ended = input.status === "pending" ? 0 : now;
   const taskStatus =
