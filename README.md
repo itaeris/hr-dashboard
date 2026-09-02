@@ -1,6 +1,6 @@
 # HR Recruitment Dashboard
 
-Internal recruitment tracker for **Aeris Beaute** and **From This Island**. One app, two brand workspaces — pipeline, progress, vacancies, emails, and hire requests stay separate per company.
+Internal recruitment tracker for **Aeris Beaute** and **From This Island**. One app, two brand workspaces — pipeline, progress, vacancies, emails, IT onboarding, and hire requests stay separate per company. Hire requests can notify **Lark Approval**.
 
 **Production:** [https://recruitment-fti.aerisbeaute.com/](https://recruitment-fti.aerisbeaute.com/)
 
@@ -20,16 +20,21 @@ The public hire request form also accepts **KIN** as a company. KIN has no dashb
 | Route | Screen |
 | --- | --- |
 | `/login` | Sign in (email/password, then Google) |
-| `/` | Brand picker |
+| `/` | Brand picker (admin) or workspace home |
 | `/[company]` | Overview |
 | `/[company]/pipeline` | Kanban |
 | `/[company]/candidates` | Progress tracker |
+| `/[company]/calendar` | Schedule calendar |
+| `/[company]/timeline` | Hire timeline |
 | `/[company]/jobs` | Vacancy tracker |
 | `/[company]/emails` | Email templates (Interview, User Interview, Offering Letter) |
-| `/[company]/settings` | Change password |
+| `/[company]/settings` | Password, vacancy levels, email reminders, Google Calendar |
 | `/[company]/request/form` | Customize the public request form |
 | `/[company]/request/responses` | Submissions for that company |
+| `/[company]/onboarding` | IT laptop / Workspace / Lark requests |
+| `/[company]/onboarding/joiners` | Ready-to-join hires |
 | `/recruitment-request` | Public hire request (no login) |
+| `/recruitment-request/approval/[id]` | Approve or reject a submitted request (Lark Approval link) |
 
 `/[company]` is `aeris-beaute` or `from-this-island`.
 
@@ -71,8 +76,14 @@ flowchart TD
   F --> G
   G --> H[Pick Division]
   H --> I[Department options for that division]
-  I --> J[Submit]
-  J --> K[(recruitment_requests)]
+  I --> J[Pick Lark N+1]
+  J --> K[Submit]
+  K --> L[(recruitment_requests)]
+  L --> M[Sync Lark Approval instance]
+  M --> N[N+1 to-do in Lark Approval]
+  N --> O["/recruitment-request/approval/id"]
+  O --> P[Approve or reject]
+  P --> Q[Update row + Lark task]
 ```
 
 ### Admin request form and responses
@@ -104,9 +115,11 @@ flowchart TD
 
 ## Auth
 
-Public routes: `/login`, `/api/auth/*`, `/recruitment-request`. Everything else needs a session.
+Public routes: `/login`, `/api/auth/*`, `/recruitment-request`, `/recruitment-request/approval/*`, `/api/lark/users`, `/api/lark/approvals*`. Everything else needs a session.
 
-Roles: **Admin** and **HR**.
+Roles: **Admin**, **HR**, and **IT**.
+
+- Admin → `/`. HR → `/[company]`. IT → `/[company]/onboarding`.
 
 - Google sign-in is limited to `@aerisbeaute.com` and `@fromthisisland.com`.
 - Emails listed in `src/lib/auth/users.ts` keep that saved role.
@@ -132,17 +145,64 @@ Sessions use a signed httpOnly cookie (`AUTH_SECRET`).
 
 ## Recruitment request
 
-Public form at `/recruitment-request`. The requester picks a company first (AERIS, KIN, or FTI). That loads that company’s schema. Department options follow the selected Division.
+Public form at `/recruitment-request`. The requester picks a company first (AERIS, KIN, or FTI). That loads that company’s schema. Department options follow the selected Division. Direct / indirect supervisor fields search **Lark users**.
 
-In the dashboard, **Request → Form** edits the schema for the current workspace (AERIS or FTI). **Request → Responses** lists only that company’s submissions. Preview opens the public form in a new tab.
+In the dashboard, **Request → Form** edits the schema for the current workspace (AERIS or FTI). **Request → Responses** lists only that company’s submissions, with approval status and a link to the approval page.
 
 Without Supabase, schemas and responses stay in `localStorage`.
+
+### Lark Approval
+
+Submit creates a third-party approval instance so N+1 gets a to-do in the Lark **Approval** app. The task opens `/recruitment-request/approval/[id]` (same URL on desktop and mobile). Approve / Reject there updates the row and the Lark task.
+
+**Lark Developer Console — Permissions & Scopes** (publish after adding):
+
+| Scope | Why |
+| --- | --- |
+| `contact:contact.base:readonly` | List people in the tenant |
+| `contact:department.organize:readonly` | Walk departments |
+| `contact:user.base:readonly` | Show names in the picker |
+| `contact:user.email:readonly` | Show emails in the picker |
+| `approval:approval` | Create the external approval definition |
+| `approval:external_instance` | Sync instances / tasks |
+
+Contacts data range: **All members**.
+
+**Lark Approval — Basic Info** (external approval wizard):
+
+| Field | Value |
+| --- | --- |
+| Name | `HR Recruitment Request Form` |
+| Group | Provided by other service providers |
+| Who can submit | All |
+| Approval link initiated from desktop | `https://recruitment-fti.aerisbeaute.com/recruitment-request` |
+| Approval link initiated from mobile | same URL (the form is responsive) |
+
+Those two links start a **new** request. Per-request approve/reject URLs are sent automatically on submit. After publish, copy the definition **approval code** into `LARK_APPROVAL_CODE` (default `hr_recruitment_request`).
+
+Also run `supabase/request-approval.sql`.
 
 ## Emails
 
 Templates are per workspace: Interview, User Interview, Offering Letter. Merge fields: `{{candidate_name}}`, `{{role}}`, `{{company}}`. Send from a candidate record via SMTP (`POST /api/email/send`).
 
 Gmail SMTP needs an app password. The `MAIL_FROM_ADDRESS` should match the authenticated mailbox, or Gmail may reject the send.
+
+In-app **Send email** is logged (`supabase/email-sends.sql`) so pipeline cards can warn if that candidate was already emailed. Gmail compose is not logged.
+
+## CVs
+
+Uploads go to the public Supabase Storage bucket `cvs` (`supabase/storage-cvs.sql`). That survives deploys. Do not store CVs on the Vercel disk.
+
+If the bucket is missing, save fails with a SQL reminder. Preview uses a blob URL so Chrome CSP does not block the PDF modal.
+
+## Schedule alerts
+
+Overdue / due-today flags come from each candidate’s Progress dates (timezone `Asia/Jakarta`). The header **Alerts** bell is on every HR page.
+
+Optional morning digest: `GET /api/cron/schedule-alerts` via Vercel Cron (`vercel.json`, `0 1 * * *` UTC = 08:00 WIB). Set `CRON_SECRET`. Brands can turn email reminders off in Settings; in-app Alerts stay on.
+
+SQL: `supabase/schedule-alerts.sql`, `supabase/schedule-alert-settings.sql`.
 
 ## Run locally
 
@@ -154,7 +214,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Restart after changing env files.
 
-`.env.local` (local — do **not** set `AUTH_URL` here):
+`.env.local` (local — do **not** set `AUTH_URL` here unless you need a non-default origin):
 
 ```
 AUTH_SECRET=generate-a-long-random-string
@@ -162,12 +222,18 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=
 MAIL_PASSWORD=
 MAIL_FROM_ADDRESS=
 MAIL_FROM_NAME=HR Recruitment
+CRON_SECRET=generate-a-long-random-string
+LARK_APP_ID=
+LARK_APP_SECRET=
+LARK_API_BASE=https://open.larksuite.com
+LARK_APPROVAL_CODE=hr_recruitment_request
 ```
 
 Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy (Clara, Nadia, Sari, …). Request forms and email templates still work locally, and email edits persist to Supabase when keys are set.
@@ -258,12 +324,18 @@ GOOGLE_CLIENT_ID=....apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=....
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
 MAIL_HOST=smtp.gmail.com
 MAIL_PORT=587
 MAIL_USERNAME=...
 MAIL_PASSWORD=...
 MAIL_FROM_ADDRESS=...
 MAIL_FROM_NAME=HR Recruitment
+CRON_SECRET=...
+LARK_APP_ID=...
+LARK_APP_SECRET=...
+LARK_API_BASE=https://open.larksuite.com
+LARK_APPROVAL_CODE=hr_recruitment_request
 ```
 
 Redeploy after saving. `NEXT_PUBLIC_*` values are compiled into the client bundle — a new deployment is required after any change.
@@ -286,13 +358,20 @@ The app still gates access with its own login.
    - `supabase/migrate-tracker.sql` — if tables already exist from an older schema
    - `supabase/storage-cvs.sql` — CV upload bucket (`cvs`)
    - `supabase/recruitment-requests.sql` — request form schemas and submissions
+   - `supabase/request-approval.sql` — approval status on hire requests
    - `supabase/vacancy-settings.sql` — editable vacancy Level dropdown
    - `supabase/email-templates.sql` — email Subject / CC / Body per workspace
+   - `supabase/email-sends.sql` — log of in-app SMTP sends
    - `supabase/interview-records.sql` — Google Drive links for interview recordings
    - `supabase/auth-passwords.sql` — password changes from Settings
    - `supabase/google-calendar.sql` — Google Calendar refresh tokens
    - `supabase/lock-auth-tables.sql` — deny anon access to users / passwords / calendar tokens
    - `supabase/onboarding.sql` — IT laptop / Workspace / Lark requests before new joiners
+   - `supabase/onboarding-request-kind.sql`
+   - `supabase/onboarding-it-notes.sql`
+   - `supabase/onboarding-work-password.sql` — Google Workspace password on IT request
+   - `supabase/schedule-alerts.sql` — morning digest log
+   - `supabase/schedule-alert-settings.sql` — per-brand email reminder toggle
 3. Copy project URL, anon key, and **service role** key into env (`SUPABASE_SERVICE_ROLE_KEY`).
 4. Restart / redeploy.
 
@@ -300,7 +379,7 @@ Auth tables (`hr_app_users`, `hr_auth_passwords`, `hr_google_tokens`) are server
 
 If `recruitment_form_settings` was created as a single row (`id = 1`), re-run `supabase/recruitment-requests.sql` so schemas are stored per company (`AERIS`, `FTI`, `KIN`).
 
-Without the `cvs` bucket, CV files still attach as an inline fallback.
+CVs live in the `cvs` bucket, not on the app server, so they survive deploys.
 
 ## Scripts
 

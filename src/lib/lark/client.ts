@@ -191,7 +191,7 @@ async function loadDepartmentScope() {
   return { departmentIds: [...ids], userIds };
 }
 
-function stringField(row: Record<string, unknown>, ...keys: string[]) {
+function stringField(row: Record<string, unknown>, ...keys: string[]): string {
   for (const key of keys) {
     const value = row[key];
     if (typeof value === "string" && value.trim()) return value.trim();
