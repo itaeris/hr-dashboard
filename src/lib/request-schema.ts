@@ -262,6 +262,7 @@ export type RequestResponse = {
   id: string;
   created_at: string;
   payload: Record<string, string>;
+  approval_status: string;
 };
 
 export function responseCompany(row: RequestResponse) {
@@ -324,6 +325,7 @@ function normalizeResponse(row: Record<string, unknown>): RequestResponse {
     id: String(row.id ?? crypto.randomUUID()),
     created_at: String(row.created_at ?? new Date().toISOString()),
     payload,
+    approval_status: String(row.approval_status ?? payload.approval_status ?? "pending"),
   };
 }
 

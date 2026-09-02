@@ -21,7 +21,7 @@ import {
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { DatePicker, Select } from "./fields";
-import { IconPlus, IconClose } from "./icons";
+import { LarkPersonPicker } from "./lark-person-picker";
 import { PageFade } from "./ui";
 
 const inputClass =
@@ -49,64 +49,6 @@ function FormField({
       {children}
       {error ? <p className="text-xs text-[#E24B4A]">{error}</p> : null}
       {!error && hint ? <p className="text-xs text-muted">{hint}</p> : null}
-    </div>
-  );
-}
-
-function PersonPicker({
-  value,
-  onChange,
-  invalid,
-  placeholder,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  invalid?: boolean;
-  placeholder?: string;
-}) {
-  const [editing, setEditing] = useState(!value);
-
-  if (value && !editing) {
-    return (
-      <div
-        className={`flex items-center justify-between rounded-xl border bg-paper-raised px-3 py-2 ${
-          invalid ? "border-[#E57373]" : "border-line"
-        }`}
-      >
-        <span className="text-sm">{value}</span>
-        <button
-          type="button"
-          onClick={() => {
-            onChange("");
-            setEditing(true);
-          }}
-          className="rounded-full p-1 text-muted hover:text-ink"
-          aria-label="Remove person"
-        >
-          <IconClose className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder || "Full name"}
-        className={`${inputClass} ${invalid ? "border-[#E57373]" : "border-line focus:border-accent"}`}
-      />
-      <button
-        type="button"
-        onClick={() => {
-          if (value.trim()) setEditing(false);
-        }}
-        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-muted hover:text-ink"
-        aria-label="Add person"
-      >
-        <IconPlus className="h-4 w-4" />
-      </button>
     </div>
   );
 }
@@ -226,6 +168,7 @@ export function RequestFormPage({
       id: crypto.randomUUID(),
       created_at: new Date().toISOString(),
       payload,
+      approval_status: "pending",
     };
 
     try {
@@ -261,7 +204,24 @@ export function RequestFormPage({
       } else {
         persistLocalResponse(row);
       }
-      setNotice("Recruitment request submitted.");
+
+      let message = "Recruitment request submitted.";
+      try {
+        const lark = await fetch("/api/lark/approvals", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: row.id }),
+        });
+        const larkPayload = (await lark.json()) as { error?: string };
+        if (lark.ok) {
+          message = `Submitted. ${payload.direct_supervisor || "N+1"} will get a Lark Approval notification.`;
+        } else if (larkPayload.error) {
+          message = `Submitted. Lark notification failed: ${larkPayload.error}`;
+        }
+      } catch {
+        message = "Submitted. Could not reach Lark Approval.";
+      }
+      setNotice(message);
       reset();
     } catch (cause) {
       persistLocalResponse(row);
@@ -359,11 +319,12 @@ export function RequestFormPage({
                     );
                   } else if (item.type === "person") {
                     control = (
-                      <PersonPicker
+                      <LarkPersonPicker
                         value={value}
                         onChange={(next) => set(item.id, next)}
+                        onSelectUser={(user) => set(`${item.id}_id`, user?.id ?? "")}
                         invalid={invalid}
-                        placeholder={item.placeholder}
+                        placeholder={item.placeholder || "Search Lark users"}
                       />
                     );
                   } else if (item.type === "textarea") {

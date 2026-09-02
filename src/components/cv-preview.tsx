@@ -1,8 +1,8 @@
 "use client";
 
-import { cvMeta, previewable } from "@/lib/cv";
+import { cvMeta, isLocalDiskCvUrl, loadCvBlob, previewable } from "@/lib/cv";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { EmptyValue } from "./data-table";
 import { IconClose, IconFile } from "./icons";
@@ -52,8 +52,58 @@ export function CvPreviewDialog({
 }) {
   const meta = cvMeta(url);
   const canPreview = previewable(meta.kind);
+  const [mounted, setMounted] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  if (typeof document === "undefined") return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open || !canPreview) {
+      setPreviewSrc(null);
+      setLoadError("");
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    setLoading(true);
+    setLoadError("");
+    setPreviewSrc(null);
+
+    void (async () => {
+      try {
+        const blob = await loadCvBlob(url);
+        objectUrl = URL.createObjectURL(blob);
+        if (cancelled) {
+          URL.revokeObjectURL(objectUrl);
+          return;
+        }
+        setPreviewSrc(objectUrl);
+      } catch {
+        if (cancelled) return;
+        setLoadError(
+          isLocalDiskCvUrl(url)
+            ? "This CV was stored on the app server and is no longer available. Re-upload it so it is kept in cloud storage."
+            : "This file could not be previewed. Use Open file, or re-upload the CV.",
+        );
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [open, url, canPreview]);
+
+  if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence>
@@ -98,17 +148,39 @@ export function CvPreviewDialog({
               </div>
             </div>
             <div className="min-h-0 flex-1 bg-paper">
-              {meta.kind === "image" ? (
+              {meta.kind === "image" && previewSrc ? (
                 <div className="flex h-full items-center justify-center p-6">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={url}
+                    src={previewSrc}
                     alt={meta.name}
                     className="max-h-full max-w-full rounded-xl object-contain"
                   />
                 </div>
-              ) : canPreview ? (
-                <iframe title={meta.name} src={url} className="h-full w-full border-0 bg-white" />
+              ) : canPreview && previewSrc ? (
+                <iframe
+                  title={meta.name}
+                  src={previewSrc}
+                  className="h-full w-full border-0 bg-white"
+                />
+              ) : loadError ? (
+                <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+                  <IconFile className="h-8 w-8 text-muted" />
+                  <p className="max-w-sm text-sm text-muted">{loadError}</p>
+                  <a
+                    href={url}
+                    download={meta.name}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-medium text-accent hover:underline"
+                  >
+                    Open {meta.name}
+                  </a>
+                </div>
+              ) : canPreview && loading ? (
+                <div className="flex h-full items-center justify-center px-6 text-sm text-muted">
+                  Loading preview…
+                </div>
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
                   <IconFile className="h-8 w-8 text-muted" />

@@ -1,5 +1,5 @@
 -- CV attachments. Run in the Supabase SQL Editor after schema.sql.
--- If this bucket is missing, the app still stores the file inline as a fallback.
+-- Files live in this bucket (not on the app server), so they survive deploys.
 
 insert into storage.buckets (id, name, public)
 values ('cvs', 'cvs', true)

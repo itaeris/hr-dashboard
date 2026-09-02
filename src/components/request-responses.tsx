@@ -99,6 +99,7 @@ export function RequestResponsesPage() {
         <thead>
           <tr>
             <Th sticky>Submitted</Th>
+            <Th>Status</Th>
             {PREVIEW_KEYS.map((key) => (
               <Th key={key}>{labels[key] ?? key}</Th>
             ))}
@@ -107,7 +108,7 @@ export function RequestResponsesPage() {
         <tbody>
           {filtered.length === 0 ? (
             <tr>
-              <td colSpan={PREVIEW_KEYS.length + 1} className="px-5 py-12 text-sm text-muted">
+              <td colSpan={PREVIEW_KEYS.length + 2} className="px-5 py-12 text-sm text-muted">
                 No responses yet.
               </td>
             </tr>
@@ -117,6 +118,7 @@ export function RequestResponsesPage() {
                 <Td sticky nowrap muted>
                   {formatDate(row.created_at)}
                 </Td>
+                <Td nowrap>{row.approval_status || "pending"}</Td>
                 {PREVIEW_KEYS.map((key) => (
                   <Td key={key} nowrap>
                     {cell(row.payload[key])}
@@ -150,6 +152,14 @@ export function RequestResponsesPage() {
                     {selected.payload.job_position || "Request"}
                   </h2>
                   <p className="text-sm text-muted">{formatDate(selected.created_at)}</p>
+                  <a
+                    href={`/recruitment-request/approval/${selected.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block text-sm text-accent hover:underline"
+                  >
+                    Open approval page
+                  </a>
                 </div>
                 <button
                   type="button"

@@ -5,13 +5,16 @@ import { emailKindLabel, latestSendByApplication } from "@/lib/email-sends";
 import { useEmailSends } from "@/lib/use-email-sends";
 import { useRecruitment } from "@/lib/recruitment-context";
 import { alertChip, collectScheduleAlerts } from "@/lib/schedule-alerts";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { IconBell } from "./icons";
 
 export function HeaderAlerts() {
   const { slug, views, setSelectedId } = useRecruitment();
   const [open, setOpen] = useState(false);
-  const root = useRef<HTMLDivElement>(null);
+  const [panel, setPanel] = useState({ top: 0, right: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const alerts = useMemo(() => collectScheduleAlerts(views), [views]);
   const due = useMemo(() => {
     const seen = new Map<string, (typeof alerts)[number]>();
@@ -42,19 +45,73 @@ export function HeaderAlerts() {
   }, [emailSends, views]);
   const count = due.length;
 
+  useLayoutEffect(() => {
+    if (!open) return;
+    function place() {
+      const box = buttonRef.current?.getBoundingClientRect();
+      if (!box) return;
+      setPanel({
+        top: box.bottom + 8,
+        right: Math.max(8, window.innerWidth - box.right),
+      });
+    }
+    place();
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
+    return () => {
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
     function close(event: MouseEvent) {
-      if (root.current?.contains(event.target as Node)) return;
+      const target = event.target as Node;
+      if (buttonRef.current?.contains(target) || panelRef.current?.contains(target)) {
+        return;
+      }
       setOpen(false);
     }
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
 
+  const menu =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={panelRef}
+            style={{ top: panel.top, right: panel.right }}
+            className="fixed z-[80] w-[min(22rem,calc(100vw-2rem))] rounded-[20px] border border-line bg-paper-raised p-3 shadow-xl"
+          >
+            <AlertGroup
+              title="Dates to follow up"
+              empty="No overdue or due-today dates."
+              items={due}
+              onOpen={(id) => {
+                setSelectedId(id);
+                setOpen(false);
+              }}
+            />
+            <AlertGroup
+              title="Already emailed"
+              empty="No emails sent from this workspace yet."
+              items={emailed}
+              onOpen={(id) => {
+                setSelectedId(id);
+                setOpen(false);
+              }}
+            />
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
-    <div ref={root} className="relative shrink-0">
+    <div className="relative shrink-0">
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setOpen((current) => !current)}
         className={`relative inline-flex items-center justify-center rounded-full border p-2 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm ${
@@ -73,28 +130,7 @@ export function HeaderAlerts() {
           </span>
         ) : null}
       </button>
-      {open ? (
-        <div className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-[20px] border border-line bg-paper-raised p-3 shadow-xl">
-          <AlertGroup
-            title="Dates to follow up"
-            empty="No overdue or due-today dates."
-            items={due}
-            onOpen={(id) => {
-              setSelectedId(id);
-              setOpen(false);
-            }}
-          />
-          <AlertGroup
-            title="Already emailed"
-            empty="No emails sent from this workspace yet."
-            items={emailed}
-            onOpen={(id) => {
-              setSelectedId(id);
-              setOpen(false);
-            }}
-          />
-        </div>
-      ) : null}
+      {menu}
     </div>
   );
 }

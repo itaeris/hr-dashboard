@@ -67,10 +67,16 @@ export function CandidateForm({
   onSubmit: (input: AddCandidateInput) => Promise<void>;
 }) {
   const [cvFile, setCvFile] = useState<File | null>(null);
+  const [error, setError] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await onSubmit(readCandidateForm(new FormData(event.currentTarget), cvFile));
+    setError("");
+    try {
+      await onSubmit(readCandidateForm(new FormData(event.currentTarget), cvFile));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Could not save candidate.");
+    }
   }
 
   return (
@@ -286,6 +292,7 @@ export function CandidateForm({
           className={fieldClass}
         />
       </Field>
+      {error ? <p className="text-sm text-accent">{error}</p> : null}
       <button
         type="submit"
         disabled={saving || jobs.length === 0}

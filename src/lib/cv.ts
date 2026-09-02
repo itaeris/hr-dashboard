@@ -84,25 +84,53 @@ function safeFileName(name: string) {
   return name.replace(/[^\w.\- ()]+/g, "_");
 }
 
+export function isLocalDiskCvUrl(url: string) {
+  try {
+    const parsed = new URL(url, "http://local.invalid");
+    return parsed.pathname.startsWith("/api/files/");
+  } catch {
+    return false;
+  }
+}
+
+export async function loadCvBlob(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Could not load CV");
+  }
+  const blob = await response.blob();
+  if (!blob.size) {
+    throw new Error("Could not load CV");
+  }
+  return blob;
+}
+
 export async function persistCvFile(file: File, companyId: string) {
   if (file.size > CV_MAX_BYTES) {
     throw new Error("CV must be under 8 MB");
   }
 
   const supabase = getSupabaseBrowserClient();
-  if (supabase) {
-    const path = `${companyId}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
-    const { error } = await supabase.storage.from("cvs").upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type || undefined,
-    });
-
-    if (!error) {
-      const { data } = supabase.storage.from("cvs").getPublicUrl(path);
-      return withCvName(data.publicUrl, file.name);
-    }
+  if (!supabase) {
+    return readFileAsDataUrl(file);
   }
 
-  return readFileAsDataUrl(file);
+  const path = `${companyId}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+  const { error } = await supabase.storage.from("cvs").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+
+  if (error) {
+    const missingBucket = /bucket|not found|does not exist/i.test(error.message);
+    throw new Error(
+      missingBucket
+        ? "CV storage is not set up. Run supabase/storage-cvs.sql in the Supabase SQL Editor, then try again."
+        : `Could not store the CV (${error.message}). The file was not saved.`,
+    );
+  }
+
+  const { data } = supabase.storage.from("cvs").getPublicUrl(path);
+  return withCvName(data.publicUrl, file.name);
 }

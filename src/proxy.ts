@@ -17,6 +17,10 @@ export function proxy(request: NextRequest) {
   const isPublic =
     pathname === "/login" ||
     pathname === "/recruitment-request" ||
+    pathname.startsWith("/recruitment-request/approval/") ||
+    pathname === "/api/lark/users" ||
+    pathname === "/api/lark/approvals" ||
+    pathname.startsWith("/api/lark/approvals/") ||
     pathname === "/api/auth/google" ||
     pathname === "/api/auth/google/callback" ||
     pathname === "/api/auth/google/calendar" ||
