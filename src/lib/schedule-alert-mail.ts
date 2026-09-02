@@ -157,6 +157,18 @@ async function loadCompanyViews(slug: CompanySlug) {
   return joinViews((applicationRows ?? []) as ApplicationRow[], candidates, jobs);
 }
 
+async function emailRemindersEnabled(slug: CompanySlug) {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) return true;
+  const { data, error } = await supabase
+    .from("schedule_alert_settings")
+    .select("email_enabled")
+    .eq("company_slug", slug)
+    .maybeSingle();
+  if (error || !data) return true;
+  return data.email_enabled !== false;
+}
+
 export async function sendScheduleAlertDigests(now = new Date()) {
   if (!isSmtpConfigured()) {
     return { sent: 0, skipped: "smtp" as const };
@@ -168,6 +180,10 @@ export async function sendScheduleAlertDigests(now = new Date()) {
   const details: { slug: CompanySlug; overdue: number; today: number; status: string }[] = [];
 
   for (const slug of slugs) {
+    if (!(await emailRemindersEnabled(slug))) {
+      details.push({ slug, overdue: 0, today: 0, status: "disabled" });
+      continue;
+    }
     const views = await loadCompanyViews(slug);
     const alerts = collectScheduleAlerts(views, now);
     const overdue = alerts.filter((item) => item.state === "overdue");

@@ -8,6 +8,7 @@ import { GoogleCalendarSync } from "./google-calendar-sync";
 import { PageFade, Field, PasswordInput } from "./ui";
 import { VacancyLevelsSettings } from "./vacancy-levels-settings";
 import { LaptopAppsSettings } from "./laptop-apps-settings";
+import { ScheduleAlertSettings } from "./schedule-alert-settings";
 
 export function SettingsPage({
   user,
@@ -30,6 +31,7 @@ export function SettingsPage({
       {user.role === "it" ? null : (
         <>
           <GoogleCalendarSync surface="settings" />
+          <ScheduleAlertSettings />
           <VacancyLevelsSettings />
           <LaptopAppsSettings />
         </>
