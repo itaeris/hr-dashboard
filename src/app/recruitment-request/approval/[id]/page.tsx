@@ -1,4 +1,5 @@
 import { RequestApprovalPage } from "@/components/request-approval-page";
+import { getSession } from "@/lib/auth/session";
 import { loadRecruitmentRequest } from "@/lib/request-approval";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -14,7 +15,12 @@ export default async function RecruitmentRequestApprovalRoute({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const request = await loadRecruitmentRequest(id);
+  const [request, session] = await Promise.all([loadRecruitmentRequest(id), getSession()]);
   if (!request) notFound();
-  return <RequestApprovalPage request={request} />;
+  return (
+    <RequestApprovalPage
+      request={request}
+      viewer={session ? { name: session.name, email: session.email } : null}
+    />
+  );
 }

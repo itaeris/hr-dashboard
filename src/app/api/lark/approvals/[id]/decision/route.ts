@@ -4,7 +4,11 @@ import {
   syncRecruitmentApproval,
 } from "@/lib/lark/approval";
 import { isLarkConfigured } from "@/lib/lark/client";
-import { nextApprovalStep } from "@/lib/recruitment-approval-flow";
+import {
+  APPROVAL_STEP_LABELS,
+  canDecideCurrentStep,
+  nextApprovalStep,
+} from "@/lib/recruitment-approval-flow";
 import {
   loadRecruitmentRequest,
   saveRecruitmentApproval,
@@ -40,6 +44,22 @@ export async function POST(
     action === "rejected" ? "rejected" : nextStep === "done" ? "approved" : "pending";
 
   const session = await getSession();
+  if (
+    session &&
+    !canDecideCurrentStep(
+      { name: session.name, email: session.email },
+      row.approval_step,
+      row.payload,
+    )
+  ) {
+    return NextResponse.json(
+      {
+        error: `Waiting for ${APPROVAL_STEP_LABELS[row.approval_step]}. You cannot act on this step yet.`,
+      },
+      { status: 403 },
+    );
+  }
+
   const decidedBy = session?.email || session?.name || "Lark approver";
   const saved = await saveRecruitmentApproval(id, {
     approval_status: nextStatus,

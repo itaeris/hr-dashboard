@@ -7,8 +7,11 @@ import {
   HANDLE_MEMBERS,
   HR_APPROVERS,
   approvalProcessPreview,
+  canDecideCurrentStep,
   parseApprovalStep,
+  waitingCopy,
   type ApprovalStep,
+  type ApprovalViewer,
 } from "@/lib/recruitment-approval-flow";
 import {
   REQUEST_COMPANY_LABELS,
@@ -26,32 +29,23 @@ const STATUS_COPY: Record<ApprovalStatus, { label: string; className: string }> 
   rejected: { label: "Rejected", className: "bg-red-50 text-red-800" },
 };
 
-function stepCopy(step: ApprovalStep) {
-  if (step === "hr") {
-    return {
-      title: "HR Approval",
-      body: `${HR_APPROVERS.join(" or ")} can approve. One agreement is enough.`,
-      confirm: "Approve",
-    };
-  }
-  if (step === "handle") {
-    return {
-      title: "Handle",
-      body: `${HANDLE_MEMBERS.join(", ")}. One handler needs to complete this step.`,
-      confirm: "Handled",
-    };
-  }
-  return {
-    title: "Business Leader Approval",
-    body: "The requester’s selected business leader reviews this request. Approving CCs HR.",
-    confirm: "Approve",
-  };
+function membersForStep(id: "leader" | "hr" | "handle", leaderName: string) {
+  if (id === "leader") return leaderName.trim() || "Requester’s selected business leader";
+  if (id === "hr") return HR_APPROVERS.join(", ");
+  return HANDLE_MEMBERS.join(", ");
+}
+
+function futureCopy(id: "hr" | "handle") {
+  if (id === "hr") return "Process will start after Business Leader approval.";
+  return "Process will start after HR and Business Leader approval.";
 }
 
 export function RequestApprovalPage({
   request,
+  viewer,
 }: {
   request: StoredRecruitmentRequest;
+  viewer: ApprovalViewer | null;
 }) {
   const [status, setStatus] = useState(request.approval_status);
   const [step, setStep] = useState(request.approval_step);
@@ -69,7 +63,7 @@ export function RequestApprovalPage({
   const title = request.payload.job_position || "Recruitment request";
   const pending = status === "pending";
   const preview = approvalProcessPreview(request.payload.direct_supervisor ?? "");
-  const current = stepCopy(step);
+  const canAct = pending && canDecideCurrentStep(viewer, step, request.payload);
 
   const fields = schema.fields.filter((field) => {
     if (field.id.endsWith("_id")) return false;
@@ -78,6 +72,7 @@ export function RequestApprovalPage({
   });
 
   async function decide(next: "approved" | "rejected") {
+    if (!canAct) return;
     if (next === "rejected" && !draft.trim()) {
       setError("Add a short reason to reject.");
       return;
@@ -120,41 +115,98 @@ export function RequestApprovalPage({
             <span
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.12em] ${STATUS_COPY[status].className}`}
             >
-              {status === "pending" ? current.title : STATUS_COPY[status].label}
+              {status === "pending" ? APPROVAL_STEP_LABELS[step] : STATUS_COPY[status].label}
             </span>
           </div>
           <p className="mt-2 text-sm text-muted">
             {REQUEST_COMPANY_LABELS[company]} · submitted {formatDate(request.created_at)}
           </p>
 
-          <ol className="mt-5 space-y-2">
+          <ol className="mt-5 space-y-3">
             {preview.map((item, index) => {
               const active = pending && item.id === step;
               const done = step === "done" || stageComplete(item.id, step, status);
+              const locked = pending && !done && !active;
+              const confirm = item.id === "handle" ? "Handled" : "Approve";
               return (
                 <li
                   key={item.id}
-                  className={`flex items-start gap-3 rounded-xl border px-3 py-2 text-sm ${
+                  className={`rounded-2xl border px-4 py-4 sm:px-5 ${
                     active
                       ? "border-accent bg-accent-soft"
-                      : "border-line bg-paper-raised"
+                      : locked
+                        ? "border-line bg-paper opacity-70"
+                        : "border-line bg-paper-raised"
                   }`}
                 >
-                  <span
-                    className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
-                      done
-                        ? "bg-emerald-50 text-emerald-800"
-                        : active
-                          ? "bg-white text-accent-deep"
-                          : "bg-paper text-muted"
-                    }`}
-                  >
-                    {done ? "✓" : index + 1}
-                  </span>
-                  <span>
-                    <span className="block font-medium">{item.title}</span>
-                    <span className="mt-0.5 block text-xs text-muted">{item.detail}</span>
-                  </span>
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
+                        done
+                          ? "bg-emerald-50 text-emerald-800"
+                          : active
+                            ? "bg-white text-accent-deep"
+                            : "bg-paper text-muted"
+                      }`}
+                    >
+                      {done ? "✓" : index + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-sm font-medium">{item.title}</h2>
+                        <span className="rounded-full bg-paper px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted">
+                          {done ? "Done" : active ? "Current" : "Waiting"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-muted">
+                        {done
+                          ? "This step is complete."
+                          : active
+                            ? waitingCopy(item.id)
+                            : futureCopy(item.id === "leader" ? "hr" : item.id)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted">
+                        {membersForStep(item.id, request.payload.direct_supervisor ?? "")}
+                      </p>
+
+                      {active ? (
+                        <>
+                          {canAct ? (
+                            <textarea
+                              value={draft}
+                              onChange={(event) => setDraft(event.target.value)}
+                              rows={3}
+                              placeholder="Optional note. Required if you reject."
+                              className="mt-3 w-full rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted focus:border-accent"
+                            />
+                          ) : (
+                            <p className="mt-3 text-sm text-ink">
+                              You cannot act on this step. Wait for the people listed above.
+                            </p>
+                          )}
+                          {error ? <p className="mt-2 text-sm text-[#E24B4A]">{error}</p> : null}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              disabled={!canAct || saving}
+                              onClick={() => void decide("approved")}
+                              className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              {saving ? "Saving…" : confirm}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!canAct || saving}
+                              onClick={() => void decide("rejected")}
+                              className="rounded-full border border-line bg-paper px-5 py-2.5 text-sm text-ink hover:bg-paper-raised disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
                 </li>
               );
             })}
@@ -171,41 +223,9 @@ export function RequestApprovalPage({
             ))}
           </section>
 
-          <section className="mt-5 rounded-[24px] border border-line bg-paper-raised p-4 sm:p-7">
-            <h2 className="text-lg font-medium">
-              {pending ? current.title : "Decision"}
-            </h2>
-            {pending ? (
-              <>
-                <p className="mt-1 text-sm text-muted">{current.body}</p>
-                <textarea
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  rows={3}
-                  placeholder="Optional note. Required if you reject."
-                  className="mt-4 w-full rounded-xl border border-line bg-paper px-3 py-2.5 text-sm text-ink outline-none placeholder:text-muted focus:border-accent"
-                />
-                {error ? <p className="mt-2 text-sm text-[#E24B4A]">{error}</p> : null}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => void decide("approved")}
-                    className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
-                  >
-                    {saving ? "Saving…" : current.confirm}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={saving}
-                    onClick={() => void decide("rejected")}
-                    className="rounded-full border border-line bg-paper px-5 py-2.5 text-sm text-ink hover:bg-paper-raised disabled:opacity-50"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </>
-            ) : (
+          {!pending ? (
+            <section className="mt-5 rounded-[24px] border border-line bg-paper-raised p-4 sm:p-7">
+              <h2 className="text-lg font-medium">Decision</h2>
               <p className="mt-2 text-sm text-muted">
                 {status === "approved"
                   ? "This request was approved and handled."
@@ -213,8 +233,8 @@ export function RequestApprovalPage({
                 {comment ? ` ${comment}` : ""}
                 {request.approval_decided_by ? ` · ${request.approval_decided_by}` : ""}
               </p>
-            )}
-          </section>
+            </section>
+          ) : null}
         </PageFade>
       </div>
     </div>

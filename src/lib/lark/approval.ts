@@ -9,7 +9,7 @@ import {
   LEADER_CC_RECIPIENTS,
   type ApprovalStep,
 } from "@/lib/recruitment-approval-flow";
-import type { ApprovalStatus } from "@/lib/request-approval-types";
+import type { ApprovalStatus, StoredRecruitmentRequest } from "@/lib/request-approval-types";
 
 export function larkApprovalCode() {
   return process.env.LARK_APPROVAL_CODE?.trim() || "hr_recruitment_request";
@@ -254,6 +254,86 @@ export async function syncRecruitmentApproval(input: {
           "@i18n@company": input.company || "—",
           "@i18n@department_label": "Department",
           "@i18n@department": input.department || "—",
+        }),
+      },
+    ],
+  });
+}
+
+export async function syncStoredRecruitmentApproval(
+  row: StoredRecruitmentRequest,
+  initiatorCandidates: string[] = [],
+) {
+  const supervisorOpenId = await resolveLarkOpenId(
+    row.payload.direct_supervisor_id ?? "",
+    row.payload.direct_supervisor ?? "",
+  );
+  const initiatorOpenId = await resolveLarkOpenId(
+    ...initiatorCandidates,
+    supervisorOpenId,
+  );
+  await syncRecruitmentApproval({
+    id: row.id,
+    status: row.approval_status,
+    step: row.approval_step,
+    jobPosition: row.payload.job_position ?? "",
+    company: row.company || row.payload.company || "",
+    department: row.payload.department ?? "",
+    supervisorName: row.payload.direct_supervisor ?? "",
+    supervisorOpenId,
+    initiatorOpenId,
+    comment: row.approval_comment,
+  });
+}
+
+export async function removeRecruitmentApproval(
+  row: StoredRecruitmentRequest,
+  initiatorCandidates: string[] = [],
+) {
+  if (!isLarkConfigured()) return;
+  const supervisorOpenId = await resolveLarkOpenId(
+    row.payload.direct_supervisor_id ?? "",
+    row.payload.direct_supervisor ?? "",
+  );
+  const initiator =
+    (await resolveLarkOpenId(...initiatorCandidates, supervisorOpenId)) || supervisorOpenId;
+  if (!initiator) {
+    throw new Error("Could not resolve a Lark user to remove the approval.");
+  }
+
+  const now = Date.now();
+  const link = requestApprovalUrl(row.id);
+  await larkPost("/open-apis/approval/v4/external_instances", {
+    approval_code: larkApprovalCode(),
+    instance_id: row.id,
+    status: "DELETED",
+    display_method: "BROWSER",
+    update_mode: "REPLACE",
+    links: { pc_link: link, mobile_link: link },
+    title: "@i18n@title",
+    open_id: initiator,
+    start_time: String(now),
+    end_time: String(now),
+    update_time: String(now),
+    extra: JSON.stringify({ complete_reason: "delete" }),
+    form: [
+      { name: "@i18n@position_label", value: "@i18n@position" },
+      { name: "@i18n@company_label", value: "@i18n@company" },
+      { name: "@i18n@department_label", value: "@i18n@department" },
+    ],
+    task_list: [],
+    i18n_resources: [
+      {
+        locale: "en-US",
+        is_default: true,
+        texts: texts({
+          "@i18n@title": `Hire ${row.payload.job_position || "role"}`,
+          "@i18n@position_label": "Position",
+          "@i18n@position": row.payload.job_position || "—",
+          "@i18n@company_label": "Company",
+          "@i18n@company": row.company || row.payload.company || "—",
+          "@i18n@department_label": "Department",
+          "@i18n@department": row.payload.department || "—",
         }),
       },
     ],

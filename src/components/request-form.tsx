@@ -6,6 +6,7 @@ import {
   REQUEST_COMPANY_LABELS,
   departmentsForDivision,
   isRequestCompany,
+  recruitmentRequestColumns,
   slugFromRequestCompany,
   type RequestCompany,
 } from "@/lib/recruitment-request";
@@ -176,29 +177,7 @@ export function RequestFormPage({
       if (supabase) {
         const { error } = await supabase.from("recruitment_requests").insert({
           id: row.id,
-          company,
-          job_position: payload.job_position ?? "",
-          min_job_level: payload.min_job_level ?? "",
-          max_job_level: payload.max_job_level ?? "",
-          workforce_type: payload.workforce_type ?? "",
-          division: payload.division ?? "",
-          department: payload.department ?? "",
-          work_location: payload.work_location ?? "",
-          headcount_number: Number(payload.headcount_number || 1),
-          headcount_type: payload.headcount_type ?? "",
-          employee_replaced: payload.employee_replaced ?? "",
-          cost_center: payload.cost_center ?? "",
-          min_salary: payload.min_salary ?? "",
-          max_salary: payload.max_salary ?? "",
-          priority_level: payload.priority_level ?? "",
-          expected_join_date: payload.expected_join_date || null,
-          direct_supervisor: payload.direct_supervisor ?? "",
-          indirect_supervisor: payload.indirect_supervisor ?? "",
-          job_description: payload.job_description ?? "",
-          additional_notes: payload.additional_notes ?? "",
-          assessment: payload.assessment ?? "",
-          interviewers: payload.interviewers ?? "",
-          payload,
+          ...recruitmentRequestColumns(company, payload),
         });
         if (error) throw error;
       } else {

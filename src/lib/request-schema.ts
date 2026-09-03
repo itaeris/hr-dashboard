@@ -333,3 +333,22 @@ export function persistLocalResponse(row: RequestResponse) {
   const current = JSON.parse(window.localStorage.getItem(RESPONSES_KEY) ?? "[]") as unknown[];
   window.localStorage.setItem(RESPONSES_KEY, JSON.stringify([row, ...current]));
 }
+
+export function updateLocalResponse(row: RequestResponse) {
+  const current = JSON.parse(window.localStorage.getItem(RESPONSES_KEY) ?? "[]") as Array<
+    Record<string, unknown>
+  >;
+  const next = current.map((item) => (String(item.id) === row.id ? row : item));
+  if (!next.some((item) => String(item.id) === row.id)) next.unshift(row);
+  window.localStorage.setItem(RESPONSES_KEY, JSON.stringify(next));
+}
+
+export function deleteLocalResponse(id: string) {
+  const current = JSON.parse(window.localStorage.getItem(RESPONSES_KEY) ?? "[]") as Array<
+    Record<string, unknown>
+  >;
+  window.localStorage.setItem(
+    RESPONSES_KEY,
+    JSON.stringify(current.filter((item) => String(item.id) !== id)),
+  );
+}

@@ -1,8 +1,5 @@
 import { getSession } from "@/lib/auth/session";
-import {
-  resolveLarkOpenId,
-  syncRecruitmentApproval,
-} from "@/lib/lark/approval";
+import { syncStoredRecruitmentApproval } from "@/lib/lark/approval";
 import { isLarkConfigured } from "@/lib/lark/client";
 import { loadRecruitmentRequest } from "@/lib/request-approval";
 import { NextResponse } from "next/server";
@@ -23,28 +20,12 @@ export async function POST(request: Request) {
   }
 
   const session = await getSession();
-  const supervisorOpenId = await resolveLarkOpenId(
-    row.payload.direct_supervisor_id ?? "",
-    row.payload.direct_supervisor ?? "",
-  );
-  const initiatorOpenId = await resolveLarkOpenId(
-    session?.email ?? "",
-    process.env.LARK_INITIATOR_OPEN_ID ?? "",
-    supervisorOpenId,
-  );
 
   try {
-    await syncRecruitmentApproval({
-      id: row.id,
-      status: row.approval_status,
-      step: row.approval_step,
-      jobPosition: row.payload.job_position ?? "",
-      company: row.company || row.payload.company || "",
-      department: row.payload.department ?? "",
-      supervisorName: row.payload.direct_supervisor ?? "",
-      supervisorOpenId,
-      initiatorOpenId,
-    });
+    await syncStoredRecruitmentApproval(row, [
+      session?.email ?? "",
+      process.env.LARK_INITIATOR_OPEN_ID ?? "",
+    ]);
     return NextResponse.json({ ok: true, url: `/recruitment-request/approval/${id}` });
   } catch (cause) {
     const raw = cause instanceof Error ? cause.message : "Could not notify Lark Approval.";
