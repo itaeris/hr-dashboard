@@ -11,8 +11,40 @@ let usersCache: LarkUser[] | null = null;
 let usersError = "";
 let usersInflight: Promise<LarkUser[]> | null = null;
 
+const STORAGE_KEY = "hr-lark-users";
+const STORAGE_MS = 15 * 60 * 1000;
+
+function readStoredUsers() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { users?: LarkUser[]; at?: number };
+    if (!Array.isArray(parsed.users) || parsed.users.length === 0) return null;
+    if (typeof parsed.at !== "number" || Date.now() - parsed.at > STORAGE_MS) return null;
+    return parsed.users;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredUsers(users: LarkUser[]) {
+  usersCache = users;
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ users, at: Date.now() }));
+  } catch {
+    /* quota */
+  }
+}
+
 export async function loadLarkUsers() {
-  if (usersCache?.some((user) => user.email)) return usersCache;
+  if (usersCache && usersCache.length > 0) return usersCache;
+  const stored = readStoredUsers();
+  if (stored) {
+    usersCache = stored;
+    return stored;
+  }
   if (usersInflight) return usersInflight;
 
   usersInflight = fetch("/api/lark/users")
@@ -21,9 +53,10 @@ export async function loadLarkUsers() {
       if (!response.ok) {
         throw new Error(payload.error || "Could not load Lark users.");
       }
-      usersCache = payload.users ?? [];
+      const users = payload.users ?? [];
+      writeStoredUsers(users);
       usersError = "";
-      return usersCache;
+      return users;
     })
     .catch((cause) => {
       usersError = cause instanceof Error ? cause.message : "Could not load Lark users.";

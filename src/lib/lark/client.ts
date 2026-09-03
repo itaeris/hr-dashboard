@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import type { LarkUser } from "./users";
 
 export type { LarkUser };
@@ -11,11 +12,13 @@ const DEFAULT_BASES = [
 ];
 
 const TOKEN_SKEW_MS = 120_000;
-const USERS_TTL_MS = 10 * 60_000;
+const USERS_TTL_MS = 15 * 60_000;
+const USERS_STALE_MS = 60 * 60_000;
+const USER_FETCH_CONCURRENCY = 8;
 
 type TokenState = { token: string; expiresAt: number; base: string };
 let tokenState: TokenState | null = null;
-let usersState: { users: LarkUser[]; expiresAt: number } | null = null;
+let usersState: { users: LarkUser[]; expiresAt: number; staleUntil: number } | null = null;
 let usersInflight: Promise<LarkUser[]> | null = null;
 
 function configuredBases() {
@@ -140,8 +143,24 @@ async function paginate(path: string, query: Record<string, string | undefined>)
   return pages;
 }
 
+async function mapPool<T>(items: T[], limit: number, worker: (item: T) => Promise<void>) {
+  if (items.length === 0) return;
+  let next = 0;
+  async function run() {
+    while (next < items.length) {
+      const current = next;
+      next += 1;
+      await worker(items[current]);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, () => run()),
+  );
+}
+
 async function loadDepartmentScope() {
   const ids = new Set<string>(["0"]);
+  const names = new Map<string, string>();
   const userIds: string[] = [];
 
   try {
@@ -166,29 +185,25 @@ async function loadDepartmentScope() {
     /* find_by_department on root still runs */
   }
 
-  for (const departmentId of [...ids]) {
-    try {
-      const items = await paginate(
-        `/open-apis/contact/v3/departments/${encodeURIComponent(departmentId)}/children`,
-        {
-          department_id_type: "open_department_id",
-          fetch_child: "true",
-          page_size: "50",
-        },
-      );
-      for (const item of items) {
-        const row = asRecord(item);
-        const id =
-          (typeof row.open_department_id === "string" && row.open_department_id) ||
-          (typeof row.department_id === "string" && row.department_id);
-        if (id) ids.add(id);
-      }
-    } catch {
-      /* Keep the parent id even if children are out of scope. */
+  try {
+    const items = await paginate("/open-apis/contact/v3/departments/0/children", {
+      department_id_type: "open_department_id",
+      fetch_child: "true",
+      page_size: "50",
+    });
+    for (const item of items) {
+      const row = asRecord(item);
+      const id = stringField(row, "open_department_id", "department_id");
+      if (!id) continue;
+      ids.add(id);
+      const name = stringField(row, "name");
+      if (name) names.set(id, name);
     }
+  } catch {
+    /* Scoped department ids are enough when the tree walk is denied. */
   }
 
-  return { departmentIds: [...ids], userIds };
+  return { departmentIds: [...ids], userIds, names };
 }
 
 function stringField(row: Record<string, unknown>, ...keys: string[]): string {
@@ -234,8 +249,11 @@ function userFromRow(row: Record<string, unknown>): LarkUser | null {
 
 async function usersByIds(userIds: string[]) {
   const users: LarkUser[] = [];
+  const chunks: string[][] = [];
   for (let index = 0; index < userIds.length; index += 50) {
-    const chunk = userIds.slice(index, index + 50);
+    chunks.push(userIds.slice(index, index + 50));
+  }
+  await mapPool(chunks, USER_FETCH_CONCURRENCY, async (chunk) => {
     const params = new URLSearchParams({ user_id_type: "open_id" });
     for (const id of chunk) params.append("user_ids", id);
     try {
@@ -249,56 +267,36 @@ async function usersByIds(userIds: string[]) {
     } catch {
       /* Batch get is optional; department listing remains the source of truth. */
     }
-  }
+  });
   return users;
-}
-
-async function departmentNames(ids: string[]) {
-  const unique = [...new Set(ids.filter((id) => id && id !== "0"))];
-  const names = new Map<string, string>();
-  await Promise.all(
-    unique.map(async (id) => {
-      try {
-        const payload = await larkGet(
-          `/open-apis/contact/v3/departments/${encodeURIComponent(id)}`,
-          { department_id_type: "open_department_id" },
-        );
-        const department = asRecord(asRecord(payload.data).department);
-        const name = stringField(department, "name");
-        if (name) names.set(id, name);
-      } catch {
-        /* Department name is optional extra context. */
-      }
-    }),
-  );
-  return names;
 }
 
 async function fetchDirectory() {
   const users = new Map<string, LarkUser>();
-  const { departmentIds, userIds } = await loadDepartmentScope();
+  const { departmentIds, userIds, names } = await loadDepartmentScope();
 
-  for (const user of await usersByIds(userIds)) {
-    users.set(user.id, user);
-  }
-
-  for (const departmentId of departmentIds) {
-    try {
-      const items = await paginate("/open-apis/contact/v3/users/find_by_department", {
-        department_id: departmentId,
-        department_id_type: "open_department_id",
-        user_id_type: "open_id",
-        page_size: "50",
-      });
-      for (const item of items) {
-        const row = asRecord(item);
-        const user = userFromRow({ ...row, ...asRecord(row.user) });
-        if (user) users.set(user.id, user);
+  await Promise.all([
+    usersByIds(userIds).then((list) => {
+      for (const user of list) users.set(user.id, user);
+    }),
+    mapPool(departmentIds, USER_FETCH_CONCURRENCY, async (departmentId) => {
+      try {
+        const items = await paginate("/open-apis/contact/v3/users/find_by_department", {
+          department_id: departmentId,
+          department_id_type: "open_department_id",
+          user_id_type: "open_id",
+          page_size: "50",
+        });
+        for (const item of items) {
+          const row = asRecord(item);
+          const user = userFromRow({ ...row, ...asRecord(row.user) });
+          if (user) users.set(user.id, user);
+        }
+      } catch {
+        /* Skip departments the app cannot read. */
       }
-    } catch {
-      /* Skip departments the app cannot read. */
-    }
-  }
+    }),
+  ]);
 
   const list = [...users.values()].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
@@ -314,35 +312,51 @@ async function fetchDirectory() {
     );
   }
 
-  const names = await departmentNames(list.map((user) => user.department));
   return list.map((user) => ({
     ...user,
     department: names.get(user.department) ?? user.department,
   }));
 }
 
-export async function listLarkUsers() {
-  if (!isLarkConfigured()) {
-    throw new Error("Lark is not configured. Add LARK_APP_ID and LARK_APP_SECRET.");
-  }
-  if (usersState && Date.now() < usersState.expiresAt) return usersState.users;
-  if (usersInflight) return usersInflight;
+function rememberUsers(users: LarkUser[]) {
+  const now = Date.now();
+  usersState = {
+    users,
+    expiresAt: now + USERS_TTL_MS,
+    staleUntil: now + USERS_STALE_MS,
+  };
+  return users;
+}
 
-  usersInflight = fetchDirectory()
-    .then((users) => {
-      usersState = {
-        users,
-        expiresAt: Date.now() + (users.some((user) => user.email) ? USERS_TTL_MS : 30_000),
-      };
-      return users;
-    })
+const cachedDirectory = unstable_cache(
+  async () => fetchDirectory(),
+  ["lark-users-directory-v2"],
+  { revalidate: 900 },
+);
+
+function refreshUsers() {
+  if (usersInflight) return usersInflight;
+  usersInflight = cachedDirectory()
+    .then(rememberUsers)
     .catch((cause) => {
-      usersState = null;
+      if (usersState) return usersState.users;
       throw cause;
     })
     .finally(() => {
       usersInflight = null;
     });
-
   return usersInflight;
+}
+
+export async function listLarkUsers() {
+  if (!isLarkConfigured()) {
+    throw new Error("Lark is not configured. Add LARK_APP_ID and LARK_APP_SECRET.");
+  }
+  const now = Date.now();
+  if (usersState && now < usersState.expiresAt) return usersState.users;
+  if (usersState && now < usersState.staleUntil) {
+    void refreshUsers();
+    return usersState.users;
+  }
+  return refreshUsers();
 }

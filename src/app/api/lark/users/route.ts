@@ -13,7 +13,14 @@ export async function GET(request: Request) {
 
   try {
     const users = filterLarkUsers(await listLarkUsers(), query);
-    return NextResponse.json({ users });
+    return NextResponse.json(
+      { users },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=60, stale-while-revalidate=600",
+        },
+      },
+    );
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : "Could not load Lark users.";
     return NextResponse.json({ error: message }, { status: 502 });
