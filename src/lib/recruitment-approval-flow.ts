@@ -1,20 +1,38 @@
 export type ApprovalStep = "leader" | "hr" | "handle" | "done";
 
-export const HR_APPROVERS = ["Lelyta Nugraheni", "Fitria Latifanisa"] as const;
+export type ApprovalMember = {
+  name: string;
+  id: string;
+};
 
-export const HANDLE_MEMBERS = [
-  "Caca",
-  "Nesya Wulaningtias",
-  "Lelyta Nugraheni",
-  "Fitria Latifanisa",
-] as const;
+export type ApprovalFlowConfig = {
+  leaderCc: ApprovalMember[];
+  hrApprovers: ApprovalMember[];
+  handleMembers: ApprovalMember[];
+};
 
-export const LEADER_CC_RECIPIENTS = [
-  "Fitria Latifanisa",
-  "Nesya Wulaningtias",
-  "Lelyta Nugraheni",
-  "Caca",
-] as const;
+export const DEFAULT_APPROVAL_FLOW: ApprovalFlowConfig = {
+  leaderCc: [
+    { name: "Fitria Latifanisa", id: "" },
+    { name: "Nesya Wulaningtias", id: "" },
+    { name: "Lelyta Nugraheni", id: "" },
+    { name: "Caca", id: "" },
+  ],
+  hrApprovers: [
+    { name: "Lelyta Nugraheni", id: "" },
+    { name: "Fitria Latifanisa", id: "" },
+  ],
+  handleMembers: [
+    { name: "Caca", id: "" },
+    { name: "Nesya Wulaningtias", id: "" },
+    { name: "Lelyta Nugraheni", id: "" },
+    { name: "Fitria Latifanisa", id: "" },
+  ],
+};
+
+export const HR_APPROVERS = DEFAULT_APPROVAL_FLOW.hrApprovers.map((item) => item.name);
+export const HANDLE_MEMBERS = DEFAULT_APPROVAL_FLOW.handleMembers.map((item) => item.name);
+export const LEADER_CC_RECIPIENTS = DEFAULT_APPROVAL_FLOW.leaderCc.map((item) => item.name);
 
 export const APPROVAL_STEP_LABELS: Record<ApprovalStep, string> = {
   leader: "Business Leader Approval",
@@ -36,23 +54,110 @@ export function nextApprovalStep(step: ApprovalStep): ApprovalStep {
   return "done";
 }
 
-export function approvalProcessPreview(leaderName: string) {
+export function normalizeApprovalMembers(values: ApprovalMember[]) {
+  const seen = new Set<string>();
+  const next: ApprovalMember[] = [];
+  for (const raw of values) {
+    const name = raw.name.trim();
+    const id = raw.id.trim();
+    if (!name && !id) continue;
+    const key = id || name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    next.push({ name: name || id, id });
+  }
+  return next;
+}
+
+export function normalizeApprovalFlow(value: Partial<ApprovalFlowConfig> | null | undefined) {
+  return {
+    leaderCc: normalizeApprovalMembers(value?.leaderCc ?? DEFAULT_APPROVAL_FLOW.leaderCc),
+    hrApprovers: normalizeApprovalMembers(value?.hrApprovers ?? DEFAULT_APPROVAL_FLOW.hrApprovers),
+    handleMembers: normalizeApprovalMembers(value?.handleMembers ?? DEFAULT_APPROVAL_FLOW.handleMembers),
+  } satisfies ApprovalFlowConfig;
+}
+
+function parseMember(value: unknown): ApprovalMember | null {
+  if (typeof value === "string") {
+    const name = value.trim();
+    return name ? { name, id: "" } : null;
+  }
+  if (!value || typeof value !== "object") return null;
+  const row = value as { name?: unknown; id?: unknown };
+  const name = typeof row.name === "string" ? row.name.trim() : "";
+  const id = typeof row.id === "string" ? row.id.trim() : "";
+  if (!name && !id) return null;
+  return { name: name || id, id };
+}
+
+export function parseApprovalFlow(value: unknown): ApprovalFlowConfig | null {
+  if (!value) return null;
+  if (typeof value === "string") {
+    try {
+      return parseApprovalFlow(JSON.parse(value) as unknown);
+    } catch {
+      return null;
+    }
+  }
+  if (typeof value !== "object") return null;
+  const row = value as {
+    leaderCc?: unknown;
+    hrApprovers?: unknown;
+    handleMembers?: unknown;
+  };
+  const leaderCc = Array.isArray(row.leaderCc) ? row.leaderCc.map(parseMember).filter(Boolean) : null;
+  const hrApprovers = Array.isArray(row.hrApprovers)
+    ? row.hrApprovers.map(parseMember).filter(Boolean)
+    : null;
+  const handleMembers = Array.isArray(row.handleMembers)
+    ? row.handleMembers.map(parseMember).filter(Boolean)
+    : null;
+  if (!leaderCc && !hrApprovers && !handleMembers) return null;
+  return normalizeApprovalFlow({
+    leaderCc: leaderCc as ApprovalMember[] | undefined,
+    hrApprovers: hrApprovers as ApprovalMember[] | undefined,
+    handleMembers: handleMembers as ApprovalMember[] | undefined,
+  });
+}
+
+export function serializeApprovalFlow(flow: ApprovalFlowConfig) {
+  return JSON.stringify(normalizeApprovalFlow(flow));
+}
+
+export function flowFromPayload(
+  payload: Record<string, string>,
+  fallback: ApprovalFlowConfig = DEFAULT_APPROVAL_FLOW,
+) {
+  return parseApprovalFlow(payload.approval_flow) ?? fallback;
+}
+
+export function memberNames(members: ApprovalMember[]) {
+  return members.map((item) => item.name).filter(Boolean);
+}
+
+export function approvalProcessPreview(
+  leaderName: string,
+  flow: ApprovalFlowConfig = DEFAULT_APPROVAL_FLOW,
+) {
   const leader = leaderName.trim() || "Requester selects approver";
+  const cc = memberNames(flow.leaderCc);
+  const hr = memberNames(flow.hrApprovers);
+  const handle = memberNames(flow.handleMembers);
   return [
     {
       id: "leader" as const,
       title: APPROVAL_STEP_LABELS.leader,
-      detail: `${leader} · CC when agreed: ${LEADER_CC_RECIPIENTS.join(", ")}`,
+      detail: cc.length ? `${leader} · CC when agreed: ${cc.join(", ")}` : leader,
     },
     {
       id: "hr" as const,
       title: APPROVAL_STEP_LABELS.hr,
-      detail: `${HR_APPROVERS.join(", ")} · anyone assigned`,
+      detail: `${hr.join(", ") || "No HR approvers set"} · anyone assigned`,
     },
     {
       id: "handle" as const,
       title: APPROVAL_STEP_LABELS.handle,
-      detail: `${HANDLE_MEMBERS.join(", ")} · anyone assigned`,
+      detail: `${handle.join(", ") || "No handlers set"} · anyone assigned`,
     },
   ];
 }
@@ -109,12 +214,14 @@ export function viewerMatchesLabel(viewer: ApprovalViewer | null, label: string)
 export function assigneesForStep(
   step: ApprovalStep,
   payload: Record<string, string>,
+  fallback: ApprovalFlowConfig = DEFAULT_APPROVAL_FLOW,
 ) {
+  const flow = flowFromPayload(payload, fallback);
   if (step === "leader") {
     return [payload.direct_supervisor].filter((value) => Boolean(value?.trim()));
   }
-  if (step === "hr") return [...HR_APPROVERS];
-  if (step === "handle") return [...HANDLE_MEMBERS];
+  if (step === "hr") return memberNames(flow.hrApprovers);
+  if (step === "handle") return memberNames(flow.handleMembers);
   return [];
 }
 
@@ -122,10 +229,13 @@ export function canDecideCurrentStep(
   viewer: ApprovalViewer | null,
   step: ApprovalStep,
   payload: Record<string, string>,
+  fallback: ApprovalFlowConfig = DEFAULT_APPROVAL_FLOW,
 ) {
   if (step === "done") return false;
   if (!viewer) return true;
-  return assigneesForStep(step, payload).some((label) => viewerMatchesLabel(viewer, label));
+  return assigneesForStep(step, payload, fallback).some((label) =>
+    viewerMatchesLabel(viewer, label),
+  );
 }
 
 export function waitingCopy(step: Exclude<ApprovalStep, "done">) {

@@ -1,14 +1,16 @@
 import { getSession } from "@/lib/auth/session";
-import {
-  resolveLarkOpenId,
-  syncRecruitmentApproval,
-} from "@/lib/lark/approval";
+import { syncStoredRecruitmentApproval } from "@/lib/lark/approval";
 import { isLarkConfigured } from "@/lib/lark/client";
 import {
   APPROVAL_STEP_LABELS,
   canDecideCurrentStep,
   nextApprovalStep,
 } from "@/lib/recruitment-approval-flow";
+import { loadApprovalFlowServer } from "@/lib/recruitment-approval-settings-server";
+import {
+  isRequestCompany,
+  slugFromRequestCompany,
+} from "@/lib/recruitment-request";
 import {
   loadRecruitmentRequest,
   saveRecruitmentApproval,
@@ -39,6 +41,12 @@ export async function POST(
     });
   }
 
+  const company = row.company || row.payload.company || "";
+  const slug = isRequestCompany(company)
+    ? slugFromRequestCompany(company)
+    : "aeris-beaute";
+  const fallbackFlow = await loadApprovalFlowServer(slug);
+
   const nextStep = action === "rejected" ? row.approval_step : nextApprovalStep(row.approval_step);
   const nextStatus =
     action === "rejected" ? "rejected" : nextStep === "done" ? "approved" : "pending";
@@ -50,6 +58,7 @@ export async function POST(
       { name: session.name, email: session.email },
       row.approval_step,
       row.payload,
+      fallbackFlow,
     )
   ) {
     return NextResponse.json(
@@ -70,22 +79,10 @@ export async function POST(
 
   if (isLarkConfigured()) {
     try {
-      const supervisorOpenId = await resolveLarkOpenId(
-        saved.payload.direct_supervisor_id ?? "",
-        saved.payload.direct_supervisor ?? "",
-      );
-      await syncRecruitmentApproval({
-        id: saved.id,
-        status: saved.approval_status,
-        step: saved.approval_step,
-        jobPosition: saved.payload.job_position ?? "",
-        company: saved.company || saved.payload.company || "",
-        department: saved.payload.department ?? "",
-        supervisorName: saved.payload.direct_supervisor ?? "",
-        supervisorOpenId,
-        initiatorOpenId: await resolveLarkOpenId(session?.email ?? "", supervisorOpenId),
-        comment: saved.approval_comment,
-      });
+      await syncStoredRecruitmentApproval(saved, [
+        session?.email ?? "",
+        process.env.LARK_INITIATOR_OPEN_ID ?? "",
+      ]);
     } catch (cause) {
       return NextResponse.json({
         approval_status: saved.approval_status,

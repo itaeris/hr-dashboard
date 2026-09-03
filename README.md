@@ -157,11 +157,11 @@ Without Supabase, schemas and responses stay in `localStorage`.
 
 Submit creates a third-party approval instance that follows the native Lark process:
 
-1. **Business Leader Approval** — requester-selected Direct Supervisor (N+1). CC when agreed: Fitria Latifanisa, Nesya Wulaningtias, Lelyta Nugraheni, Caca.
-2. **HR Approval** — Lelyta Nugraheni or Fitria Latifanisa (anyone assigned).
-3. **Handle** — Caca, Nesya Wulaningtias, Lelyta Nugraheni, or Fitria Latifanisa (anyone assigned).
+1. **Business Leader Approval** — requester-selected Direct Supervisor (N+1), then optional CC.
+2. **HR Approval** — anyone assigned.
+3. **Handle** — anyone assigned.
 
-Each to-do opens `/recruitment-request/approval/[id]` (same URL on desktop and mobile). The page advances one step at a time and updates Lark.
+CC, HR, and Handle members are set per brand in **Settings → Approval process**. New requests snapshot that list. Each to-do opens `/recruitment-request/approval/[id]` (same URL on desktop and mobile). The page advances one step at a time and updates Lark.
 
 **Lark Developer Console — Permissions & Scopes** (publish after adding):
 
@@ -368,6 +368,7 @@ The app still gates access with its own login.
    - `supabase/recruitment-requests.sql` — request form schemas and submissions
    - `supabase/request-approval.sql` — approval status on hire requests
    - `supabase/vacancy-settings.sql` — editable vacancy Level dropdown
+   - `supabase/recruitment-approval-settings.sql` — customizable hire-request approval members
    - `supabase/email-templates.sql` — email Subject / CC / Body per workspace
    - `supabase/email-sends.sql` — log of in-app SMTP sends
    - `supabase/interview-records.sql` — Google Drive links for interview recordings

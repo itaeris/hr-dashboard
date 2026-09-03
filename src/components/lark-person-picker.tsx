@@ -11,7 +11,7 @@ let usersCache: LarkUser[] | null = null;
 let usersError = "";
 let usersInflight: Promise<LarkUser[]> | null = null;
 
-async function loadUsers() {
+export async function loadLarkUsers() {
   if (usersCache?.some((user) => user.email)) return usersCache;
   if (usersInflight) return usersInflight;
 
@@ -60,7 +60,7 @@ export function LarkPersonPicker({
 
   useEffect(() => {
     let cancelled = false;
-    void loadUsers()
+    void loadLarkUsers()
       .then((next) => {
         if (!cancelled) {
           setUsers(next);

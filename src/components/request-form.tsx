@@ -19,7 +19,13 @@ import {
   type RequestSchema,
   type RequestSchemaField,
 } from "@/lib/request-schema";
-import { approvalProcessPreview } from "@/lib/recruitment-approval-flow";
+import {
+  DEFAULT_APPROVAL_FLOW,
+  approvalProcessPreview,
+  serializeApprovalFlow,
+  type ApprovalFlowConfig,
+} from "@/lib/recruitment-approval-flow";
+import { loadApprovalFlow } from "@/lib/recruitment-approval-settings";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { DatePicker, Select } from "./fields";
@@ -67,6 +73,7 @@ export function RequestFormPage({
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [approvalOpen, setApprovalOpen] = useState(true);
+  const [approvalFlow, setApprovalFlow] = useState<ApprovalFlowConfig>(DEFAULT_APPROVAL_FLOW);
   const [schemaLoading, setSchemaLoading] = useState(Boolean(initialCompany));
   const [schemaCompany, setSchemaCompany] = useState<RequestCompany | "">(
     initialCompany ?? "",
@@ -96,6 +103,17 @@ export function RequestFormPage({
     };
   }, [company]);
 
+  useEffect(() => {
+    if (!company) return;
+    let cancelled = false;
+    void loadApprovalFlow(slugFromRequestCompany(company)).then((next) => {
+      if (!cancelled) setApprovalFlow(next);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [company]);
+
   const fields = schema ? visibleFormFields(schema) : [];
   const brand = COMPANIES[slugFromRequestCompany(company || "AERIS")];
   const canSeeApproval = Boolean(
@@ -105,8 +123,8 @@ export function RequestFormPage({
       answers.direct_supervisor,
   );
   const approvalSteps = useMemo(
-    () => approvalProcessPreview(answers.direct_supervisor ?? ""),
-    [answers.direct_supervisor],
+    () => approvalProcessPreview(answers.direct_supervisor ?? "", approvalFlow),
+    [answers.direct_supervisor, approvalFlow],
   );
 
   function set(id: string, value: string) {
@@ -150,6 +168,7 @@ export function RequestFormPage({
     setNotice("");
     setErrors({});
     setCompany(isRequestCompany(next) ? next : "");
+    if (!isRequestCompany(next)) setApprovalFlow(DEFAULT_APPROVAL_FLOW);
   }
 
   async function onSubmit() {
@@ -158,6 +177,7 @@ export function RequestFormPage({
       ...answers,
       company,
       approval_step: "leader",
+      approval_flow: serializeApprovalFlow(approvalFlow),
     };
     const nextErrors = validateAnswers(schema, payload);
     setErrors(nextErrors);

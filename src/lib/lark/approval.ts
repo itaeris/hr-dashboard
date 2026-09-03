@@ -4,11 +4,17 @@ import { publicSiteUrl } from "@/lib/auth/google";
 import { isLarkConfigured, listLarkUsers, larkPost } from "@/lib/lark/client";
 import { findLarkUser } from "@/lib/lark/users";
 import {
-  HANDLE_MEMBERS,
-  HR_APPROVERS,
-  LEADER_CC_RECIPIENTS,
+  DEFAULT_APPROVAL_FLOW,
+  flowFromPayload,
+  type ApprovalFlowConfig,
+  type ApprovalMember,
   type ApprovalStep,
 } from "@/lib/recruitment-approval-flow";
+import { loadApprovalFlowServer } from "@/lib/recruitment-approval-settings-server";
+import {
+  isRequestCompany,
+  slugFromRequestCompany,
+} from "@/lib/recruitment-request";
 import type { ApprovalStatus, StoredRecruitmentRequest } from "@/lib/request-approval-types";
 
 export function larkApprovalCode() {
@@ -73,16 +79,19 @@ export async function resolveLarkOpenId(...candidates: string[]) {
   return "";
 }
 
-async function resolveLarkMembers(names: readonly string[]) {
-  if (!isLarkConfigured() || names.length === 0) return [];
+async function resolveConfiguredMembers(members: ApprovalMember[]) {
+  if (!isLarkConfigured() || members.length === 0) return [];
   const users = await listLarkUsers();
   const seen = new Set<string>();
   const resolved: { name: string; open_id: string }[] = [];
-  for (const name of names) {
-    const match = findLarkUser(users, name);
-    if (!match?.id || seen.has(match.id)) continue;
-    seen.add(match.id);
-    resolved.push({ name: match.name, open_id: match.id });
+  for (const member of members) {
+    const match =
+      (member.id ? findLarkUser(users, member.id) : null) ??
+      findLarkUser(users, member.name);
+    const openId = match?.id || member.id;
+    if (!openId || seen.has(openId)) continue;
+    seen.add(openId);
+    resolved.push({ name: match?.name || member.name, open_id: openId });
   }
   return resolved;
 }
@@ -120,6 +129,7 @@ export async function syncRecruitmentApproval(input: {
   supervisorOpenId: string;
   initiatorOpenId?: string;
   comment?: string;
+  flow?: ApprovalFlowConfig;
 }) {
   if (!isLarkConfigured()) {
     throw new Error("Lark is not configured.");
@@ -128,19 +138,20 @@ export async function syncRecruitmentApproval(input: {
     throw new Error("Direct supervisor is not a Lark user, so Approval cannot be notified.");
   }
 
+  const flow = input.flow ?? DEFAULT_APPROVAL_FLOW;
   const [hrMembers, handleMembers, ccMembers] = await Promise.all([
-    resolveLarkMembers(HR_APPROVERS),
-    resolveLarkMembers(HANDLE_MEMBERS),
-    resolveLarkMembers(LEADER_CC_RECIPIENTS),
+    resolveConfiguredMembers(flow.hrApprovers),
+    resolveConfiguredMembers(flow.handleMembers),
+    resolveConfiguredMembers(flow.leaderCc),
   ]);
   if (hrMembers.length === 0) {
     throw new Error(
-      `Could not find HR approvers in Lark (${HR_APPROVERS.join(", ")}).`,
+      `Could not find HR approvers in Lark (${flow.hrApprovers.map((item) => item.name).join(", ") || "none"}).`,
     );
   }
   if (handleMembers.length === 0) {
     throw new Error(
-      `Could not find Handle members in Lark (${HANDLE_MEMBERS.join(", ")}).`,
+      `Could not find Handle members in Lark (${flow.handleMembers.map((item) => item.name).join(", ") || "none"}).`,
     );
   }
 
@@ -264,6 +275,11 @@ export async function syncStoredRecruitmentApproval(
   row: StoredRecruitmentRequest,
   initiatorCandidates: string[] = [],
 ) {
+  const company = row.company || row.payload.company || "";
+  const slug = isRequestCompany(company)
+    ? slugFromRequestCompany(company)
+    : "aeris-beaute";
+  const flow = flowFromPayload(row.payload, await loadApprovalFlowServer(slug));
   const supervisorOpenId = await resolveLarkOpenId(
     row.payload.direct_supervisor_id ?? "",
     row.payload.direct_supervisor ?? "",
@@ -277,12 +293,13 @@ export async function syncStoredRecruitmentApproval(
     status: row.approval_status,
     step: row.approval_step,
     jobPosition: row.payload.job_position ?? "",
-    company: row.company || row.payload.company || "",
+    company,
     department: row.payload.department ?? "",
     supervisorName: row.payload.direct_supervisor ?? "",
     supervisorOpenId,
     initiatorOpenId,
     comment: row.approval_comment,
+    flow,
   });
 }
 

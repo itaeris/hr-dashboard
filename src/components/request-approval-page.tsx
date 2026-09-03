@@ -4,12 +4,14 @@ import { COMPANIES, themeStyle } from "@/lib/companies";
 import { formatDate } from "@/lib/format";
 import {
   APPROVAL_STEP_LABELS,
-  HANDLE_MEMBERS,
-  HR_APPROVERS,
+  DEFAULT_APPROVAL_FLOW,
   approvalProcessPreview,
   canDecideCurrentStep,
+  flowFromPayload,
+  memberNames,
   parseApprovalStep,
   waitingCopy,
+  type ApprovalFlowConfig,
   type ApprovalStep,
   type ApprovalViewer,
 } from "@/lib/recruitment-approval-flow";
@@ -29,10 +31,14 @@ const STATUS_COPY: Record<ApprovalStatus, { label: string; className: string }> 
   rejected: { label: "Rejected", className: "bg-red-50 text-red-800" },
 };
 
-function membersForStep(id: "leader" | "hr" | "handle", leaderName: string) {
+function membersForStep(
+  id: "leader" | "hr" | "handle",
+  leaderName: string,
+  flow: ApprovalFlowConfig,
+) {
   if (id === "leader") return leaderName.trim() || "Requester’s selected business leader";
-  if (id === "hr") return HR_APPROVERS.join(", ");
-  return HANDLE_MEMBERS.join(", ");
+  if (id === "hr") return memberNames(flow.hrApprovers).join(", ");
+  return memberNames(flow.handleMembers).join(", ");
 }
 
 function futureCopy(id: "hr" | "handle") {
@@ -43,9 +49,11 @@ function futureCopy(id: "hr" | "handle") {
 export function RequestApprovalPage({
   request,
   viewer,
+  fallbackFlow = DEFAULT_APPROVAL_FLOW,
 }: {
   request: StoredRecruitmentRequest;
   viewer: ApprovalViewer | null;
+  fallbackFlow?: ApprovalFlowConfig;
 }) {
   const [status, setStatus] = useState(request.approval_status);
   const [step, setStep] = useState(request.approval_step);
@@ -62,8 +70,9 @@ export function RequestApprovalPage({
   const brand = COMPANIES[slugFromRequestCompany(company)];
   const title = request.payload.job_position || "Recruitment request";
   const pending = status === "pending";
-  const preview = approvalProcessPreview(request.payload.direct_supervisor ?? "");
-  const canAct = pending && canDecideCurrentStep(viewer, step, request.payload);
+  const flow = flowFromPayload(request.payload, fallbackFlow);
+  const preview = approvalProcessPreview(request.payload.direct_supervisor ?? "", flow);
+  const canAct = pending && canDecideCurrentStep(viewer, step, request.payload, flow);
 
   const fields = schema.fields.filter((field) => {
     if (field.id.endsWith("_id")) return false;
@@ -166,7 +175,7 @@ export function RequestApprovalPage({
                             : futureCopy(item.id === "leader" ? "hr" : item.id)}
                       </p>
                       <p className="mt-1 text-xs text-muted">
-                        {membersForStep(item.id, request.payload.direct_supervisor ?? "")}
+                        {membersForStep(item.id, request.payload.direct_supervisor ?? "", flow)}
                       </p>
 
                       {active ? (
