@@ -18,11 +18,17 @@ export const GOOGLE_CALENDAR_SCOPE = [
   "https://www.googleapis.com/auth/calendar",
 ].join(" ");
 
-const GOOGLE_NEXT = /^\/(aeris-beaute|from-this-island)\/(calendar|settings)\/?$/;
+const GOOGLE_NEXT_PATH = /^\/(aeris-beaute|from-this-island)\/(calendar|settings)\/?$/;
 
 export function safeCalendarNext(value: string | null) {
-  if (!value || !GOOGLE_NEXT.test(value)) return "/";
-  return value.replace(/\/$/, "");
+  if (!value) return "/";
+  const [path = "", query = ""] = value.split("?");
+  if (!GOOGLE_NEXT_PATH.test(path)) return "/";
+  const cleanPath = path.replace(/\/$/, "") || path;
+  if (!query) return cleanPath;
+  const menu = new URLSearchParams(query).get("menu");
+  if (menu === "calendar") return `${cleanPath}?menu=calendar`;
+  return cleanPath;
 }
 
 export const PRODUCTION_ORIGIN = "https://recruitment-fti.aerisbeaute.com";

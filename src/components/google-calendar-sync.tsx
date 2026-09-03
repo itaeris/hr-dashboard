@@ -168,7 +168,7 @@ function GoogleCalendarSyncInner({
           </>
         ) : (
           <a
-            href={`/api/auth/google/calendar?next=/${slug}/settings`}
+            href={`/api/auth/google/calendar?next=${encodeURIComponent(`/${slug}/settings?menu=calendar`)}`}
             className="rounded-full bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-hover"
           >
             Connect Google Calendar
