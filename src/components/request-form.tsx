@@ -6,7 +6,6 @@ import {
   REQUEST_COMPANY_LABELS,
   departmentsForDivision,
   isRequestCompany,
-  recruitmentRequestColumns,
   slugFromRequestCompany,
   type RequestCompany,
 } from "@/lib/recruitment-request";
@@ -26,10 +25,10 @@ import {
   type ApprovalFlowConfig,
 } from "@/lib/recruitment-approval-flow";
 import { loadApprovalFlow } from "@/lib/recruitment-approval-settings";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { DatePicker, Select } from "./fields";
 import { LarkPersonPicker } from "./lark-person-picker";
+import { TurnstileWidget, turnstileEnabled } from "./turnstile-widget";
 import { PageFade } from "./ui";
 
 const inputClass =
@@ -74,6 +73,8 @@ export function RequestFormPage({
   const [notice, setNotice] = useState("");
   const [approvalOpen, setApprovalOpen] = useState(true);
   const [approvalFlow, setApprovalFlow] = useState<ApprovalFlowConfig>(DEFAULT_APPROVAL_FLOW);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReset, setTurnstileReset] = useState(0);
   const [schemaLoading, setSchemaLoading] = useState(Boolean(initialCompany));
   const [schemaCompany, setSchemaCompany] = useState<RequestCompany | "">(
     initialCompany ?? "",
@@ -182,6 +183,10 @@ export function RequestFormPage({
     const nextErrors = validateAnswers(schema, payload);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+    if (turnstileEnabled() && !turnstileToken.trim()) {
+      setNotice("Complete the verification below, then submit.");
+      return;
+    }
 
     setSaving(true);
     setNotice("");
@@ -193,15 +198,25 @@ export function RequestFormPage({
     };
 
     try {
-      const supabase = getSupabaseBrowserClient();
-      if (supabase) {
-        const { error } = await supabase.from("recruitment_requests").insert({
+      const created = await fetch("/api/recruitment-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           id: row.id,
-          ...recruitmentRequestColumns(company, payload),
-        });
-        if (error) throw error;
-      } else {
-        persistLocalResponse(row);
+          payload,
+          turnstileToken,
+        }),
+      });
+      const createdPayload = (await created.json()) as { error?: string };
+      if (created.status === 400) {
+        throw new Error(createdPayload.error || "Could not verify you are human.");
+      }
+      if (!created.ok) {
+        if (/Database is not configured/i.test(createdPayload.error ?? "")) {
+          persistLocalResponse(row);
+        } else {
+          throw new Error(createdPayload.error || "Could not save the request.");
+        }
       }
 
       let message = "Recruitment request submitted.";
@@ -223,14 +238,18 @@ export function RequestFormPage({
       setNotice(message);
       reset();
     } catch (cause) {
+      const message =
+        cause instanceof Error ? cause.message : "Could not save the request.";
+      if (/human|verify/i.test(message)) {
+        setNotice(message);
+        return;
+      }
       persistLocalResponse(row);
-      setNotice(
-        cause && typeof cause === "object" && "message" in cause
-          ? `Saved locally. ${String((cause as { message: string }).message)}`
-          : "Saved locally.",
-      );
+      setNotice(`Saved locally. ${message}`);
       reset();
     } finally {
+      setTurnstileToken("");
+      setTurnstileReset((current) => current + 1);
       setSaving(false);
     }
   }
@@ -402,6 +421,15 @@ export function RequestFormPage({
                 ) : null}
 
                 {notice ? <p className="mt-6 text-sm text-accent">{notice}</p> : null}
+
+                {turnstileEnabled() ? (
+                  <div className="mt-6">
+                    <TurnstileWidget
+                      resetSignal={turnstileReset}
+                      onToken={setTurnstileToken}
+                    />
+                  </div>
+                ) : null}
 
                 <div className="mt-6 flex flex-wrap gap-2">
                   <button

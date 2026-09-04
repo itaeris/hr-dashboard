@@ -97,6 +97,20 @@ export async function saveRecruitmentApproval(
   return fromRow(fallback.data as Record<string, unknown>);
 }
 
+export async function insertRecruitmentRequest(input: {
+  id: string;
+  company: string;
+  payload: Record<string, string>;
+}) {
+  const supabase = getSupabaseServerClient();
+  if (!supabase) throw new Error("Database is not configured.");
+  const { error } = await supabase.from("recruitment_requests").insert({
+    id: input.id,
+    ...recruitmentRequestColumns(input.company, input.payload),
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function updateRecruitmentRequest(
   id: string,
   answers: Record<string, string>,

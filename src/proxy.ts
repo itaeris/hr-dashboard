@@ -21,6 +21,7 @@ export function proxy(request: NextRequest) {
     pathname === "/api/lark/users" ||
     pathname === "/api/lark/approvals" ||
     pathname.startsWith("/api/lark/approvals/") ||
+    pathname === "/api/recruitment-requests" ||
     pathname === "/api/auth/google" ||
     pathname === "/api/auth/google/callback" ||
     pathname === "/api/auth/google/calendar" ||

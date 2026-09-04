@@ -25,6 +25,7 @@ import { clearSession, getSession, setSession } from "@/lib/auth/session";
 import { parseRole, roleLabel, toPublicUser } from "@/lib/auth/users";
 import { isCompanySlug } from "@/lib/companies";
 import type { CompanySlug } from "@/lib/types";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 import { headers } from "next/headers";
 
 export type LoginState = { error: string } | null;
@@ -50,6 +51,13 @@ export async function loginAction(
   }
 
   const ip = await requestIp();
+  const human = await verifyTurnstileToken(
+    String(formData.get("cf-turnstile-response") ?? formData.get("turnstile") ?? ""),
+    ip,
+  );
+  if (!human) {
+    return { error: "Could not verify you are human. Refresh and try again." };
+  }
   const limit = loginAllowed(ip, email);
   if (!limit.ok) {
     return {

@@ -242,7 +242,11 @@ LARK_APP_ID=
 LARK_APP_SECRET=
 LARK_API_BASE=https://open.larksuite.com
 LARK_APPROVAL_CODE=hr_recruitment_request
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 ```
+
+Local Turnstile keys above are Cloudflare’s dummy always-pass pair. Production must use the real keys on Vercel, not these.
 
 Without Supabase keys, the app uses **demo data** for pipeline / progress / vacancy (Clara, Nadia, Sari, …). Request forms and email templates still work locally, and email edits persist to Supabase when keys are set.
 
@@ -344,9 +348,13 @@ LARK_APP_ID=...
 LARK_APP_SECRET=...
 LARK_API_BASE=https://open.larksuite.com
 LARK_APPROVAL_CODE=hr_recruitment_request
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=your-production-site-key
+TURNSTILE_SECRET_KEY=your-production-secret-key
 ```
 
 Redeploy after saving. `NEXT_PUBLIC_*` values are compiled into the client bundle — a new deployment is required after any change.
+
+Cloudflare Turnstile protects `/login` (email/password) and the public hire form. In the [Turnstile dashboard](https://dash.cloudflare.com/), add hostnames `recruitment-fti.aerisbeaute.com` and `localhost` (localhost only if you test production keys locally). Dummy keys in `.env.example` already work on localhost without a hostname allowlist.
 
 ### Deployment Protection
 

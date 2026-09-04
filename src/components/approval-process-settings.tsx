@@ -97,24 +97,25 @@ export function ApprovalProcessSettings() {
         />
       </Field>
 
-      <button
-        type="button"
-        onClick={() => setFlow(DEFAULT_APPROVAL_FLOW)}
-        className="text-sm text-muted hover:text-ink"
-      >
-        Reset to default
-      </button>
-
       {error ? <p className="text-sm text-[#E24B4A]">{error}</p> : null}
       {success ? <p className="text-sm text-accent">{success}</p> : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
-      >
-        {pending ? "Saving…" : "Save approval process"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
+        >
+          {pending ? "Saving…" : "Save approval process"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setFlow(DEFAULT_APPROVAL_FLOW)}
+          className="rounded-full px-4 py-2.5 text-sm text-muted hover:bg-paper hover:text-ink"
+        >
+          Reset to default
+        </button>
+      </div>
     </form>
   );
 }

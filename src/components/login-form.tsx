@@ -12,9 +12,10 @@ import {
   IconPeople,
 } from "@/components/icons";
 import { PasswordInput, fieldClass } from "@/components/ui";
+import { TurnstileWidget, turnstileEnabled } from "@/components/turnstile-widget";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 const OAUTH_ERRORS: Record<string, string> = {
   domain: "Use a Google account from @aerisbeaute.com or @fromthisisland.com.",
@@ -65,6 +66,12 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
     loginAction,
     null,
   );
+  const [turnstileReset, setTurnstileReset] = useState(0);
+  const [seenState, setSeenState] = useState(state);
+  if (state !== seenState) {
+    setSeenState(state);
+    if (state?.error) setTurnstileReset((current) => current + 1);
+  }
   const error = state?.error ?? (oauthError ? OAUTH_ERRORS[oauthError] ?? OAUTH_ERRORS.oauth : null);
 
   return (
@@ -128,6 +135,10 @@ export function LoginForm({ oauthError }: { oauthError?: string }) {
                   />
                 </span>
               </label>
+
+              {turnstileEnabled() ? (
+                <TurnstileWidget resetSignal={turnstileReset} />
+              ) : null}
 
               {error ? (
                 <p className="rounded-2xl bg-accent-soft px-3 py-2 text-sm text-accent-deep">
