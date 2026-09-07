@@ -354,7 +354,7 @@ TURNSTILE_SECRET_KEY=your-production-secret-key
 
 Redeploy after saving. `NEXT_PUBLIC_*` values are compiled into the client bundle — a new deployment is required after any change.
 
-Cloudflare Turnstile protects `/login` (email/password) and the public hire form. In the [Turnstile dashboard](https://dash.cloudflare.com/), add hostnames `recruitment-fti.aerisbeaute.com` and `localhost` (localhost only if you test production keys locally). Dummy keys in `.env.example` already work on localhost without a hostname allowlist.
+Cloudflare Turnstile protects `/login` (email/password only). In the [Turnstile dashboard](https://dash.cloudflare.com/), add hostnames `recruitment-fti.aerisbeaute.com` and `localhost` (localhost only if you test production keys locally). Dummy keys in `.env.example` already work on localhost without a hostname allowlist.
 
 ### Deployment Protection
 
